@@ -95,7 +95,7 @@
 <div class="wrap">
   <header class="doc-head">
     <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.11 (43종) · 파서 P0.6</span>
-    <div class="eyebrow">복정고등학교 · 교육과정연구부</div>
+    <div class="eyebrow">복정고등학교 · 교육연구부</div>
     <h1>평가계획 제출 전 검사기</h1>
     <p class="subtitle">작성 방식은 그대로 두세요. 제출 전에 파일을 끌어 놓으면 삭제하지 않은 안내문·메모와 함께 반영비율 합계, 수행평가 30%, 정기시험 1회 상한, 평가요소 형태까지 확인해 드립니다.</p>
   </header>
@@ -110,7 +110,7 @@
   <div id="results"></div>
 
   <footer>
-    판정 근거는 각 항목에 표시됩니다(경기도교육청 지침 / 복정고 작성 기준 / 교내 검토 기준 / 양식 정리 규칙). 회색 「검사 미완료」는 통과가 아니라 값을 읽지 못해 검사하지 못했다는 뜻입니다. 수치 판정의 근거 값은 「검사기가 읽은 값」에서 원문과 대조할 수 있습니다. 문의: 교육과정연구부
+    판정 근거는 각 항목에 표시됩니다(경기도교육청 지침 / 복정고 작성 기준 / 교내 검토 기준 / 양식 정리 규칙). 회색 「검사 미완료」는 통과가 아니라 값을 읽지 못해 검사하지 못했다는 뜻입니다. 수치 판정의 근거 값은 「검사기가 읽은 값」에서 원문과 대조할 수 있습니다. 문의: 교육연구부
   </footer>
 </div>
 
@@ -1364,7 +1364,7 @@ function runV1(doc){
           push("N2", ST.FAIL, "수행평가 반영비율 합계가 "+fmtPct(sum)+"로 30% 미만입니다",
             { basis:"2026 경기도교육청 학업성적관리 시행지침 — 수행평가 반영비율 합계는 30% 이상이어야 합니다.",
               hits:[{ loc:"평가총괄표 · 수행평가", text:bd }],
-              fix:"수행평가 비율을 30% 이상으로 조정하세요. (예외 승인 과목이라면 교육과정연구부에 알려 주세요.)" });
+              fix:"수행평가 비율을 30% 이상으로 조정하세요. (예외 승인 과목이라면 교육연구부에 알려 주세요.)" });
         } else {
           push("N2", ST.PASS, "수행평가 합계 "+fmtPct(sum)+" (≥ 30%)");
         }
@@ -1765,7 +1765,7 @@ function runSRules(doc, courseName){
       { basis:BASIS,
         hits: [...unk.map(e=>({ loc: locStr(e), text: "[" + (e.disp||e.bare) + "]" })),
                ...areaBad.map(e=>({ loc: locStr(e), text: "[" + (e.disp||e.bare) + "] (영역 코드)" }))],
-        fix:"코드가 정확한지 확인하세요. 정확하다면 DB 미수록일 수 있으니 교육과정연구부에 알려 주세요." });
+        fix:"코드가 정확한지 확인하세요. 정확하다면 DB 미수록일 수 있으니 교육연구부에 알려 주세요." });
   } else {
     push("S2", ST.PASS, "성취기준 코드 " + (ok.length+wrong.length+areaOk.length) + "건 모두 DB에서 확인");
   }
@@ -2034,7 +2034,7 @@ function runX8(doc){
     }
   }
   if(hits.length) push("X8", ST.REVIEW, "정기시험 시기가 학사일정 지필 기간과 다른 영역이 "+hits.length+"개 있습니다",
-    { basis:B, hits, fix:"총괄표의 시험 시기를 학사일정 기간에 맞게 수정하세요. 학사일정이 변경된 경우라면 교육과정연구부에 알려 주세요." });
+    { basis:B, hits, fix:"총괄표의 시험 시기를 학사일정 기간에 맞게 수정하세요. 학사일정이 변경된 경우라면 교육연구부에 알려 주세요." });
   else if(checked === 0) push("X8", ST.UNKNOWN, "정기시험 시기를 읽지 못해 지필 기간 대조를 하지 못했습니다"+(noTime?" ("+noTime+"개 영역)":""), { basis:B });
   else push("X8", ST.PASS, "정기시험 시기 = 학사일정 지필 기간 확인 ("+checked+"건"+(noTime?" · 시기 미판독 "+noTime+"개 제외":"")+")");
   return items;
