@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>복정고 평가계획 제출 전 검사기 V1.11</title>
+<title>복정고 평가계획 제출 전 검사기 V1.2</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -94,8 +94,8 @@
 <body>
 <div class="wrap">
   <header class="doc-head">
-    <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.11 (43종) · 파서 P0.6</span>
-    <div class="eyebrow">복정고등학교 · 교육연구부</div>
+    <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.0.1 · 파서 P0.5</span>
+    <div class="eyebrow">복정고등학교 · 교육과정연구부</div>
     <h1>평가계획 제출 전 검사기</h1>
     <p class="subtitle">작성 방식은 그대로 두세요. 제출 전에 파일을 끌어 놓으면 삭제하지 않은 안내문·메모와 함께 반영비율 합계, 수행평가 30%, 정기시험 1회 상한, 평가요소 형태까지 확인해 드립니다.</p>
   </header>
@@ -110,7 +110,7 @@
   <div id="results"></div>
 
   <footer>
-    판정 근거는 각 항목에 표시됩니다(경기도교육청 지침 / 복정고 작성 기준 / 교내 검토 기준 / 양식 정리 규칙). 회색 「검사 미완료」는 통과가 아니라 값을 읽지 못해 검사하지 못했다는 뜻입니다. 수치 판정의 근거 값은 「검사기가 읽은 값」에서 원문과 대조할 수 있습니다. 문의: 교육연구부
+    판정 근거는 각 항목에 표시됩니다(경기도교육청 지침 / 복정고 작성 기준 / 교내 검토 기준 / 양식 정리 규칙). 회색 「검사 미완료」는 통과가 아니라 값을 읽지 못해 검사하지 못했다는 뜻입니다. 수치 판정의 근거 값은 「검사기가 읽은 값」에서 원문과 대조할 수 있습니다. 문의: 교육과정연구부
   </footer>
 </div>
 
@@ -123,14 +123,10 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
 <script>
 "use strict";
 /* ============================================================
-   설정 (규칙 버전: 복정고 2026-2학기 V1.11)
+   설정 (규칙 버전: 복정고 2026-2학기 V1.2)
    ============================================================ */
-const RULE_VERSION = "복정고 2026-2학기 V1.11";
+const RULE_VERSION = "복정고 2026-2학기 V1.3";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
-
-// 학교명 — 다교 배포 시 이 두 값만 바꾸면 됩니다
-const SCHOOL_NAME       = "복정고등학교";
-const SCHOOL_NAME_SHORT = "복정고";
 
 const BASIS = {
   CLEAN: "양식 정리 규칙 — 제출본에서 안내·예시·메모는 모두 삭제해야 합니다.",
@@ -718,40 +714,8 @@ function runChecks(doc){
     }
   }
 
-  /* R9. 학교명 미기재 */
-  {
-    const hits = hitsFor([ new RegExp(escRe_(SCHOOL_NAME_SHORT)) ], scanTexts, { max: 1 });
-    if(hits.length) passes.push({ id:"R9", title:"학교명 기재 확인" });
-    else findings.push({ id:"R9", level:"red", title:"문서에 학교명이 없습니다",
-      basis:"교내 검토 기준 — 평가계획서에는 학교명이 명시되어야 합니다.",
-      fix:"문서 정보표(학교명 칸) 또는 머리글에 「" + SCHOOL_NAME + "」을(를) 기재하세요.", hits: [] });
-  }
-
-  /* R10. '장기결석(무단)' 용어 — 2026 지침에서 '미인정'으로 변경 */
-  {
-    const hits = hitsFor([ /장기\s*결석\s*[（(]?\s*무단/, /무단\s*결석/ ], scanTexts);
-    if(hits.length){
-      findings.push({ id:"R10", level:"red", title:"'무단결석' 용어가 " + hits.length + "곳 있습니다",
-        basis:"2026 경기도교육청 학업성적관리 시행지침 — '장기결석(무단)'은 '장기결석(미인정)'으로 용어가 변경되었습니다.",
-        fix:"'무단'을 '미인정'으로 수정하세요. 예) 장기결석(무단) → 장기결석(미인정)",
-        hits: hits.slice(0,8), moreCount: Math.max(0, hits.length - 8) });
-    } else passes.push({ id:"R10", title:"'무단결석' 용어 없음" });
-  }
-
-  /* F7. 동점자 처리 기준 미기재 */
-  {
-    const hits = hitsFor([ /동점자/ ], scanTexts, { max: 1 });
-    if(hits.length) passes.push({ id:"F7", title:"동점자 처리 기준 기재 확인" });
-    else findings.push({ id:"F7", level:"red", title:"동점자 처리 기준이 문서에 없습니다",
-      basis:"2026 경기도교육청 학업성적관리 시행지침 — 평가계획에는 동점자 처리 기준을 포함해야 합니다.",
-      fix:"평가 유의사항에 동점자 처리 순서를 기재하세요. (예: 정기시험 → 수행평가 → …)", hits: [] });
-  }
-
   return { findings, passes, meta };
 }
-
-/** 정규식 이스케이프 (텍스트 규칙용) */
-function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
@@ -985,8 +949,20 @@ function extractPlan(grid, src){
     const wm=toHalf(wCell.t).match(/\d+/);
     const rowCodes=sCell? (sCell.t.match(/\[\d{2}[^\[\]\s]{1,12}\]/g)||[]) : [];
     rowCodes.forEach(x=>codes.add(x));
+    // B1: 이 주(행)를 덮는 모든 셀에서 ★항목 수집 — 같은 주 중복은 1회
+    const themes=new Set();
+    for(const cell of grid.all){
+      if(cell.r==null||!cell.t||cell.t.indexOf("★")<0) continue;
+      if(!(cell.r<=wCell.r && wCell.r<cell.r+cell.rs)) continue;
+      for(const seg of cell.t.split("★").slice(1)){
+        for(const part of seg.split(/[,，\/]/)){
+          const p=part.replace(/\s/g,"").replace(/[ㆍ・]/g,"·").replace(/[^가-힣·]/g,"");
+          if(p) themes.add(p);
+        }
+      }
+    }
     detail.push({ month:curMonth, week:wm?+wm[0]:null, unit:uCell?uCell.t.slice(0,40):null,
-      achievementCodes:rowCodes, source:{...src, row:wCell.r} });
+      achievementCodes:rowCodes, crossThemes:[...themes], source:{...src, row:wCell.r} });
   }
   return {weeks, codes:[...codes], detail};
 }
@@ -1002,12 +978,13 @@ async function parseDoc(zip){
 
   const doc={ document:{year:null,semester:null,grade:null,subject:null,curriculum:null,teacher:null,classes:null},
     tables:[], summary:null, teachingPlan:{weeks:0,codes:[],tables:0,detail:[]},
-    rubrics:[], achievementTables:0, achievementLevels:[], semesterLevels:[], counts:{}, parseStatus:{}, warnings:[], unknowns:[] };
+    rubrics:[], achievementTables:0, achievementLevels:[], semesterLevels:[], counts:{}, parseStatus:{}, warnings:[], unknowns:[], fullText:"" };
 
   const sectionXmlCache=[];
   for(let si=0; si<secNames.length; si++){
     const xml=stripMemos(await zip.extract(secNames[si]));
     sectionXmlCache.push(xml);
+    doc.fullText+=[...xml.matchAll(/<hp:t\b[^>]*>([\s\S]*?)<\/hp:t>/g)].map(m=>cleanT(m[1])).join("\n")+"\n";
     // 제목에서 연도·학기 (표 밖 텍스트 포함 전체에서)
     if(si===0){
       const tm=xml.match(/(\d{4})\s*학년도/); if(tm) doc.document.year=+tm[1];
@@ -1364,7 +1341,7 @@ function runV1(doc){
           push("N2", ST.FAIL, "수행평가 반영비율 합계가 "+fmtPct(sum)+"로 30% 미만입니다",
             { basis:"2026 경기도교육청 학업성적관리 시행지침 — 수행평가 반영비율 합계는 30% 이상이어야 합니다.",
               hits:[{ loc:"평가총괄표 · 수행평가", text:bd }],
-              fix:"수행평가 비율을 30% 이상으로 조정하세요. (예외 승인 과목이라면 교육연구부에 알려 주세요.)" });
+              fix:"수행평가 비율을 30% 이상으로 조정하세요. (예외 승인 과목이라면 교육과정연구부에 알려 주세요.)" });
         } else {
           push("N2", ST.PASS, "수행평가 합계 "+fmtPct(sum)+" (≥ 30%)");
         }
@@ -1512,6 +1489,77 @@ function runV1(doc){
       else if(checked===0) push("X2", ST.UNKNOWN, "성취기준 교차검증 — 총괄표의 성취기준 코드를 읽지 못해 검사하지 못했습니다",
         { basis:"교내 검토 기준 — 총괄표에 적은 성취기준 코드는 해당 세부기준표에도 있어야 합니다." });
       else push("X2", ST.PASS, "성취기준 교차검증 — 총괄표 코드가 세부기준표에 모두 존재"+(unreadable? " (판독 실패 "+unreadable+"개 영역 제외)":""));
+    }
+  }
+
+  /* ---------- B1. 범교과 연계주제 — 학교 공식 명칭·최소 주수, 1학기 승인본 10부 실측으로 기준 확정 ---------- */
+  {
+    const REQ = [
+      ["안전·건강교육",2], ["진로연계수업",2], ["성교육",2],
+      ["인성교육",1], ["민주시민교육",1], ["인권교육",1], ["다문화교육",1],
+      ["통일교육",1], ["독도교육",1], ["경제금융교육",1], ["환경·지속가능발전교육",1],
+    ];
+    const canon = REQ.map(x=>x[0]);
+    // OSA 거리 (인접 전위=1) — '도독교육'↔'독도교육' 같은 자리바꿈 오타 대응
+    const lev=(a,b)=>{ if(Math.abs(a.length-b.length)>2) return 9;
+      const d=[...Array(a.length+1)].map(()=>Array(b.length+1).fill(0));
+      for(let i=0;i<=a.length;i++) d[i][0]=i;
+      for(let j=0;j<=b.length;j++) d[0][j]=j;
+      for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++){
+        const c=a[i-1]===b[j-1]?0:1;
+        d[i][j]=Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+c);
+        if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) d[i][j]=Math.min(d[i][j], d[i-2][j-2]+1);
+      }
+      return d[a.length][b.length]; };
+    const nearest=u=>{ let best=null, bd=3;
+      for(const c of canon){ const v=lev(u,c); if(v<bd){ bd=v; best=c; } }
+      return bd<=2? best: null; };
+
+    if(doc.teachingPlan.weeks===0){
+      push("B1", ST.UNKNOWN, "교수학습계획 표를 판독하지 못해 범교과 연계주제를 검사하지 못했습니다");
+    } else {
+      const count={}; const unknownMarks=new Set();
+      for(const d of doc.teachingPlan.detail){
+        for(const t of (d.crossThemes||[])){
+          if(canon.includes(t)) count[t]=(count[t]||0)+1;
+          else unknownMarks.add(t);
+        }
+      }
+      const short = REQ.filter(([n,min])=>(count[n]||0)<min);
+      const typos=[...unknownMarks].map(u=>{
+        const hit=nearest(u);
+        return hit? u+" → "+hit : null;
+      }).filter(Boolean);
+
+      if(short.length){
+        push("B1", ST.FAIL, "범교과 연계주제가 기준에 미달합니다 ("+short.length+"개 항목)",
+          { basis:"학교 지침 — 학기당 안전·건강교육/진로연계수업/성교육 각 2주 이상, 나머지 8개 주제 각 1주 이상 ★표기 (공식 명칭만 인정)",
+            hits: short.map(([n,min])=>({ loc:"교수학습계획", text:n+" — "+(count[n]||0)+"회 (최소 "+min+"회)" }))
+              .concat(typos.map(t=>({ loc:"표기 오류 의심", text:t+" — 공식 명칭 그대로 입력해야 인정됩니다" }))),
+            fix:"교수학습계획 주차별 계획에 부족한 주제를 '★공식명칭'으로 추가 기재하세요." });
+      } else if(typos.length){
+        push("B1", ST.REVIEW, "범교과 기준은 충족했으나 공식 명칭과 다른 ★표기가 있습니다",
+          { hits: typos.map(t=>({ loc:"교수학습계획", text:t })),
+            fix:"표기를 공식 명칭으로 통일하는 것을 권장합니다." });
+      } else {
+        const tot=REQ.reduce((s,[n])=>s+(count[n]||0),0);
+        push("B1", ST.PASS, "범교과 연계주제 11개 항목 기준 충족 (총 "+tot+"회 기재)");
+      }
+    }
+  }
+
+  /* ---------- B2. 양식 안내 박스 잔존 — 삭제 지침 위반, 문자열 탐지라 결정론적 → FAIL ---------- */
+  {
+    const flat = (doc.fullText||"").replace(/\s/g,"");
+    const marks = ["※범교과연계주제", "★교육명"];
+    const found = marks.filter(m => flat.indexOf(m)>=0);
+    if(found.length){
+      push("B2", ST.FAIL, "양식의 범교과 안내 박스가 삭제되지 않았습니다",
+        { basis:"학교 제출 지침 — 양식 상단의 범교과 안내 박스는 삭제 후 제출",
+          hits: found.map(m=>({ loc:"본문", text:"발견 문구: "+m })),
+          fix:"안내 박스(※범교과 연계주제…)를 삭제한 뒤 다시 검사하세요." });
+    } else {
+      push("B2", ST.PASS, "양식 안내 박스 삭제 확인");
     }
   }
 
@@ -1765,7 +1813,7 @@ function runSRules(doc, courseName){
       { basis:BASIS,
         hits: [...unk.map(e=>({ loc: locStr(e), text: "[" + (e.disp||e.bare) + "]" })),
                ...areaBad.map(e=>({ loc: locStr(e), text: "[" + (e.disp||e.bare) + "] (영역 코드)" }))],
-        fix:"코드가 정확한지 확인하세요. 정확하다면 DB 미수록일 수 있으니 교육연구부에 알려 주세요." });
+        fix:"코드가 정확한지 확인하세요. 정확하다면 DB 미수록일 수 있으니 교육과정연구부에 알려 주세요." });
   } else {
     push("S2", ST.PASS, "성취기준 코드 " + (ok.length+wrong.length+areaOk.length) + "건 모두 DB에서 확인");
   }
@@ -1942,61 +1990,6 @@ const SCHOOL_CALENDAR_S2 = {
   ],
   note: "개학 8/14 · 학년 종료 1/6. 주차는 1~7일=1주 방식 환산."
 };
-/**
- * 월 → 학기.  3~7월 = 1학기 / 8~12월·1~2월 = 2학기
- * (복정고 2학기: 개학 8/14 ~ 학년 종료 1/6)
- */
-function semesterOfMonth_(m){
-  if(m >= 3 && m <= 7) return 1;
-  if((m >= 8 && m <= 12) || m === 1 || m === 2) return 2;
-  return null;
-}
-
-/* ---------- X9. 평가 시기가 학기 범위를 벗어남 (FAIL) ----------
-   "4월 4주"처럼 다른 학기의 월이 적혀 있으면 이전 학기 문서에서
-   시기를 갱신하지 않은 것이 거의 확실합니다. 지필 기간 대조(X8)보다
-   근거가 강하므로 확인 요청이 아니라 필수 오류로 처리합니다.
-   정기시험뿐 아니라 수행평가 시기도 함께 봅니다.               */
-function runX9(doc){
-  const items = [];
-  const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
-  const D = doc.document || {};
-  const sem = D.semester;
-  const B = "양식 정리 규칙 — 평가 시기는 해당 학기 안이어야 합니다. " +
-            "1학기 = 3~7월 / 2학기 = 8~12월·1~2월. " +
-            "다른 학기의 월이 적혀 있으면 이전 학기 문서에서 시기를 갱신하지 않은 것입니다.";
-
-  if(!sem){ push("X9", ST.UNKNOWN, "학기를 판별하지 못해 평가 시기의 학기 범위를 검사하지 못했습니다", { basis:B }); return items; }
-  const S = doc.summary;
-  if(!S){ push("X9", ST.UNKNOWN, "총괄표를 읽지 못해 평가 시기를 검사하지 못했습니다", { basis:B }); return items; }
-
-  const units = [...(S.exams||[]).map(u=>({u,k:"정기시험"})),
-                 ...(S.performanceTasks||[]).map(u=>({u,k:"수행평가"}))];
-  const hits = []; let checked = 0, noTime = 0;
-
-  for(const {u,k} of units){
-    const raw = String(u.time && u.time.raw || "").normalize("NFKC").replace(/～/g,"~");
-    const ms = [...raw.matchAll(/(\d{1,2})\s*월/g)].map(m => +m[1]);
-    if(!ms.length){ noTime++; continue; }
-    checked++;
-    const bad = [...new Set(ms)].filter(m => semesterOfMonth_(m) !== sem);
-    if(bad.length){
-      hits.push({ loc: k + " 「" + String(u.name||"").slice(0,16) + "」",
-        text: "기재 시기 「" + raw + "」 — " + bad.map(m=>m+"월").join(", ") +
-              "은 " + sem + "학기 범위(" + (sem===1 ? "3~7월" : "8~12월·1~2월") + ") 밖입니다" });
-    }
-  }
-
-  if(hits.length)
-    push("X9", ST.FAIL, "다른 학기의 평가 시기가 " + hits.length + "곳 남아 있습니다", { basis:B, hits,
-      fix:"이전 학기 문서를 복사해 시기를 갱신하지 않은 것으로 보입니다. 총괄표의 평가 시기를 이번 학기 일정으로 모두 수정하세요." });
-  else if(checked === 0)
-    push("X9", ST.UNKNOWN, "평가 시기를 읽지 못해 학기 범위를 검사하지 못했습니다" + (noTime? " ("+noTime+"개 영역)":""), { basis:B });
-  else
-    push("X9", ST.PASS, "평가 시기 " + checked + "건 모두 " + sem + "학기 범위 안" + (noTime? " (시기 미판독 "+noTime+"개 제외)":""));
-  return items;
-}
-
 function runX8(doc){
   const items = [];
   const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
@@ -2034,7 +2027,7 @@ function runX8(doc){
     }
   }
   if(hits.length) push("X8", ST.REVIEW, "정기시험 시기가 학사일정 지필 기간과 다른 영역이 "+hits.length+"개 있습니다",
-    { basis:B, hits, fix:"총괄표의 시험 시기를 학사일정 기간에 맞게 수정하세요. 학사일정이 변경된 경우라면 교육연구부에 알려 주세요." });
+    { basis:B, hits, fix:"총괄표의 시험 시기를 학사일정 기간에 맞게 수정하세요. 학사일정이 변경된 경우라면 교육과정연구부에 알려 주세요." });
   else if(checked === 0) push("X8", ST.UNKNOWN, "정기시험 시기를 읽지 못해 지필 기간 대조를 하지 못했습니다"+(noTime?" ("+noTime+"개 영역)":""), { basis:B });
   else push("X8", ST.PASS, "정기시험 시기 = 학사일정 지필 기간 확인 ("+checked+"건"+(noTime?" · 시기 미판독 "+noTime+"개 제외":"")+")");
   return items;
@@ -2082,42 +2075,6 @@ function runF6(doc){
   return items;
 }
 
-/* ---------- F8. 평가 시기 표기 형식 (FAIL) ----------
-   "3월 4주"처럼 월·주가 모두 있어야 합니다. "1학기 중", "수시" 같은
-   표기는 Y1 이 잡지만, "9월"처럼 주차가 빠진 경우는 여기서 봅니다. */
-function runF8(doc){
-  const items = [];
-  const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
-  const B = "2026 경기도교육청 학업성적관리 시행지침 — 평가 시기는 「n월 n주」 형태로 구체적으로 기재해야 합니다.";
-  const S = doc.summary;
-  if(!S || (S.exams.length + S.performanceTasks.length) === 0){
-    push("F8", ST.UNKNOWN, "총괄표를 읽지 못해 평가 시기 형식을 검사하지 못했습니다", { basis:B });
-    return items;
-  }
-  const RE_OK = /\d{1,2}\s*월\s*\d\s*주/;
-  const hits = []; let checked = 0, na = 0;
-
-  for(const {u,k} of [...S.exams.map(u=>({u,k:"정기시험"})), ...S.performanceTasks.map(u=>({u,k:"수행평가"}))]){
-    const t = u.time;
-    if(!t || t.notApplicable){ na++; continue; }
-    const raw = String(t.raw || "").normalize("NFKC").replace(/～/g,"~").trim();
-    if(!raw){ hits.push({ loc:k+" 「"+String(u.name||"").slice(0,16)+"」", text:"평가 시기가 비어 있습니다" }); continue; }
-    checked++;
-    if(!RE_OK.test(raw))
-      hits.push({ loc:k+" 「"+String(u.name||"").slice(0,16)+"」",
-        text:"기재 시기 「"+raw.slice(0,30)+"」 — 「n월 n주」 형태가 아닙니다" });
-  }
-
-  if(hits.length)
-    push("F8", ST.FAIL, "평가 시기 표기가 「n월 n주」 형태가 아닌 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
-      fix:"「9월 3주」처럼 월과 주차를 모두 적으세요. 기간이면 「9월 3주~10월 1주」로 씁니다." });
-  else if(checked===0)
-    push("F8", ST.UNKNOWN, "평가 시기를 읽지 못해 형식을 검사하지 못했습니다", { basis:B });
-  else
-    push("F8", ST.PASS, "평가 시기 「n월 n주」 형식 확인 ("+checked+"건" + (na? " · 해당 없음 "+na+"개 제외":"") + ")");
-  return items;
-}
-
 /* ---------- X7. 선행학습 방지 · F2/F3. 성취수준 표 ---------- */
 function parseTimeStart(raw){
   // "4월 4주~4월 5주" / "6월 5주 ～ 7월 1주" / "4월4주" / "4월 4주~5주" → 시작 (월,주)
@@ -2125,7 +2082,7 @@ function parseTimeStart(raw){
   const m = t.match(/(\d{1,2})\s*월\s*(\d)\s*주/);
   return m ? { month:+m[1], week:+m[2], key:+m[1]*10 + +m[2] } : null;
 }
-function runX7(doc, timingBroken){
+function runX7(doc){
   const items = [];
   const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
   const B = "교내 검토 기준 — 성취기준은 교수학습에서 먼저 다룬 뒤 평가해야 합니다 (선행학습 유발 방지).";
@@ -2165,12 +2122,8 @@ function runX7(doc, timingBroken){
     }
   }
   if(hits.length)
-    push("X7", ST.REVIEW, "평가 시작보다 늦게 가르치는 성취기준이 "+hits.length+"건 있습니다",
-      { basis: B + (timingBroken
-          ? "\n\n⚠ 평가 시기 자체가 학기·학사일정과 어긋난다는 판정(X8·X9)이 함께 나왔습니다. 시기를 먼저 바로잡으면 아래 지적 대부분이 사라질 수 있습니다."
-          : ""),
-        hits,
-        fix:"평가 시기를 늦추거나 교수학습 계획의 해당 성취기준 주차를 앞당기세요. 과정중심평가로 수업과 병행하는 경우라면 그대로 둬도 됩니다." });
+    push("X7", ST.REVIEW, "평가 시작보다 늦게 가르치는 성취기준이 "+hits.length+"건 있습니다", { basis:B, hits,
+      fix:"평가 시기를 늦추거나 교수학습 계획의 해당 성취기준 주차를 앞당기세요. 과정중심평가로 수업과 병행하는 경우라면 그대로 둬도 됩니다." });
   else if(checked === 0)
     push("X7", ST.UNKNOWN, "평가 시기를 읽지 못해 검사하지 못했습니다" + (noTime? " (시기 미판독 "+noTime+"개 영역)":""), { basis:B });
   else
@@ -2326,67 +2279,29 @@ function runNumericBundle(doc){
     else push("N6c", ST.PASS, "장기 미인정 결석 점수 > 0 확인 ("+checked+"개 영역)");
   }
 
-  /* ----- N6d. 기본점수 0점 이하 (FAIL) -----
-     N6a(20~40%)는 영역 만점을 읽어야 판정할 수 있습니다.
-     만점을 못 읽어도 0점은 그 자체로 지적 대상이므로 따로 봅니다. */
+  /* ----- N8a·N8b. 수행 영역 만점 ≤ 20점 · 비율 ≤ 20% (수행 100% 과목은 NA) ----- */
   {
-    const B = "2026 경기도교육청 학업성적관리 시행지침 — 수행평가 기본점수 0점 부여는 지양합니다.";
-    const hits = []; let checked = 0;
-    for(const r of rubrics){
-      const bs = r.basicScore && r.basicScore.value;
-      if(bs == null) continue;
-      checked++;
-      if(bs <= 0) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」", text:"기본점수 "+bs+"점" });
-    }
-    if(rubrics.length===0 || checked===0) push("N6d", ST.UNKNOWN, "기본점수를 읽지 못해 0점 여부를 검사하지 못했습니다");
-    else if(hits.length) push("N6d", ST.FAIL, "기본점수가 0점 이하인 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
-      fix:"영역 만점의 20% 이상으로 기본점수를 설정하세요." });
-    else push("N6d", ST.PASS, "기본점수 > 0 확인 ("+checked+"개 영역)");
-  }
-
-  /* ----- N6e. 장기 미인정 결석 점수 < 자발적 미응시 점수 (FAIL) -----
-     두 값이 같으면 자발적 미응시와 장기 결석을 구분하지 않는 것이 됩니다. */
-  {
-    const B = "2026 경기도교육청 학업성적관리 시행지침 — 장기 미인정 결석자 점수는 " +
-              "자발적 미응시(백지·미제출) 점수보다 낮아야 합니다.";
-    const hits = []; let checked = 0;
-    for(const r of rubrics){
-      const vol = r.voluntaryNonSubmissionScore && r.voluntaryNonSubmissionScore.value;
-      const la  = r.longAbsenceScore && r.longAbsenceScore.value;
-      if(vol == null || la == null) continue;
-      checked++;
-      if(la >= vol) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」",
-        text:"장기 미인정 "+la+"점 ≥ 자발적 미응시 "+vol+"점" });
-    }
-    if(checked===0) push("N6e", ST.UNKNOWN, "결시자 점수를 읽지 못해 차등 여부를 검사하지 못했습니다");
-    else if(hits.length) push("N6e", ST.FAIL, "결시자 점수가 차등되지 않은 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
-      fix:"장기 미인정 결석자 점수를 자발적 미응시 점수보다 낮게 조정하세요." });
-    else push("N6e", ST.PASS, "결시자 점수 차등 확인 ("+checked+"개 영역)");
-  }
-
-  /* ----- N6f. 수행 100% 과목의 기본점수 < 40% (FAIL) ----- */
-  {
-    const B = "2026 경기도교육청 학업성적관리 시행지침 — 수행평가 100% 과목의 기본점수는 " +
-              "영역 만점의 40% 미만이어야 합니다.";
-    const isAllPerf = S && (S.exams||[]).length === 0 && (S.performanceTasks||[]).length > 0;
-    if(!isAllPerf){
-      push("N6f", ST.NA, "수행 100% 과목이 아니어서 기본점수 40% 상한은 적용되지 않습니다");
+    const B = "복정고 2026 평가계획 작성 안내 — 수행평가 한 영역의 만점·반영비율은 20점·20% 이하여야 합니다 (수행 100% 과목 제외).";
+    if(!S || (S.performanceTasks||[]).length===0){
+      push("N8a", ST.UNKNOWN, "총괄표 수행 영역을 읽지 못해 만점 상한을 검사하지 못했습니다", { basis:B });
+      push("N8b", ST.UNKNOWN, "총괄표 수행 영역을 읽지 못해 비율 상한을 검사하지 못했습니다", { basis:B });
+    } else if((S.exams||[]).length===0){
+      push("N8a", ST.NA, "수행 100% 과목 — 영역 만점 20점 상한은 적용되지 않습니다");
+      push("N8b", ST.NA, "수행 100% 과목 — 영역 비율 20% 상한은 적용되지 않습니다");
     } else {
-      const hits = []; let checked = 0;
-      for(const r of rubrics){
-        const mx = r.max && r.max.score, bs = r.basicScore && r.basicScore.value;
-        if(mx == null || bs == null) continue;
-        checked++;
-        const pct = bs / mx * 100;
-        if(pct + EPS >= 40) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」",
-          text:"기본점수 "+bs+"점 / 만점 "+mx+"점 = "+(Math.round(pct*10)/10)+"% (상한 40% 미만)" });
+      const ha=[], hb=[];
+      for(const u of S.performanceTasks){
+        const mv = u.max && u.max.score;
+        const rv = unitRatio(u).value;
+        if(mv != null && mv - EPS > 20) ha.push({ loc:"평가총괄표 · "+u.name, text:"만점 "+mv+"점 (상한 20점)" });
+        if(rv != null && rv - EPS > 20) hb.push({ loc:"평가총괄표 · "+u.name, text:"반영비율 "+rv+"% (상한 20%)" });
       }
-      if(checked===0) push("N6f", ST.UNKNOWN, "기본점수·만점을 읽지 못해 40% 상한을 검사하지 못했습니다");
-      else if(hits.length) push("N6f", ST.FAIL, "수행 100% 과목인데 기본점수가 40% 이상인 영역이 "+hits.length+"개 있습니다", { basis:B, hits });
-      else push("N6f", ST.PASS, "수행 100% 과목 기본점수 < 40% 확인 ("+checked+"개 영역)");
+      if(ha.length) push("N8a", ST.FAIL, "수행 영역 만점이 20점을 넘는 영역이 "+ha.length+"개 있습니다", { basis:B, hits:ha });
+      else push("N8a", ST.PASS, "수행 영역 만점 ≤ 20점 확인");
+      if(hb.length) push("N8b", ST.FAIL, "수행 영역 반영비율이 20%를 넘는 영역이 "+hb.length+"개 있습니다", { basis:B, hits:hb });
+      else push("N8b", ST.PASS, "수행 영역 비율 ≤ 20% 확인");
     }
   }
-
   return items;
 }
 
@@ -2595,7 +2510,7 @@ function runX1Shadow(doc){
 /* ============================================================
    UI (V1.0 통합)
    ============================================================ */
-const V1_VERSION = "복정고 2026-2학기 V1.11 (43종 — 결정론 규칙 전체)";
+const V1_VERSION = "복정고 2026-2학기 V1.9 (37종 — 결정론 규칙 전체)";
 const drop = document.getElementById("drop");
 const fileInput = document.getElementById("fileInput");
 const resultsEl = document.getElementById("results");
@@ -2647,12 +2562,7 @@ async function handleFiles(fileList){
       const checks = runChecks({ headerXml, sections, fileName: f.name });
       // V1 수치·형식 규칙
       const v1 = runV1(doc);
-      v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
-                    ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF8(doc), ...runF23(doc), ...runCurriculumRules(doc));
-      // X7(선행학습)은 시기 판정 결과를 참고해야 하므로 뒤에 붙입니다
-      const timingBroken = v1.items.some(i =>
-        (i.id === "X8" || i.id === "X9") && (i.status === ST.FAIL || i.status === ST.REVIEW));
-      v1.items.push(...runX7(doc, timingBroken));
+      v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc), ...runX7(doc), ...runX8(doc), ...runF5(doc), ...runF6(doc), ...runF23(doc), ...runCurriculumRules(doc));
       const x1 = runX1Shadow(doc);   // 그림자 — 판정 미반영
       // S규칙: 과목 자동 인식(정규화 일치) → 카드별 드롭다운으로 교정 가능
       const sCtx = { course: (doc.document.curriculum === "2022" ? stdCourseMatch(doc.document.subject) : null),
