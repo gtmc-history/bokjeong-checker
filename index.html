@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>복정고 평가계획 제출 전 검사기 V1.10</title>
+<title>복정고 평가계획 제출 전 검사기 V1.11</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -94,7 +94,7 @@
 <body>
 <div class="wrap">
   <header class="doc-head">
-    <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.10 (36종) · 파서 P0.6</span>
+    <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.11 (43종) · 파서 P0.6</span>
     <div class="eyebrow">복정고등학교 · 교육과정연구부</div>
     <h1>평가계획 제출 전 검사기</h1>
     <p class="subtitle">작성 방식은 그대로 두세요. 제출 전에 파일을 끌어 놓으면 삭제하지 않은 안내문·메모와 함께 반영비율 합계, 수행평가 30%, 정기시험 1회 상한, 평가요소 형태까지 확인해 드립니다.</p>
@@ -123,10 +123,14 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
 <script>
 "use strict";
 /* ============================================================
-   설정 (규칙 버전: 복정고 2026-2학기 V1.10)
+   설정 (규칙 버전: 복정고 2026-2학기 V1.11)
    ============================================================ */
-const RULE_VERSION = "복정고 2026-2학기 V1.10";
+const RULE_VERSION = "복정고 2026-2학기 V1.11";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
+
+// 학교명 — 다교 배포 시 이 두 값만 바꾸면 됩니다
+const SCHOOL_NAME       = "복정고등학교";
+const SCHOOL_NAME_SHORT = "복정고";
 
 const BASIS = {
   CLEAN: "양식 정리 규칙 — 제출본에서 안내·예시·메모는 모두 삭제해야 합니다.",
@@ -714,8 +718,40 @@ function runChecks(doc){
     }
   }
 
+  /* R9. 학교명 미기재 */
+  {
+    const hits = hitsFor([ new RegExp(escRe_(SCHOOL_NAME_SHORT)) ], scanTexts, { max: 1 });
+    if(hits.length) passes.push({ id:"R9", title:"학교명 기재 확인" });
+    else findings.push({ id:"R9", level:"red", title:"문서에 학교명이 없습니다",
+      basis:"교내 검토 기준 — 평가계획서에는 학교명이 명시되어야 합니다.",
+      fix:"문서 정보표(학교명 칸) 또는 머리글에 「" + SCHOOL_NAME + "」을(를) 기재하세요.", hits: [] });
+  }
+
+  /* R10. '장기결석(무단)' 용어 — 2026 지침에서 '미인정'으로 변경 */
+  {
+    const hits = hitsFor([ /장기\s*결석\s*[（(]?\s*무단/, /무단\s*결석/ ], scanTexts);
+    if(hits.length){
+      findings.push({ id:"R10", level:"red", title:"'무단결석' 용어가 " + hits.length + "곳 있습니다",
+        basis:"2026 경기도교육청 학업성적관리 시행지침 — '장기결석(무단)'은 '장기결석(미인정)'으로 용어가 변경되었습니다.",
+        fix:"'무단'을 '미인정'으로 수정하세요. 예) 장기결석(무단) → 장기결석(미인정)",
+        hits: hits.slice(0,8), moreCount: Math.max(0, hits.length - 8) });
+    } else passes.push({ id:"R10", title:"'무단결석' 용어 없음" });
+  }
+
+  /* F7. 동점자 처리 기준 미기재 */
+  {
+    const hits = hitsFor([ /동점자/ ], scanTexts, { max: 1 });
+    if(hits.length) passes.push({ id:"F7", title:"동점자 처리 기준 기재 확인" });
+    else findings.push({ id:"F7", level:"red", title:"동점자 처리 기준이 문서에 없습니다",
+      basis:"2026 경기도교육청 학업성적관리 시행지침 — 평가계획에는 동점자 처리 기준을 포함해야 합니다.",
+      fix:"평가 유의사항에 동점자 처리 순서를 기재하세요. (예: 정기시험 → 수행평가 → …)", hits: [] });
+  }
+
   return { findings, passes, meta };
 }
+
+/** 정규식 이스케이프 (텍스트 규칙용) */
+function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
@@ -2046,6 +2082,42 @@ function runF6(doc){
   return items;
 }
 
+/* ---------- F8. 평가 시기 표기 형식 (FAIL) ----------
+   "3월 4주"처럼 월·주가 모두 있어야 합니다. "1학기 중", "수시" 같은
+   표기는 Y1 이 잡지만, "9월"처럼 주차가 빠진 경우는 여기서 봅니다. */
+function runF8(doc){
+  const items = [];
+  const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
+  const B = "2026 경기도교육청 학업성적관리 시행지침 — 평가 시기는 「n월 n주」 형태로 구체적으로 기재해야 합니다.";
+  const S = doc.summary;
+  if(!S || (S.exams.length + S.performanceTasks.length) === 0){
+    push("F8", ST.UNKNOWN, "총괄표를 읽지 못해 평가 시기 형식을 검사하지 못했습니다", { basis:B });
+    return items;
+  }
+  const RE_OK = /\d{1,2}\s*월\s*\d\s*주/;
+  const hits = []; let checked = 0, na = 0;
+
+  for(const {u,k} of [...S.exams.map(u=>({u,k:"정기시험"})), ...S.performanceTasks.map(u=>({u,k:"수행평가"}))]){
+    const t = u.time;
+    if(!t || t.notApplicable){ na++; continue; }
+    const raw = String(t.raw || "").normalize("NFKC").replace(/～/g,"~").trim();
+    if(!raw){ hits.push({ loc:k+" 「"+String(u.name||"").slice(0,16)+"」", text:"평가 시기가 비어 있습니다" }); continue; }
+    checked++;
+    if(!RE_OK.test(raw))
+      hits.push({ loc:k+" 「"+String(u.name||"").slice(0,16)+"」",
+        text:"기재 시기 「"+raw.slice(0,30)+"」 — 「n월 n주」 형태가 아닙니다" });
+  }
+
+  if(hits.length)
+    push("F8", ST.FAIL, "평가 시기 표기가 「n월 n주」 형태가 아닌 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
+      fix:"「9월 3주」처럼 월과 주차를 모두 적으세요. 기간이면 「9월 3주~10월 1주」로 씁니다." });
+  else if(checked===0)
+    push("F8", ST.UNKNOWN, "평가 시기를 읽지 못해 형식을 검사하지 못했습니다", { basis:B });
+  else
+    push("F8", ST.PASS, "평가 시기 「n월 n주」 형식 확인 ("+checked+"건" + (na? " · 해당 없음 "+na+"개 제외":"") + ")");
+  return items;
+}
+
 /* ---------- X7. 선행학습 방지 · F2/F3. 성취수준 표 ---------- */
 function parseTimeStart(raw){
   // "4월 4주~4월 5주" / "6월 5주 ～ 7월 1주" / "4월4주" / "4월 4주~5주" → 시작 (월,주)
@@ -2252,6 +2324,67 @@ function runNumericBundle(doc){
     if(rubrics.length===0 || checked===0) push("N6c", ST.UNKNOWN, "장기 미인정 결석 점수를 읽지 못해 검사하지 못했습니다");
     else if(hits.length) push("N6c", ST.FAIL, "장기 미인정 결석 점수가 0 이하인 영역이 "+hits.length+"개 있습니다", { basis:B, hits });
     else push("N6c", ST.PASS, "장기 미인정 결석 점수 > 0 확인 ("+checked+"개 영역)");
+  }
+
+  /* ----- N6d. 기본점수 0점 이하 (FAIL) -----
+     N6a(20~40%)는 영역 만점을 읽어야 판정할 수 있습니다.
+     만점을 못 읽어도 0점은 그 자체로 지적 대상이므로 따로 봅니다. */
+  {
+    const B = "2026 경기도교육청 학업성적관리 시행지침 — 수행평가 기본점수 0점 부여는 지양합니다.";
+    const hits = []; let checked = 0;
+    for(const r of rubrics){
+      const bs = r.basicScore && r.basicScore.value;
+      if(bs == null) continue;
+      checked++;
+      if(bs <= 0) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」", text:"기본점수 "+bs+"점" });
+    }
+    if(rubrics.length===0 || checked===0) push("N6d", ST.UNKNOWN, "기본점수를 읽지 못해 0점 여부를 검사하지 못했습니다");
+    else if(hits.length) push("N6d", ST.FAIL, "기본점수가 0점 이하인 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
+      fix:"영역 만점의 20% 이상으로 기본점수를 설정하세요." });
+    else push("N6d", ST.PASS, "기본점수 > 0 확인 ("+checked+"개 영역)");
+  }
+
+  /* ----- N6e. 장기 미인정 결석 점수 < 자발적 미응시 점수 (FAIL) -----
+     두 값이 같으면 자발적 미응시와 장기 결석을 구분하지 않는 것이 됩니다. */
+  {
+    const B = "2026 경기도교육청 학업성적관리 시행지침 — 장기 미인정 결석자 점수는 " +
+              "자발적 미응시(백지·미제출) 점수보다 낮아야 합니다.";
+    const hits = []; let checked = 0;
+    for(const r of rubrics){
+      const vol = r.voluntaryNonSubmissionScore && r.voluntaryNonSubmissionScore.value;
+      const la  = r.longAbsenceScore && r.longAbsenceScore.value;
+      if(vol == null || la == null) continue;
+      checked++;
+      if(la >= vol) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」",
+        text:"장기 미인정 "+la+"점 ≥ 자발적 미응시 "+vol+"점" });
+    }
+    if(checked===0) push("N6e", ST.UNKNOWN, "결시자 점수를 읽지 못해 차등 여부를 검사하지 못했습니다");
+    else if(hits.length) push("N6e", ST.FAIL, "결시자 점수가 차등되지 않은 영역이 "+hits.length+"개 있습니다", { basis:B, hits,
+      fix:"장기 미인정 결석자 점수를 자발적 미응시 점수보다 낮게 조정하세요." });
+    else push("N6e", ST.PASS, "결시자 점수 차등 확인 ("+checked+"개 영역)");
+  }
+
+  /* ----- N6f. 수행 100% 과목의 기본점수 < 40% (FAIL) ----- */
+  {
+    const B = "2026 경기도교육청 학업성적관리 시행지침 — 수행평가 100% 과목의 기본점수는 " +
+              "영역 만점의 40% 미만이어야 합니다.";
+    const isAllPerf = S && (S.exams||[]).length === 0 && (S.performanceTasks||[]).length > 0;
+    if(!isAllPerf){
+      push("N6f", ST.NA, "수행 100% 과목이 아니어서 기본점수 40% 상한은 적용되지 않습니다");
+    } else {
+      const hits = []; let checked = 0;
+      for(const r of rubrics){
+        const mx = r.max && r.max.score, bs = r.basicScore && r.basicScore.value;
+        if(mx == null || bs == null) continue;
+        checked++;
+        const pct = bs / mx * 100;
+        if(pct + EPS >= 40) hits.push({ loc:"세부기준표 「"+String(r.name||"").slice(0,16)+"」",
+          text:"기본점수 "+bs+"점 / 만점 "+mx+"점 = "+(Math.round(pct*10)/10)+"% (상한 40% 미만)" });
+      }
+      if(checked===0) push("N6f", ST.UNKNOWN, "기본점수·만점을 읽지 못해 40% 상한을 검사하지 못했습니다");
+      else if(hits.length) push("N6f", ST.FAIL, "수행 100% 과목인데 기본점수가 40% 이상인 영역이 "+hits.length+"개 있습니다", { basis:B, hits });
+      else push("N6f", ST.PASS, "수행 100% 과목 기본점수 < 40% 확인 ("+checked+"개 영역)");
+    }
   }
 
   return items;
@@ -2462,7 +2595,7 @@ function runX1Shadow(doc){
 /* ============================================================
    UI (V1.0 통합)
    ============================================================ */
-const V1_VERSION = "복정고 2026-2학기 V1.10 (36종 — 결정론 규칙 전체)";
+const V1_VERSION = "복정고 2026-2학기 V1.11 (43종 — 결정론 규칙 전체)";
 const drop = document.getElementById("drop");
 const fileInput = document.getElementById("fileInput");
 const resultsEl = document.getElementById("results");
@@ -2515,7 +2648,7 @@ async function handleFiles(fileList){
       // V1 수치·형식 규칙
       const v1 = runV1(doc);
       v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
-                    ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF23(doc), ...runCurriculumRules(doc));
+                    ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF8(doc), ...runF23(doc), ...runCurriculumRules(doc));
       // X7(선행학습)은 시기 판정 결과를 참고해야 하므로 뒤에 붙입니다
       const timingBroken = v1.items.some(i =>
         (i.id === "X8" || i.id === "X9") && (i.status === ST.FAIL || i.status === ST.REVIEW));
