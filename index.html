@@ -94,7 +94,7 @@
 <body>
 <div class="wrap">
   <header class="doc-head">
-    <span class="rulever">검사 규칙: 복정고 2026-2학기 V1.0.1 · 파서 P0.5</span>
+    <span class="rulever">검사 규칙: 복정고 2026-2학기 V2.0.1 (37종) · 파서 P0.5</span>
     <div class="eyebrow">복정고등학교 · 교육연구부</div>
     <h1>평가계획 제출 전 검사기</h1>
     <p class="subtitle">작성 방식은 그대로 두세요. 제출 전에 파일을 끌어 놓으면 삭제하지 않은 안내문·메모와 함께 반영비율 합계, 수행평가 30%, 정기시험 1회 상한, 평가요소 형태까지 확인해 드립니다.</p>
@@ -125,7 +125,7 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
 /* ============================================================
    설정 (규칙 버전: 복정고 2026-2학기 V1.2)
    ============================================================ */
-const RULE_VERSION = "복정고 2026-2학기 V1.3";
+const RULE_VERSION = "복정고 2026-2학기 V2.0.1";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 const BASIS = {
@@ -149,6 +149,10 @@ const CFG = {
   codeCatch: /\[\s*\d{2}[^\[\]]{0,12}\]\d?/g,  // ]뒤 즉시 붙은 숫자만(오타), 공백 후 숫자(배점)는 제외
   codeValid: /^\[\d{2}[^\[\]\s-]{1,10}(?:\d{2}-\d{2}|-\d{2}(?:-\d{2})?)\]$/,  // 전체 코드 + 영역 코드([10한사1-01]) 허용. V1에서 표 맥락별로 구분
 };
+
+// B1 범교과 공식 명칭 — 길이 내림차순 (extractPlan prefix 매칭용)
+const CROSS_THEMES=["환경·지속가능발전교육","안전·건강교육","진로연계수업","민주시민교육",
+  "경제금융교육","다문화교육","인성교육","인권교육","통일교육","독도교육","성교육"];
 
 // 통합 성취기준 코드 파서 — Y3(형식)과 Y7(약칭)이 동일 해석 사용
 // 지원: [12한지03-02](부착형), [10한사1-01-01]·[10한사1-01](하이픈형), [12융과01-01-00](평가준거 3段)
@@ -955,9 +959,14 @@ function extractPlan(grid, src){
       if(cell.r==null||!cell.t||cell.t.indexOf("★")<0) continue;
       if(!(cell.r<=wCell.r && wCell.r<cell.r+cell.rs)) continue;
       for(const seg of cell.t.split("★").slice(1)){
-        for(const part of seg.split(/[,，\/]/)){
-          const p=part.replace(/\s/g,"").replace(/[ㆍ・]/g,"·").replace(/[^가-힣·]/g,"");
+        let rest=seg.replace(/\s/g,"").replace(/[ㆍ・]/g,"·");
+        while(rest){
+          const hit=CROSS_THEMES.find(c=>rest.startsWith(c));   // 공식 명칭 prefix 매칭
+          if(hit){ themes.add(hit); rest=rest.slice(hit.length).replace(/^[,，·\/]+/,"");
+            if(!CROSS_THEMES.some(c=>rest.startsWith(c))) break; continue; }
+          const p=rest.split(/[,，\/()（）]/)[0].replace(/[^가-힣·]/g,"").slice(0,10); // 오타 후보 보존
           if(p) themes.add(p);
+          break;
         }
       }
     }
@@ -2178,7 +2187,7 @@ function runF23(doc){
   return items;
 }
 
-/* ---------- N5·N6·N8. 급간·기본점수·수행 상한 번들 ---------- */
+/* ---------- N5·N6. 급간·기본점수 번들 (구 N8a/N8b 수행 상한 규칙은 25점 배점 유효 확인으로 폐기) ---------- */
 function _critGroups(r){
   // scoreCriteria → 요소 그룹(라벨 " · " 접두, 없으면 통합) — 제외행 필터
   const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계/;
@@ -2279,29 +2288,7 @@ function runNumericBundle(doc){
     else push("N6c", ST.PASS, "장기 미인정 결석 점수 > 0 확인 ("+checked+"개 영역)");
   }
 
-  /* ----- N8a·N8b. 수행 영역 만점 ≤ 20점 · 비율 ≤ 20% (수행 100% 과목은 NA) ----- */
-  {
-    const B = "복정고 2026 평가계획 작성 안내 — 수행평가 한 영역의 만점·반영비율은 20점·20% 이하여야 합니다 (수행 100% 과목 제외).";
-    if(!S || (S.performanceTasks||[]).length===0){
-      push("N8a", ST.UNKNOWN, "총괄표 수행 영역을 읽지 못해 만점 상한을 검사하지 못했습니다", { basis:B });
-      push("N8b", ST.UNKNOWN, "총괄표 수행 영역을 읽지 못해 비율 상한을 검사하지 못했습니다", { basis:B });
-    } else if((S.exams||[]).length===0){
-      push("N8a", ST.NA, "수행 100% 과목 — 영역 만점 20점 상한은 적용되지 않습니다");
-      push("N8b", ST.NA, "수행 100% 과목 — 영역 비율 20% 상한은 적용되지 않습니다");
-    } else {
-      const ha=[], hb=[];
-      for(const u of S.performanceTasks){
-        const mv = u.max && u.max.score;
-        const rv = unitRatio(u).value;
-        if(mv != null && mv - EPS > 20) ha.push({ loc:"평가총괄표 · "+u.name, text:"만점 "+mv+"점 (상한 20점)" });
-        if(rv != null && rv - EPS > 20) hb.push({ loc:"평가총괄표 · "+u.name, text:"반영비율 "+rv+"% (상한 20%)" });
-      }
-      if(ha.length) push("N8a", ST.FAIL, "수행 영역 만점이 20점을 넘는 영역이 "+ha.length+"개 있습니다", { basis:B, hits:ha });
-      else push("N8a", ST.PASS, "수행 영역 만점 ≤ 20점 확인");
-      if(hb.length) push("N8b", ST.FAIL, "수행 영역 반영비율이 20%를 넘는 영역이 "+hb.length+"개 있습니다", { basis:B, hits:hb });
-      else push("N8b", ST.PASS, "수행 영역 비율 ≤ 20% 확인");
-    }
-  }
+  
   return items;
 }
 
@@ -2510,7 +2497,7 @@ function runX1Shadow(doc){
 /* ============================================================
    UI (V1.0 통합)
    ============================================================ */
-const V1_VERSION = "복정고 2026-2학기 V1.9 (37종 — 결정론 규칙 전체)";
+const V1_VERSION = "복정고 2026-2학기 V2.0.1 (37종 — 결정론 규칙 전체)";
 const drop = document.getElementById("drop");
 const fileInput = document.getElementById("fileInput");
 const resultsEl = document.getElementById("results");
