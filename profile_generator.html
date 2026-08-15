@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.3</title>
+<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.4</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -95,7 +95,7 @@
 <div class="wrap">
 
 <header class="doc-head">
-  <span class="rulever">생성기 v0.3.3 · 프로필 스키마 v1</span>
+  <span class="rulever">생성기 v0.3.4 · 프로필 스키마 v1</span>
   <div class="eyebrow">평가계획 제출 전 검사기</div>
   <h1>학교 프로필 생성기</h1>
   <p class="subtitle">우리 학교 평가계획 양식(hwpx)을 올리면 유의사항 문구에서 검사 기준을 자동으로 읽어냅니다. 인식 결과를 확인·수정한 뒤 프로필 파일을 내려받아 검사기에 적용하세요.</p>
@@ -209,7 +209,7 @@
 
 <script>
 "use strict";
-const GEN_VERSION = "학교프로필_생성기 v0.3.3";
+const GEN_VERSION = "학교프로필_생성기 v0.3.4";
 
 /* ===== 최소 ZIP 리더 (deflate-raw / stored) ===== */
 async function readZip(buf){
@@ -362,34 +362,34 @@ function scopeOf(p, i, j){
   return { text, s, e, inside, spans };
 }
 
-function nearCtx(p, i, j){
+/** 판정용 문맥(괄호 마스킹본)과 화면 표시용 근거(원문)를 함께 만든다.
+    마스킹본을 그대로 근거로 보여주면 "수행평가(30%)"처럼 값이 괄호 안에 있는 문장에서
+    정작 그 값이 지워진 채 표시되어, 담당자가 원문과 대조할 수 없다. */
+function ctxOf(p, i, j, nextStart, nextOutsideStart){
   const sc = scopeOf(p, i, j);
-  let near = sc.text.slice(Math.max(sc.s, i - 45), j);
-  if(sc.inside){                       // 괄호 안 매치 — 괄호 앞 문맥도 함께 본다
-    const outer = maskParens(p, sc.spans);
-    let os = 0;
-    for(let k = sc.inside[0] - 1; k >= 0; k--) if(STRONG_BOUND.test(outer[k])){ os = k + 1; break; }
-    near = outer.slice(Math.max(os, sc.inside[0] - 45), sc.inside[0]) + " " + near;
-  }
-  return near;
-}
-
-function tailCtx(p, i, j, nextStart, nextOutsideStart){
-  const sc = scopeOf(p, i, j);
+  const nearFrom = Math.max(sc.s, i - 45);
+  let near = sc.text.slice(nearFrom, j);
   let end = sc.e;
   if(nextStart != null && nextStart < end) end = nextStart;
   let tail = sc.text.slice(j, end);
+  let srcFrom = nearFrom, srcTo = end;
+
   if(sc.inside){
-    /* 괄호 밖에서 괄호 안 규칙을 부정·완화하는 경우까지 본다.
-       단 바깥 문맥도 '다음 규칙이 시작되기 전'까지만 — 그러지 않으면
-       뒤에 오는 다른 규칙의 수식어(권장·필요 없다)를 앞 규칙이 삼킨다. */
     const outer = maskParens(p, sc.spans);
+    // 괄호 앞 문맥
+    let os = 0;
+    for(let k = sc.inside[0] - 1; k >= 0; k--) if(STRONG_BOUND.test(outer[k])){ os = k + 1; break; }
+    const preFrom = Math.max(os, sc.inside[0] - 45);
+    near = outer.slice(preFrom, sc.inside[0]) + " " + near;
+    // 괄호 뒤 문맥 — 다음 규칙이 시작되기 전까지
     let oe = outer.length;
     for(let k = sc.inside[1]; k < outer.length; k++) if(STRONG_BOUND.test(outer[k])){ oe = k; break; }
     if(nextOutsideStart != null && nextOutsideStart < oe) oe = nextOutsideStart;
     tail += " " + outer.slice(sc.inside[1], oe);
+    srcFrom = preFrom; srcTo = oe;
   }
-  return tail;
+  // 근거는 언제나 원문 그대로 (괄호·값이 지워지지 않는다)
+  return { near, tail, src: p.slice(srcFrom, srcTo).replace(/\s+/g, " ").trim() };
 }
 
 /**
@@ -424,8 +424,7 @@ function recognize(paragraphs){
       const encl = pSpans.find(([s, e]) => s <= h.i && h.j <= e) || null;
       let nextOutsideStart = null;
       if(encl) for(let k = 0; k < hits.length; k++) if(hits[k].i >= encl[1]){ nextOutsideStart = hits[k].i; break; }
-      const near = nearCtx(p, h.i, h.j);
-      const tail = tailCtx(p, h.i, h.j, nextStart, nextOutsideStart);
+      const { near, tail, src } = ctxOf(p, h.i, h.j, nextStart, nextOutsideStart);
       if(pat.guard && !pat.guard.test(near)) continue;
       if(!pat.allowNegation && NEGATION.test(tail)) continue;
       if(pat.deny && pat.deny(near)) continue;
@@ -435,7 +434,6 @@ function recognize(paragraphs){
       else if(Array.isArray(pat.g)) value = pat.g.map(x => parseInt(h.m[x], 10));
       else value = parseInt(h.m[pat.g], 10);
       const verdict = pat.defaultVerdict || detectStrength(tail);
-      const src = (near + tail).replace(/\s+/g, " ").trim();
       const sig = pat.key + "|" + JSON.stringify(value) + "|" + verdict + "|" + src;
       if(seen.has(sig)) continue;
       seen.add(sig);
