@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.3</title>
+<style>
+  :root{
+    --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
+    --seal:#C0392B; --warn:#9A6B00; --pass:#2E7D4F; --muted:#5B6B7A; --gray:#6B7280;
+    --chip-red:#FBEAE7; --chip-yellow:#FBF3DC; --chip-green:#E7F3EC; --chip-gray:#ECEEF0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--paper); color:var(--ink);
+    font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",system-ui,sans-serif;
+    line-height:1.55; padding:28px 16px 80px; font-size:15px;}
+  .wrap{max-width:860px; margin:0 auto;}
+  header.doc-head{border-top:3px solid var(--ink); border-bottom:1px solid var(--ink); padding:18px 4px 14px; margin-bottom:20px;}
+  .eyebrow{font-size:12px; letter-spacing:.35em; color:var(--muted); margin-bottom:6px;}
+  h1{font-size:22px; letter-spacing:-.01em; font-weight:800;}
+  .subtitle{margin-top:6px; color:var(--muted); font-size:13.5px;}
+  .rulever{float:right; font-size:12px; color:var(--muted); border:1px solid var(--line-soft); padding:2px 8px; border-radius:3px; margin-top:4px;}
+  h2.step{font-size:15px; font-weight:800; margin:32px 0 10px; padding-left:10px; border-left:4px solid var(--ink);}
+  h2.step .n{color:var(--seal); margin-right:6px;}
+  h2.step .opt{font-weight:400; font-size:12.5px; color:var(--muted);}
+  .hint{font-size:12.5px; color:var(--muted); margin:-6px 0 10px 14px;}
+
+  table.form{width:100%; border-collapse:collapse; background:#fff; border:1.5px solid var(--ink); font-size:13.5px;}
+  table.form th, table.form td{border:1px solid var(--line-soft); padding:7px 10px; text-align:left; vertical-align:middle;}
+  table.form th{background:#F1F3F5; font-weight:700; width:170px; color:var(--muted); font-size:12.5px; letter-spacing:.04em; white-space:nowrap;}
+  input[type=text], input[type=number], input[type=date], select{
+    font:inherit; font-size:13.5px; padding:5px 8px; border:1px solid var(--line-soft); border-radius:3px; background:#fff; color:var(--ink);}
+  input[type=text]{width:100%; max-width:320px;}
+  input[type=number]{width:74px; text-align:right;}
+  select{padding:4px 6px;}
+  input:focus-visible, select:focus-visible, button:focus-visible{outline:3px solid var(--seal); outline-offset:1px;}
+  input.bad, select.bad{border-color:var(--seal); background:#FFF8F6;}
+
+  #drop{border:2px dashed var(--line); border-radius:6px; background:#fff; padding:34px 20px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s;}
+  #drop.over{border-color:var(--seal); background:#FFF8F6;}
+  #drop .big{font-size:16px; font-weight:700;}
+  #drop .small{color:var(--muted); font-size:13px; margin-top:6px;}
+  #drop input{display:none;}
+  .privacy{margin-top:10px; font-size:12.5px; color:var(--muted); display:flex; gap:8px;}
+  .privacy .dot{color:var(--pass); font-weight:900;}
+
+  .found{margin-top:14px; display:none;}
+  .found.show{display:block; animation:fade .3s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion: reduce){ .found.show{animation:none;} }
+  .found-head{font-size:13px; font-weight:700; margin-bottom:8px;}
+  .found-head .cnt{color:var(--seal);}
+  .fcard{background:#fff; border:1px solid var(--line-soft); border-left:4px solid var(--pass); border-radius:4px; padding:10px 14px; margin-bottom:8px;}
+  .fcard.conflict{border-left-color:var(--warn); background:#FFFDF7;}
+  .fcard .top{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .fcard .rule{font-size:11.5px; font-weight:800; letter-spacing:.06em; background:var(--chip-green); color:var(--pass); padding:2px 8px; border-radius:10px;}
+  .fcard.conflict .rule{background:var(--chip-yellow); color:var(--warn);}
+  .fcard .lbl{font-weight:700; font-size:13.5px;}
+  .fcard .src{margin-top:6px; font-size:12.5px; color:var(--muted); border-left:3px solid var(--line-soft); padding-left:10px;}
+  .fcard .src::before{content:"근거  "; font-weight:700; color:var(--gray); letter-spacing:.08em; font-size:11px;}
+  .fcard .cand{margin-top:8px; font-size:13px;}
+  .fcard .cand b{color:var(--warn);}
+  .fcard .ask{margin-top:8px; font-size:12.5px; color:var(--ink); font-weight:700;}
+  .nofind{background:#fff; border:1px solid var(--line-soft); border-radius:4px; padding:12px 14px; font-size:13px; color:var(--muted);}
+  .err-parse{background:var(--chip-red); color:var(--seal); border-radius:4px; padding:12px 14px; font-size:13px; margin-top:12px;}
+
+  .paramrow td:first-child{font-weight:700;}
+  .rulecode{font-size:11px; color:var(--gray); font-weight:400; margin-left:4px;}
+  td.auto-mark{font-size:11.5px; color:var(--pass); font-weight:700; white-space:nowrap; width:76px; text-align:center;}
+  td.auto-mark.conflict{color:var(--warn);}
+  .range-sep{margin:0 4px; color:var(--muted);}
+
+  #jsonbox{width:100%; height:220px; font-family:ui-monospace,Consolas,monospace; font-size:12.5px;
+    border:1.5px solid var(--ink); border-radius:4px; background:#fff; padding:12px; color:var(--ink); resize:vertical;}
+  .btnrow{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  button.act{font:inherit; font-size:13.5px; font-weight:700; padding:9px 20px; border-radius:4px; cursor:pointer;
+    border:1.5px solid var(--ink); background:var(--ink); color:#fff;}
+  button.act.ghost{background:#fff; color:var(--ink);}
+  button.act:hover{opacity:.88;}
+  button.act:disabled{background:#C9CFD6; border-color:#C9CFD6; color:#fff; cursor:not-allowed; opacity:1;}
+  .savedmsg{font-size:12.5px; color:var(--pass); font-weight:700; align-self:center; opacity:0; transition:opacity .2s;}
+  .savedmsg.on{opacity:1;}
+
+  #gate{margin:14px 0 4px; border-radius:6px; padding:13px 16px; font-size:13.5px; line-height:1.65;}
+  #gate.ok{background:var(--chip-green); border:1.5px solid var(--pass); color:#1E5C3A;}
+  #gate.block{background:var(--chip-red); border:1.5px solid var(--seal); color:#8C2A1F;}
+  #gate .g-title{font-weight:900; font-size:14px; display:block; margin-bottom:5px;}
+  #gate ul{margin:6px 0 0 18px;}
+  #gate li{margin:3px 0;}
+  #gate .warn-part{margin-top:9px; padding-top:8px; border-top:1px dashed currentColor; opacity:.9;}
+  footer{margin-top:44px; font-size:12px; color:var(--muted); border-top:1px solid var(--line-soft); padding-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <span class="rulever">생성기 v0.3.3 · 프로필 스키마 v1</span>
+  <div class="eyebrow">평가계획 제출 전 검사기</div>
+  <h1>학교 프로필 생성기</h1>
+  <p class="subtitle">우리 학교 평가계획 양식(hwpx)을 올리면 유의사항 문구에서 검사 기준을 자동으로 읽어냅니다. 인식 결과를 확인·수정한 뒤 프로필 파일을 내려받아 검사기에 적용하세요.</p>
+</header>
+
+<h2 class="step"><span class="n">①</span> 학교 기본정보</h2>
+<table class="form">
+  <tr><th>학교명</th><td><input type="text" id="schoolName" placeholder="예: 복정고등학교"> <span style="font-size:12px;color:var(--seal)">필수</span></td></tr>
+  <tr><th>학교급</th><td>
+    <select id="schoolLevel">
+      <option value="고">고등학교</option>
+      <option value="중">중학교 (일부 규칙 자동 제외)</option>
+    </select>
+  </td></tr>
+  <tr><th>적용 학년도·학기</th><td>
+    <input type="number" id="metaYear" min="2000" max="2100" step="1" style="width:88px"> 학년도
+    <select id="metaSemester"><option value="1">1학기</option><option value="2" selected>2학기</option></select>
+    <span style="font-size:12px;color:var(--muted); margin-left:6px;">이 프로필이 어느 학기 기준인지 표시합니다</span>
+  </td></tr>
+</table>
+
+<h2 class="step"><span class="n">②</span> 양식 업로드 <span class="opt">(선택 — 건너뛰고 ③에서 직접 입력해도 됩니다)</span></h2>
+<div id="drop" tabindex="0" role="button" aria-label="양식 파일 선택">
+  <div class="big">평가계획 양식 파일을 끌어다 놓거나 눌러서 선택</div>
+  <div class="small">hwpx 형식만 지원 · 한글에서 [파일 ▸ 다른 이름으로 저장 ▸ HWPX]</div>
+  <input type="file" id="fileInput" accept=".hwpx">
+</div>
+<p class="privacy"><span class="dot">●</span> 파일은 서버로 전송되지 않으며, 이 브라우저 안에서만 읽습니다.</p>
+<div id="foundBox" class="found"></div>
+
+<h2 class="step"><span class="n">③</span> 검사 기준 확인·수정</h2>
+<p class="hint">양식에서 인식된 값은 <b style="color:var(--pass)">자동</b> 표시와 함께 채워집니다. 서로 다른 값이 두 군데 이상 발견되면 자동으로 채우지 않고 <b style="color:var(--warn)">확인 필요</b>로 표시하니 직접 골라 입력하세요. 값을 비우면 해당 규칙은 검사에서 제외됩니다.</p>
+<table class="form" id="paramTable">
+  <tr class="paramrow" data-key="perfMinRatio">
+    <td>수행평가 반영비율 하한 <span class="rulecode">N2</span></td>
+    <td><input type="number" min="0" max="100" data-f="v"> % 이상
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="singleExamMaxRatio">
+    <td>정기시험 1회 상한 <span class="rulecode">N7</span></td>
+    <td><input type="number" min="0" max="100" data-f="v"> % 이하
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="baseScoreRange">
+    <td>기본점수 범위 <span class="rulecode">N6a·N6f</span></td>
+    <td>만점의 <input type="number" min="0" max="100" data-f="v0"> %<span class="range-sep">~</span><input type="number" min="0" max="100" data-f="v1"> %
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="perfAreaMaxRatio">
+    <td>수행 영역별 상한 <span class="rulecode">N8</span></td>
+    <td><input type="number" min="0" max="100" data-f="v"> % 이내
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="longAbsencePositive">
+    <td>장기 미인정 결석 점수 <span class="rulecode">N6c</span></td>
+    <td><select data-f="v"><option value="">규정 없음 (검사 제외)</option><option value="true">0점보다 커야 함</option></select>
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="gapUniform">
+    <td>급간 균등 규정 <span class="rulecode">N5·N6b</span></td>
+    <td><select data-f="v"><option value="">규정 없음 (검사 제외)</option><option value="uniform">균등 급간 요구</option></select>
+      · 판정 <select data-f="verdict"><option>REVIEW</option><option>FAIL</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+</table>
+
+<h2 class="step"><span class="n">③-2</span> 정기시험 기간 <span class="opt">(선택 — 입력하면 평가계획의 시험 시기가 학사일정과 맞는지도 검사합니다)</span></h2>
+<p class="hint"><b>이 항목은 학기마다 갱신해야 합니다.</b> 이번 학기 지필평가 기간을 날짜로 입력하세요. 검사기는 「10월 1주」 같은 주차 표기와 대조하며, 주차는 1~7일=1주로 자동 환산됩니다. 비워두면 이 검사(X8)는 하지 않습니다.</p>
+<table class="form" id="calTable">
+  <tr class="calrow">
+    <th>시험 1</th>
+    <td><select data-f="name"><option value="">—</option><option>1차</option><option>2차</option></select>
+      · 학년 <label><input type="checkbox" data-g="1">1</label> <label><input type="checkbox" data-g="2">2</label> <label><input type="checkbox" data-g="3">3</label>
+      · <input type="date" data-f="start"> ~ <input type="date" data-f="end"></td>
+  </tr>
+  <tr class="calrow">
+    <th>시험 2</th>
+    <td><select data-f="name"><option value="">—</option><option>1차</option><option>2차</option></select>
+      · 학년 <label><input type="checkbox" data-g="1">1</label> <label><input type="checkbox" data-g="2">2</label> <label><input type="checkbox" data-g="3">3</label>
+      · <input type="date" data-f="start"> ~ <input type="date" data-f="end"></td>
+  </tr>
+  <tr class="calrow">
+    <th>시험 3</th>
+    <td><select data-f="name"><option value="">—</option><option>1차</option><option>2차</option></select>
+      · 학년 <label><input type="checkbox" data-g="1">1</label> <label><input type="checkbox" data-g="2">2</label> <label><input type="checkbox" data-g="3">3</label>
+      · <input type="date" data-f="start"> ~ <input type="date" data-f="end"></td>
+  </tr>
+</table>
+<p class="hint" style="margin-top:6px;">예: 2차 지필이 학년별로 다르면 행을 나눠 입력하세요 (2차·3학년 11/25~27 / 2차·1·2학년 12/10~15).</p>
+
+<h2 class="step"><span class="n">④</span> 프로필 내려받기</h2>
+<div id="gate" class="ok"></div>
+<textarea id="jsonbox" readonly aria-label="프로필 JSON 미리보기"></textarea>
+<div class="btnrow">
+  <button class="act" id="btnDownload">프로필 파일 저장 (.json)</button>
+  <button class="act ghost" id="btnCopy">JSON 복사</button>
+  <span class="savedmsg" id="savedMsg">복사했습니다</span>
+</div>
+
+<footer>
+  이 도구는 검사 기준(파라미터)만 만듭니다. 편제표 연동 규칙(E1·F4)은 미지정 시 검사에서 자동 제외됩니다.<br>
+  자동 인식은 <b>담당자가 입력할 값을 찾아주는 보조 기능</b>입니다. 최종 값은 언제나 ③에서 직접 확인하세요.<br>
+  인식되지 않은 유의사항 문구가 있으면 그 문장을 <b>gtmc@gtmc.kr</b>로 보내주시면 다음 버전에 반영하겠습니다.
+</footer>
+</div>
+
+<script>
+"use strict";
+const GEN_VERSION = "학교프로필_생성기 v0.3.3";
+
+/* ===== 최소 ZIP 리더 (deflate-raw / stored) ===== */
+async function readZip(buf){
+  const u8 = new Uint8Array(buf);
+  const dv = new DataView(buf);
+  let eocd = -1;
+  for(let i = u8.length - 22; i >= Math.max(0, u8.length - 65558); i--){
+    if(dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error("ZIP 구조를 찾지 못했습니다. hwpx 파일이 맞는지 확인하세요.");
+  const cnt = dv.getUint16(eocd + 10, true), cdOff = dv.getUint32(eocd + 16, true);
+  const entries = {}; let p = cdOff;
+  for(let i = 0; i < cnt; i++){
+    if(dv.getUint32(p, true) !== 0x02014b50) break;
+    const nLen = dv.getUint16(p + 28, true), eLen = dv.getUint16(p + 30, true), cLen = dv.getUint16(p + 32, true);
+    const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nLen));
+    entries[name] = { method: dv.getUint16(p + 10, true), csize: dv.getUint32(p + 20, true), lho: dv.getUint32(p + 42, true) };
+    p += 46 + nLen + eLen + cLen;
+  }
+  return { entries, async extract(name){
+    const e = entries[name]; if(!e) return null;
+    const nL = dv.getUint16(e.lho + 26, true), xL = dv.getUint16(e.lho + 28, true);
+    const start = e.lho + 30 + nL + xL;
+    const data = u8.subarray(start, start + e.csize);
+    if(e.method === 0) return new TextDecoder().decode(data);
+    if(e.method !== 8) throw new Error("지원하지 않는 압축 방식입니다.");
+    const ds = new DecompressionStream("deflate-raw");
+    const out = await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer();
+    return new TextDecoder().decode(out);
+  }};
+}
+
+/* ===== 문단 추출 ===== */
+function extractParagraphs(xml){
+  const paras = [];
+  const re = /<hp:p [^>]*>([\s\S]*?)<\/hp:p>/g;
+  let m;
+  while((m = re.exec(xml))){
+    const ts = m[1].match(/<hp:t>([^<]*)<\/hp:t>/g);
+    if(!ts) continue;
+    const t = ts.map(s => s.slice(6, -7)).join("").trim();
+    if(t) paras.push(t);
+  }
+  return paras;
+}
+
+/* ============================================================
+   유의사항 인식기 v0.3 (결정론)
+   설계 원칙
+   · 자동으로 "결정"하지 않는다 — 담당자가 입력할 값을 찾아준다.
+   · 후보 1개 → 자동 입력 / 후보 2개 이상(값이 다름) → 자동 입력하지 않고 충돌 표시.
+     (첫 값을 몰래 채우면 사용자가 경고를 못 볼 때 틀린 기준이 확정된다.)
+   · 부정문("~할 필요가 없다")은 규칙으로 확정하지 않는다.
+   ============================================================ */
+const RULE_KEYWORD = /수행|정기\s*시험|지필|기본\s*점수|급간|영역|장기|결석|미인정/;
+
+/* 참고: 체육·예술 20% 예외는 수행평가 총비율(N2)이 아니라 논술형(N3) 규정의 예외다.
+   (명세서 v1.0 §3 — "N3 논술형 합계 ≥ 30%, 예외 20%")
+   N3는 예외 과목 목록 미확보로 아직 미구현이므로, 예외 파라미터도 만들지 않는다.
+   근거 없는 artsMinRatio를 두면 예술 과목의 수행평가 하한을 낮추는 거짓 통과 경로가 된다. */
+
+/* 부정문 가드 — 규정을 부정·면제하는 문형.
+   주의 1: "초과할 수 없다"는 금지(=규정 있음)이므로 걸리면 안 된다.
+   주의 2: 문단 전체가 아니라 '매치 주변 절'에만 적용한다.
+           (한 문단에 정상 규정과 부정문이 함께 있으면 정상 규정까지 죽는다) */
+/*    주의 3: "초과하지 않는다"는 상한 규정이므로 '하지 않' 앞이 초과·넘이면 부정문이 아니다. */
+const NEGATION = /(?:필요|의무|제한|규정)\s*(?:가|는|도|이)?\s*없|(?<!초과|넘어|넘)하지\s*않(?:는다|아도|음|습니다)|않아도\s*(?:된|좋|무방)|해당\s*(?:사항\s*)?없|적용하지\s*않|권장하지\s*않|무관하다|아니다|아님/;
+
+/* 상한 규정의 금지 표현 — "초과할 수 없다/초과하지 않는다/넘을 수 없다"만 인정.
+   "초과하도록 한다"처럼 상한이 아닌 문장을 배제하고,
+   "미만"은 경계값이 검사기 계약(value 이하 허용)과 어긋나므로 자동 인식하지 않는다. */
+const MAX_TAIL = "(?:이하|이내|(?:초과|넘)[가-힣]{0,3}\\s*(?:수\\s*없|않|불가|금지|말아야))";
+
+const PATTERNS = [
+  // ── 수행평가 하한 (N2) ─────────────────────────────
+  { key:"perfMinRatio", rule:"N2", label:"수행평가 반영비율 하한",
+    re:/수행\s*평가?[^%\n]{0,20}?(\d{1,3})\s*%\s*(?:를|을|이)?\s*이상/g, g:1,
+    denyAlso:/영역\s*별|한\s*영역|영역\s*당/ },
+  // ── 수행평가 하한 : "수행평가(30%) : 반드시 실시" 표기형 (실양식 문형) ──
+  { key:"perfMinRatio", rule:"N2", label:"수행평가 반영비율 하한",
+    re:/수행\s*평가\s*[\(（]\s*(\d{1,3})\s*%\s*[\)）][^%\n]{0,14}?(?:반드시\s*)?(?:실시|운영|반영)/g, g:1 },
+  // ── 정기시험 1회 상한 (N7) ─────────────────────────
+  { key:"singleExamMaxRatio", rule:"N7", label:"정기시험 1회 상한",
+    re:new RegExp("(?:1\\s*회|한\\s*번)[^%\\n]{0,35}?(\\d{1,3})\\s*%\\s*(?:를|을|이)?\\s*" + MAX_TAIL, "g"), g:1,
+    guard:/정기\s*시험|지필/ },
+  // ── 기본점수 범위 (N6a) : 물결형 ───────────────────
+  { key:"baseScoreRange", rule:"N6a", label:"기본점수 범위",
+    re:/기본\s*점수[^%\n]{0,25}?(\d{1,3})\s*%?\s*[~∼〜–—-]\s*(\d{1,3})\s*%/g, g:[1,2] },
+  // ── 기본점수 범위 : 이상~이하 서술형 ───────────────
+  { key:"baseScoreRange", rule:"N6a", label:"기본점수 범위",
+    re:/기본\s*점수[^\n]{0,30}?(\d{1,3})\s*%\s*(?:를|을|이)?\s*이상[^\n]{0,15}?(\d{1,3})\s*%\s*(?:를|을|이)?\s*(?:이하|미만)/g, g:[1,2] },
+  // ── 수행 영역별 상한 (N8) ──────────────────────────
+  { key:"perfAreaMaxRatio", rule:"N8", label:"수행 영역별 상한",
+    re:new RegExp("(?:한\\s*영역|영역\\s*별|영역\\s*당|영역이)[^%\\n]{0,30}?(\\d{1,3})\\s*%\\s*(?:를|을|이)?\\s*" + MAX_TAIL, "g"), g:1,
+    guard:/수행/ },
+  // ── 장기 미인정 결석 점수 (N6c) ────────────────────
+  { key:"longAbsencePositive", rule:"N6c", label:"장기 미인정 결석 점수",
+    re:/장기[^\n]{0,12}?(?:미인정|무단)?[^\n]{0,10}?결석[^\n]{0,40}?(?:0\s*점(?:을|은)?\s*(?:초과|넘|부여하지\s*않|주지\s*않)|0\s*점\s*보다\s*(?:큰|커))/g,
+    g:null, val:"true", allowNegation:true },
+  // ── 급간 균등 (N5·N6b) — '같게·동일'도 실양식 문형 ──
+  //    N5·N6b는 규칙 자체가 "권장, 타당한 사유가 있으면 허용"(REVIEW)이다.
+  //    문장에 '권장'이 없다고 FAIL로 올리면 검사기 기본 프로필(REVIEW)과 어긋나므로
+  //    이 규칙만 고유 기본 판정을 둔다. 강제 규정으로 운용하는 학교는 ③에서 FAIL로 올린다.
+  { key:"gapUniform", rule:"N5·N6b", label:"급간 균등 규정",
+    re:/급간[^\n]{0,45}?(?:균등|일정|통일|같게|동일)/g, g:null, val:"uniform", defaultVerdict:"REVIEW" },
+];
+
+function detectStrength(ctx){
+  if(/권장|지양|가급적|바람직/.test(ctx)) return "REVIEW";
+  return "FAIL";
+}
+
+/* ============================================================
+   문맥 분리 — 하나의 '절'로 세 판정을 모두 시키면 괄호·나열·복문에서 서로를 죽인다.
+     · nearCtx : (괄호 밖 앞문맥 +) 매치 앞쪽 + 매치 자체 → guard
+     · tailCtx : 매치 뒤 ~ '다음 규칙 매치' 전 (+ 괄호 밖 뒷문맥) → 부정문 / 강도
+   tail의 끝은 키워드가 아니라 **실제 다음 패턴 매치의 시작점**으로 잡는다.
+   ('영역' 같은 일반 키워드를 경계로 쓰면 뒤따르는 부정문을 놓친다)
+   ============================================================ */
+const STRONG_BOUND = /[.!?;\n]/;
+const OPEN_CH = "([{（〔［「『", CLOSE_CH = ")]}）〕］」』";
+
+function parenSpans(p){
+  const out = [], stack = [];
+  for(let i = 0; i < p.length; i++){
+    if(OPEN_CH.indexOf(p[i]) >= 0) stack.push(i);
+    else if(CLOSE_CH.indexOf(p[i]) >= 0 && stack.length){
+      const s = stack.pop();
+      if(stack.length === 0) out.push([s, i + 1]);
+    }
+  }
+  return out;
+}
+function maskParens(p, spans){
+  let out = p;
+  for(const [s, e] of spans) out = out.slice(0, s) + " ".repeat(e - s) + out.slice(e);
+  return out;
+}
+
+/** 매치가 속한 영역(괄호 안이면 그 안, 밖이면 괄호를 가린 본문)과 문장 경계 */
+function scopeOf(p, i, j){
+  const spans = parenSpans(p);
+  const inside = spans.find(([s, e]) => s <= i && j <= e) || null;
+  const text = inside ? p : maskParens(p, spans);
+  const from = inside ? inside[0] + 1 : 0;
+  const to   = inside ? inside[1] - 1 : text.length;
+  let s = from, e = to;
+  for(let k = i - 1; k >= from; k--) if(STRONG_BOUND.test(text[k])){ s = k + 1; break; }
+  for(let k = j; k < to; k++)        if(STRONG_BOUND.test(text[k])){ e = k; break; }
+  return { text, s, e, inside, spans };
+}
+
+function nearCtx(p, i, j){
+  const sc = scopeOf(p, i, j);
+  let near = sc.text.slice(Math.max(sc.s, i - 45), j);
+  if(sc.inside){                       // 괄호 안 매치 — 괄호 앞 문맥도 함께 본다
+    const outer = maskParens(p, sc.spans);
+    let os = 0;
+    for(let k = sc.inside[0] - 1; k >= 0; k--) if(STRONG_BOUND.test(outer[k])){ os = k + 1; break; }
+    near = outer.slice(Math.max(os, sc.inside[0] - 45), sc.inside[0]) + " " + near;
+  }
+  return near;
+}
+
+function tailCtx(p, i, j, nextStart, nextOutsideStart){
+  const sc = scopeOf(p, i, j);
+  let end = sc.e;
+  if(nextStart != null && nextStart < end) end = nextStart;
+  let tail = sc.text.slice(j, end);
+  if(sc.inside){
+    /* 괄호 밖에서 괄호 안 규칙을 부정·완화하는 경우까지 본다.
+       단 바깥 문맥도 '다음 규칙이 시작되기 전'까지만 — 그러지 않으면
+       뒤에 오는 다른 규칙의 수식어(권장·필요 없다)를 앞 규칙이 삼킨다. */
+    const outer = maskParens(p, sc.spans);
+    let oe = outer.length;
+    for(let k = sc.inside[1]; k < outer.length; k++) if(STRONG_BOUND.test(outer[k])){ oe = k; break; }
+    if(nextOutsideStart != null && nextOutsideStart < oe) oe = nextOutsideStart;
+    tail += " " + outer.slice(sc.inside[1], oe);
+  }
+  return tail;
+}
+
+/**
+ * 인식 결과: { key: { label, rule, candidates:[{value, verdict, source}], conflict, axis } }
+ * · 1차로 문단 안의 모든 패턴 매치를 모으고, 2차로 문맥을 판정한다.
+ * · 값과 판정이 모두 같을 때만 하나로 합친다.
+ * · 후보가 2개 이상이면 자동으로 정하지 않는다 (axis로 무엇이 다른지 구분).
+ */
+function recognize(paragraphs){
+  const bucket = {};
+  const seen = new Set();
+  for(const p of paragraphs){
+    if(!RULE_KEYWORD.test(p)) continue;
+    /* 1차: 모든 매치 수집 */
+    const hits = [];
+    for(const pat of PATTERNS){
+      pat.re.lastIndex = 0;
+      let m;
+      while((m = pat.re.exec(p)) !== null){
+        if(m[0].length === 0){ pat.re.lastIndex++; continue; }
+        hits.push({ pat, m, i: m.index, j: m.index + m[0].length });
+      }
+    }
+    hits.sort((x, y) => x.i - y.i || x.j - y.j);
+    const pSpans = parenSpans(p);
+    /* 2차: 문맥 판정 */
+    for(let hi = 0; hi < hits.length; hi++){
+      const h = hits[hi], pat = h.pat;
+      let nextStart = null;
+      for(let k = hi + 1; k < hits.length; k++) if(hits[k].i >= h.j){ nextStart = hits[k].i; break; }
+      /* 괄호 안 매치라면, 괄호를 닫은 뒤 처음 나오는 '괄호 밖' 매치가 바깥 문맥의 끝이다 */
+      const encl = pSpans.find(([s, e]) => s <= h.i && h.j <= e) || null;
+      let nextOutsideStart = null;
+      if(encl) for(let k = 0; k < hits.length; k++) if(hits[k].i >= encl[1]){ nextOutsideStart = hits[k].i; break; }
+      const near = nearCtx(p, h.i, h.j);
+      const tail = tailCtx(p, h.i, h.j, nextStart, nextOutsideStart);
+      if(pat.guard && !pat.guard.test(near)) continue;
+      if(!pat.allowNegation && NEGATION.test(tail)) continue;
+      if(pat.deny && pat.deny(near)) continue;
+      if(pat.denyAlso && pat.denyAlso.test(near)) continue;
+      let value;
+      if(pat.g === null) value = pat.val;
+      else if(Array.isArray(pat.g)) value = pat.g.map(x => parseInt(h.m[x], 10));
+      else value = parseInt(h.m[pat.g], 10);
+      const verdict = pat.defaultVerdict || detectStrength(tail);
+      const src = (near + tail).replace(/\s+/g, " ").trim();
+      const sig = pat.key + "|" + JSON.stringify(value) + "|" + verdict + "|" + src;
+      if(seen.has(sig)) continue;
+      seen.add(sig);
+      if(!bucket[pat.key]) bucket[pat.key] = { label: pat.label, rule: pat.rule, candidates: [] };
+      bucket[pat.key].candidates.push({ value, verdict, source: src });
+    }
+  }
+  // 값과 판정이 모두 같은 후보만 병합 (근거 문장은 이어붙임)
+  for(const k of Object.keys(bucket)){
+    const b = bucket[k];
+    const byKey = new Map();
+    for(const c of b.candidates){
+      const vk = JSON.stringify(c.value) + "|" + c.verdict;
+      if(!byKey.has(vk)) byKey.set(vk, c);
+      else if(!byKey.get(vk).source.includes(c.source)) byKey.get(vk).source += "  /  " + c.source;
+    }
+    b.candidates = [...byKey.values()];
+    b.conflict = b.candidates.length > 1;
+    if(b.conflict){
+      const vs = new Set(b.candidates.map(c => JSON.stringify(c.value)));
+      const ds = new Set(b.candidates.map(c => c.verdict));
+      b.axis = vs.size > 1 ? (ds.size > 1 ? "both" : "value") : "verdict";
+    }
+  }
+  return bucket;
+}
+
+/* ===== UI 배선 ===== */
+const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const $ = sel => document.querySelector(sel);
+const drop = $("#drop"), fileInput = $("#fileInput"), foundBox = $("#foundBox");
+
+drop.addEventListener("click", () => fileInput.click());
+drop.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); fileInput.click(); } });
+["dragover","dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => { if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener("change", () => { if(fileInput.files.length) handleFile(fileInput.files[0]); });
+
+let CONFLICTS = [];      // 미해결 충돌 [key, label] 목록 (경고·표시용)
+let UPLOAD_SEQ = 0;      // 최신 업로드 토큰 — 느린 이전 파일이 최신 결과를 덮지 못하게 한다
+
+async function handleFile(file){
+  const seq = ++UPLOAD_SEQ;
+  foundBox.className = "found show";
+  if(!/\.hwpx$/i.test(file.name)){
+    foundBox.innerHTML = '<div class="err-parse">hwpx 형식만 읽을 수 있습니다. 구형 hwp 파일은 한글에서 [파일 ▸ 다른 이름으로 저장 ▸ HWPX]로 변환한 뒤 다시 올려주세요.</div>';
+    return;
+  }
+  try{
+    const buf = await file.arrayBuffer();
+    if(seq !== UPLOAD_SEQ) return;                 // 그 사이 다른 파일이 올라옴 → 이 결과는 버린다
+    const zip = await readZip(buf);
+    const secNames = Object.keys(zip.entries).filter(n => /^Contents\/section\d+\.xml$/.test(n));
+    if(secNames.length === 0) throw new Error("본문(section XML)을 찾지 못했습니다.");
+    let paras = [];
+    for(const n of secNames) paras = paras.concat(extractParagraphs(await zip.extract(n)));
+    if(seq !== UPLOAD_SEQ) return;
+    const found = recognize(paras);
+    if(seq !== UPLOAD_SEQ) return;
+    renderFound(found, file.name);
+    applyFound(found);
+  }catch(err){
+    if(seq !== UPLOAD_SEQ) return;                 // 최신 파일의 오류만 표시한다
+    foundBox.innerHTML = '<div class="err-parse">양식을 읽지 못했습니다: ' + esc(err.message) + '</div>';
+  }
+}
+
+const AXIS_TEXT = { value:"값이 서로 다름", verdict:"값은 같고 판정이 서로 다름", both:"값과 판정이 모두 다름" };
+const ASK_TEXT = {
+  value:"값이 서로 달라 자동으로 정하지 않았습니다. ③ 표에서 우리 학교 기준에 맞는 값을 직접 입력하세요.",
+  verdict:"값은 같지만 판정(필수 오류 / 확인 필요)이 서로 다릅니다. 값은 채워 두었으니 ③ 표에서 판정만 골라 주세요.",
+  both:"값과 판정이 모두 달라 자동으로 정하지 않았습니다. ③ 표에서 값과 판정을 직접 골라 주세요."
+};
+
+function valStr(v){
+  if(Array.isArray(v)) return v.join("~") + "%";
+  if(v === "uniform") return "균등 요구";
+  if(v === "true") return "0점 초과 요구";
+  return v + "%";
+}
+
+function renderFound(found, fname){
+  const keys = Object.keys(found);
+  if(keys.length === 0){
+    foundBox.innerHTML = '<div class="nofind">「' + esc(fname) + '」에서 검사 기준 문구를 찾지 못했습니다. 유의사항이 없는 양식이거나 문장 형태가 달라서일 수 있습니다 — ③에서 직접 입력하세요.<br>' +
+      '<span style="font-size:12px">해당 문구를 gtmc@gtmc.kr로 보내주시면 다음 버전 인식 대상에 넣겠습니다.</span></div>';
+    return;
+  }
+  const auto = keys.filter(k => !found[k].conflict).length;
+  const conf = keys.filter(k => found[k].conflict).length;
+  let html = '<div class="found-head">「' + esc(fname) + '」에서 <span class="cnt">' + auto + '개 기준</span>을 인식해 ③ 표에 채웠습니다.' +
+    (conf ? ' <span style="color:var(--warn)">확인이 필요한 항목 ' + conf + '개</span>는 자동으로 채우지 않았습니다.' : '') +
+    ' 근거 문장과 대조해 확인하세요.</div>';
+
+  for(const k of keys){
+    const f = found[k];
+    if(f.conflict){
+      html += '<div class="fcard conflict"><div class="top">' +
+        '<span class="rule">' + esc(f.rule) + '</span>' +
+        '<span class="lbl">' + esc(f.label) + ' — 후보 ' + f.candidates.length + '개 발견</span>' +
+        '<span style="font-size:12px;color:var(--warn)">' + esc(AXIS_TEXT[f.axis] || "") + '</span></div>' +
+        '<div class="cand">';
+      const num = ["①","②","③","④","⑤"];
+      f.candidates.forEach((c, i) => {
+        html += '<div style="margin:6px 0"><b>' + (num[i] || "·") + ' ' + esc(valStr(c.value)) + '</b> <span style="font-size:12px;color:var(--muted)">(판정 ' + esc(c.verdict) + ')</span>' +
+          '<div class="src">' + esc(c.source.slice(0, 160)) + '</div></div>';
+      });
+      html += '</div><div class="ask">' + esc(ASK_TEXT[f.axis] || ASK_TEXT.both) + '</div></div>';
+    }else{
+      const c = f.candidates[0];
+      html += '<div class="fcard"><div class="top">' +
+        '<span class="rule">' + esc(f.rule) + '</span>' +
+        '<span class="lbl">' + esc(f.label) + ' = ' + esc(valStr(c.value)) + '</span>' +
+        '<span style="font-size:12px;color:var(--muted)">판정 ' + esc(c.verdict) + '</span></div>' +
+        '<div class="src">' + esc(c.source.slice(0, 160)) + '</div></div>';
+    }
+  }
+  foundBox.innerHTML = html;
+}
+
+/** 새 양식을 읽을 때마다 ③의 모든 값을 지운다.
+    (이전 파일에서 자동 입력된 값이 남아 다른 학교 프로필에 섞여 들어가는 사고 방지) */
+function resetParams(){
+  for(const row of document.querySelectorAll(".paramrow")){
+    const mark = row.querySelector(".auto-mark");
+    mark.textContent = ""; mark.className = "auto-mark";
+    for(const el of row.querySelectorAll('[data-f]')){
+      if(el.tagName === "SELECT"){
+        if(el.dataset.f === "verdict") el.selectedIndex = 0;   // 판정은 기본값으로
+        else el.value = "";                                    // 값 select는 '규정 없음'
+      }else el.value = "";
+    }
+  }
+}
+
+function applyFound(found){
+  CONFLICTS = [];
+  resetParams();
+  for(const row of document.querySelectorAll(".paramrow")){
+    const k = row.dataset.key;
+    const mark = row.querySelector(".auto-mark");
+    const f = found[k];
+    if(!f) continue;
+    const setVal = v => {
+      if(k === "baseScoreRange"){
+        row.querySelector('[data-f="v0"]').value = v[0];
+        row.querySelector('[data-f="v1"]').value = v[1];
+      }else row.querySelector('[data-f="v"]').value = v;
+    };
+    if(f.conflict){
+      // 자동으로 정하지 않는다. 판정만 갈리는 경우엔 값은 채우고 판정을 비워 둔다.
+      // (기본값 FAIL/REVIEW가 사용자의 명시 선택인 것처럼 저장되면 안 된다)
+      if(f.axis === "verdict") setVal(f.candidates[0].value);
+      row.querySelector('[data-f="verdict"]').value = "";
+      mark.textContent = f.axis === "verdict" ? "판정 선택" : "확인 필요";
+      mark.className = "auto-mark conflict";
+      CONFLICTS.push([k, f.label]);
+      continue;
+    }
+    const c = f.candidates[0];
+    setVal(c.value);
+    row.querySelector('[data-f="verdict"]').value = c.verdict;
+    mark.textContent = "자동";
+  }
+  buildJson();
+}
+
+/* ============================================================
+   프로필 조립 + 유효성 게이트
+   errors가 하나라도 있으면 다운로드를 막는다 (미리보기는 허용).
+   ============================================================ */
+const INT_RE = /^-?\d+$/;
+
+function collect(){
+  const errors = [], warnings = [];
+  const params = {};
+
+  // 입력값 오류 표시 초기화
+  document.querySelectorAll("input.bad, select.bad").forEach(el => el.classList.remove("bad"));
+  const flag = el => { if(el) el.classList.add("bad"); };
+
+  /* ① 학교명 */
+  const nameEl = $("#schoolName");
+  const schoolName = nameEl.value.trim();
+  if(!schoolName){ errors.push("학교명을 입력하세요. (프로필 파일 이름과 검사 화면 표시에 사용됩니다)"); flag(nameEl); }
+
+  /* ① 학년도·학기 */
+  const yEl = $("#metaYear"), sEl = $("#metaSemester");
+  const yRaw = yEl.value.trim();
+  let academicYear = null;
+  if(!INT_RE.test(yRaw)){ errors.push("적용 학년도를 네 자리 숫자로 입력하세요."); flag(yEl); }
+  else{
+    academicYear = +yRaw;
+    if(academicYear < 2000 || academicYear > 2100){ errors.push("적용 학년도가 올바르지 않습니다 (2000~2100)."); flag(yEl); academicYear = null; }
+  }
+  const semester = +sEl.value;
+
+  /* ③ 파라미터 */
+  const pctCheck = (raw, el, label) => {
+    if(raw === "") return null;
+    if(!INT_RE.test(raw)){ errors.push(label + ": 숫자만 입력할 수 있습니다."); flag(el); return undefined; }
+    const n = +raw;
+    if(n < 0 || n > 100){ errors.push(label + ": 0~100 사이의 값이어야 합니다 (입력값 " + n + ")."); flag(el); return undefined; }
+    return n;
+  };
+
+  const unresolved = [];
+  for(const row of document.querySelectorAll(".paramrow")){
+    const k = row.dataset.key;
+    const label = row.querySelector("td").childNodes[0].textContent.trim();
+    const vdEl = row.querySelector('[data-f="verdict"]');
+    const verdict = vdEl.value;
+    /* 값을 입력했는데 판정이 비어 있으면 저장을 막는다.
+       (자동 인식이 충돌해 판정을 비워 둔 항목 — 기본값으로 대신 결정하지 않는다) */
+    const hasVal = k === "baseScoreRange"
+      ? (row.querySelector('[data-f="v0"]').value.trim() !== "" || row.querySelector('[data-f="v1"]').value.trim() !== "")
+      : row.querySelector('[data-f="v"]').value.trim() !== "";
+    if(hasVal && verdict === ""){
+      errors.push(label + ": 판정(필수 오류 / 확인 필요)을 골라 주세요. 자동 인식 결과가 갈려 비워 둔 항목입니다.");
+      flag(vdEl);
+      const c0 = CONFLICTS.find(c => c[0] === k);
+      if(c0) unresolved.push(c0[1]);        // 판정 미선택도 '아직 해결 안 됨'
+      continue;
+    }
+    /* 충돌 해소는 '값과 판정을 모두 정한 경우'에만 인정한다.
+       빈칸은 아직 확인하지 않은 상태이므로 경고를 유지한다. */
+    const conf = CONFLICTS.find(c => c[0] === k);
+    if(conf){
+      const mk = row.querySelector(".auto-mark");
+      if(hasVal && verdict !== ""){
+        mk.textContent = "직접 입력"; mk.className = "auto-mark";
+      }else{
+        // 값을 다시 지우면 확인 필요 상태로 되돌린다 (UI가 거짓말하지 않도록)
+        mk.textContent = "확인 필요"; mk.className = "auto-mark conflict";
+        unresolved.push(conf[1]);
+      }
+    }
+
+    if(k === "baseScoreRange"){
+      const e0 = row.querySelector('[data-f="v0"]'), e1 = row.querySelector('[data-f="v1"]');
+      const r0 = e0.value.trim(), r1 = e1.value.trim();
+      if(r0 === "" && r1 === "") continue;                      // 미입력 = 검사 제외
+      if(r0 === "" || r1 === ""){
+        errors.push("기본점수 범위: 하한과 상한을 모두 입력하거나 둘 다 비워 두세요.");
+        flag(r0 === "" ? e0 : e1);
+        continue;
+      }
+      const lo = pctCheck(r0, e0, "기본점수 범위 하한"), hi = pctCheck(r1, e1, "기본점수 범위 상한");
+      if(lo === undefined || hi === undefined) continue;
+      if(lo > hi){
+        errors.push("기본점수 범위: 하한(" + lo + "%)이 상한(" + hi + "%)보다 큽니다. 순서를 바꿔 입력하세요.");
+        flag(e0); flag(e1);
+        continue;
+      }
+      params[k] = { value:[lo, hi], verdict };
+      continue;
+    }
+
+    const el = row.querySelector('[data-f="v"]');
+    const raw = el.value.trim();
+    if(raw === "") continue;                                    // 미입력 = 검사 제외
+
+    if(k === "gapUniform"){ params[k] = { value:"uniform", verdict }; continue; }
+    if(k === "longAbsencePositive"){
+      // 계약 주의: 검사기는 값의 참·거짓이 아니라 '키의 존재'로 규칙 적용을 판단한다.
+      //           미적용은 반드시 키를 생략해야 하므로 false는 내보내지 않는다.
+      params[k] = { value:true, verdict };
+      continue;
+    }
+    const n = pctCheck(raw, el, label);
+    if(n === undefined || n === null) continue;
+    params[k] = { value:n, verdict };
+  }
+
+  /* 파라미터 간 정합성 (하한과 상한은 합이 100을 넘어도 모순이 아니므로 검사하지 않는다) */
+  if(params.perfMinRatio && params.perfAreaMaxRatio && params.perfAreaMaxRatio.value < params.perfMinRatio.value)
+    warnings.push("수행 영역별 상한(" + params.perfAreaMaxRatio.value + "%)이 수행평가 하한(" + params.perfMinRatio.value + "%)보다 작습니다. 영역을 나눠야만 하한을 충족할 수 있는 설정입니다.");
+
+  /* ③-2 학사일정 */
+  const mw = iso => { const d = new Date(iso + "T00:00:00"); return [d.getMonth() + 1, Math.ceil(d.getDate() / 7)]; };
+  const exams = [];
+  let ri = 0;
+  for(const row of document.querySelectorAll(".calrow")){
+    ri++;
+    const nEl = row.querySelector('[data-f="name"]'), sEl2 = row.querySelector('[data-f="start"]'), eEl = row.querySelector('[data-f="end"]');
+    const name = nEl.value, s = sEl2.value, e = eEl.value;
+    const gradeEls = [...row.querySelectorAll("[data-g]")];
+    const grades = gradeEls.filter(c => c.checked).map(c => +c.dataset.g);
+    const anyInput = !!(name || s || e || grades.length);
+    if(!anyInput) continue;                                     // 완전 미입력 행은 건너뜀
+    const missing = [];
+    if(!name){ missing.push("시험명"); flag(nEl); }
+    if(!grades.length) missing.push("대상 학년");
+    if(!s){ missing.push("시작일"); flag(sEl2); }
+    if(!e){ missing.push("종료일"); flag(eEl); }
+    if(missing.length){
+      errors.push("시험 " + ri + ": " + missing.join("·") + "을(를) 입력하세요. (행 전체를 비우면 이 시험은 등록되지 않습니다)");
+      continue;
+    }
+    if(s > e){
+      errors.push("시험 " + ri + ": 종료일(" + e + ")이 시작일(" + s + ")보다 빠릅니다.");
+      flag(sEl2); flag(eEl);
+      continue;
+    }
+    // 학년도·학기 범위 밖 날짜 차단 (연도가 [월,주]로 환산되며 사라지므로 여기서만 잡을 수 있다)
+    if(academicYear !== null){
+      const bad = [s, e].filter(iso => !inSemester(iso, academicYear, semester));
+      if(bad.length){
+        errors.push("시험 " + ri + ": " + bad.join(", ") + "이(가) " + academicYear + "학년도 " + semester +
+          "학기 범위(" + semesterRangeText(academicYear, semester) + ") 밖입니다. 날짜나 ①의 학년도·학기를 확인하세요.");
+        flag(sEl2); flag(eEl);
+        continue;
+      }
+    }
+    exams.push({ name, grades, start: mw(s), end: mw(e), dates: s + "~" + e });
+  }
+  const calendar = exams.length ? { semester, exams } : null;
+
+  /* 경고 (다운로드는 막지 않음) */
+  if(Object.keys(params).length === 0 && !calendar)
+    warnings.push("설정된 검사 기준이 하나도 없습니다. 이 프로필로는 학교별 수치 규칙이 모두 「적용 안 함」이 되고 전국 공통 규칙만 검사됩니다.");
+  if(unresolved.length)
+    warnings.push("자동 인식 결과가 갈린 항목이 있습니다 — " + unresolved.join(", ") + ". ③에서 값을 직접 확인해 입력하세요. (비워 두면 그 규칙은 검사하지 않습니다)");
+  if(!calendar)
+    warnings.push("정기시험 기간이 없어 시험 시기 대조(X8)는 검사에서 제외됩니다.");
+
+  const profile = {
+    profileVersion: 1,
+    generatedBy: GEN_VERSION,
+    meta: {
+      academicYear,
+      semester,
+      generatedAt: isoLocal(new Date())
+    },
+    school: { name: schoolName || null, level: $("#schoolLevel").value },
+    params,
+    calendar,
+    curriculumTable: null
+  };
+  return { profile, errors, warnings };
+}
+
+/** 날짜(YYYY-MM-DD)가 해당 학년도·학기 범위 안인가
+    1학기 = 그 해 3~7월 / 2학기 = 그 해 8~12월 + 다음 해 1~2월 */
+function inSemester(iso, year, sem){
+  const m = /^(\d{4})-(\d{2})-/.exec(iso);
+  if(!m) return true;
+  const y = +m[1], mo = +m[2];
+  if(sem === 1) return y === year && mo >= 3 && mo <= 7;
+  return (y === year && mo >= 8 && mo <= 12) || (y === year + 1 && mo >= 1 && mo <= 2);
+}
+function semesterRangeText(year, sem){
+  return sem === 1 ? year + "년 3~7월" : year + "년 8~12월 · " + (year + 1) + "년 1~2월";
+}
+
+/** 로컬 타임존 오프셋을 포함한 ISO 문자열 (2026-08-14T13:20:00+09:00) */
+function isoLocal(d){
+  const p = n => String(n).padStart(2, "0");
+  const off = -d.getTimezoneOffset();
+  const sign = off >= 0 ? "+" : "-";
+  const oh = p(Math.floor(Math.abs(off) / 60)), om = p(Math.abs(off) % 60);
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) +
+         "T" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + sign + oh + ":" + om;
+}
+
+function buildJson(){
+  const { profile, errors, warnings } = collect();
+  $("#jsonbox").value = JSON.stringify(profile, null, 2);
+
+  const gate = $("#gate"), btn = $("#btnDownload");
+  let html = "";
+  if(errors.length){
+    gate.className = "block";
+    html = '<span class="g-title">✋ 아직 저장할 수 없습니다 — 고쳐야 할 항목 ' + errors.length + '건</span><ul>' +
+      errors.map(e => "<li>" + esc(e) + "</li>").join("") + '</ul>';
+    btn.disabled = true; $("#btnCopy").disabled = true;
+  }else{
+    gate.className = "ok";
+    html = '<span class="g-title">✅ 저장할 수 있습니다</span>' +
+      '검사 기준 ' + Object.keys(profile.params).length + '개' +
+      (profile.calendar ? ' · 정기시험 ' + profile.calendar.exams.length + '개 기간' : '') +
+      ' · ' + esc(profile.meta.academicYear + "학년도 " + profile.meta.semester + "학기 기준");
+    btn.disabled = false; $("#btnCopy").disabled = false;
+  }
+  if(warnings.length){
+    html += '<div class="warn-part"><b>확인해 주세요</b><ul>' +
+      warnings.map(w => "<li>" + esc(w) + "</li>").join("") + '</ul></div>';
+  }
+  gate.innerHTML = html;
+  return { profile, errors };
+}
+document.addEventListener("input", buildJson);
+document.addEventListener("change", buildJson);
+
+$("#btnDownload").addEventListener("click", () => {
+  const { profile, errors } = buildJson();
+  if(errors.length){                      // 이중 안전장치 (disabled 우회 대비)
+    $("#gate").scrollIntoView({ behavior:"smooth", block:"center" });
+    return;
+  }
+  const fname = profile.school.name + "_검사프로필_" + profile.meta.academicYear + "-" + profile.meta.semester + ".json";
+  const blob = new Blob([$("#jsonbox").value], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("#btnCopy").addEventListener("click", async () => {
+  const { errors } = buildJson();
+  if(errors.length){                      // 이중 안전장치 — 복사로 게이트를 우회하지 못하게
+    $("#gate").scrollIntoView({ behavior:"smooth", block:"center" });
+    return;
+  }
+  await navigator.clipboard.writeText($("#jsonbox").value);
+  const msg = $("#savedMsg"); msg.classList.add("on");
+  setTimeout(() => msg.classList.remove("on"), 1600);
+});
+
+/* 초기값: 현재 날짜 기준 학년도(3월 시작) */
+(function init(){
+  const now = new Date();
+  const yr = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  $("#metaYear").value = yr;
+  $("#metaSemester").value = (now.getMonth() + 1 >= 3 && now.getMonth() + 1 <= 7) ? "1" : "2";
+  buildJson();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>평가계획 제출 전 검사기 — 사용 안내</title>
+<style>
+  :root{--paper:#FAFAF7;--ink:#1A1D21;--line:#8C99A6;--line-soft:#D5DBE1;--muted:#5B6670;--accent:#B23A48;}
+  body{background:var(--paper);color:var(--ink);font-family:'Pretendard','Noto Sans KR',system-ui,sans-serif;
+       max-width:760px;margin:0 auto;padding:40px 20px 80px;line-height:1.75;font-size:15.5px;}
+  h1{font-size:24px;border-bottom:2px solid var(--ink);padding-bottom:12px;letter-spacing:-.01em;}
+  h2{font-size:19px;margin-top:44px;border-left:4px solid var(--accent);padding-left:10px;}
+  h3{font-size:16px;margin-top:28px;}
+  ol>li{margin:8px 0;}
+  ol ul, ol ol{margin:6px 0 6px 4px;}
+  ol ul li{margin:3px 0;font-size:14.5px;color:#2A2E33;}
+  code{background:#EFEFEA;padding:1px 5px;border-radius:3px;font-size:13.5px;}
+  pre{background:#F1F2EE;border:1px solid var(--line-soft);border-radius:4px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.6;}
+  pre code{background:none;padding:0;}
+  hr{border:none;border-top:1px solid var(--line-soft);margin:36px 0;}
+  a{color:var(--accent);}
+  .top{font-size:12.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<p class="top"><a href="./">← 검사기로 돌아가기</a></p>
+<h1>평가계획 제출 전 검사기 — 사용 안내</h1>
+<p><strong>검사기 V2.2.0</strong> · 학교 프로필 지원 · 설치 없음 · 파일은 브라우저 밖으로 전송되지 않습니다</p>
+<hr />
+<h2>1. 검사받는 선생님용 (1분)</h2>
+<ol>
+<li>담당 부장님이 안내한 <strong>검사기 링크</strong>를 엽니다.</li>
+<li>화면 상단 「검사 프로필」에 <strong>우리 학교 이름</strong>이 보이는지 확인합니다.<ul>
+<li>다른 학교 이름이 보이면: 담당자가 준 <code>OO고_검사프로필.json</code> 파일을 「프로필 불러오기」로 한 번만 등록하세요. 다음부터는 자동으로 기억됩니다.</li>
+</ul>
+</li>
+<li>완성한 평가계획서를 <strong>hwpx로 저장</strong>합니다. (한글 ▸ 파일 ▸ 다른 이름으로 저장 ▸ HWPX)<ul>
+<li>구형 hwp 파일은 검사되지 않습니다.</li>
+</ul>
+</li>
+<li>파일을 검사기 화면에 <strong>끌어다 놓습니다</strong>. 여러 과목 동시 검사도 됩니다.</li>
+<li>결과 읽는 법:<ul>
+<li><strong>수정 필요(빨강)</strong> — 규정 위반. 반드시 고쳐서 다시 검사하세요.</li>
+<li><strong>확인 권장(노랑)</strong> — 의도한 것이면 그대로 둬도 됩니다. 근거를 준비하세요.</li>
+<li><strong>검사 미완료(회색)</strong> — 통과가 아닙니다. 값을 읽지 못한 것이니 해당 표의 작성 상태를 확인하세요.</li>
+<li>각 항목의 「근거」에 어느 규정에 따른 판정인지 표시됩니다.</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2>2. 학교 담당자용 — 우리 학교 프로필 만들기 (10분)</h2>
+<p>검사기는 학교마다 다른 기준(수행평가 하한, 기본점수 범위 등)을 <strong>프로필 파일</strong>로 읽습니다.
+프로필이 없으면 해당 규칙은 검사에서 자동 제외되고, 전국 공통 규칙(반영비율 합계, 평가요소 형태, 표 간 교차검증 등)만 적용됩니다.</p>
+<h3>만들기</h3>
+<ol>
+<li><strong>학교 프로필 생성기</strong>를 엽니다.</li>
+<li>① 학교명과 학교급(고/중)을 입력합니다.</li>
+<li>② 우리 학교 <strong>평가계획 양식(hwpx)</strong> 을 올립니다.<ul>
+<li>양식 안의 유의사항 문구("수행평가 30% 이상", "기본점수는 만점의 20~40%" 등)를 자동으로 읽어 기준을 채웁니다.</li>
+<li>인식된 항목마다 <strong>근거 문장</strong>이 표시되니 원문과 맞는지 확인하세요.</li>
+</ul>
+</li>
+<li>③ 인식되지 않았거나 틀린 값은 표에서 직접 고칩니다.<ul>
+<li>값을 비우면 그 규칙은 검사하지 않습니다.</li>
+<li>판정 강도: 규정 위반이면 <strong>FAIL</strong>, 권장 사항이면 <strong>REVIEW</strong>.</li>
+<li>③-2 <strong>지필평가 기간</strong>을 입력하면 정기시험 시기 대조 검사(X8)가 켜집니다. 학기가 바뀌면 프로필을 갱신·재배포하세요.</li>
+</ul>
+</li>
+<li>④ 「프로필 파일 저장」 → <code>OO학교_검사프로필.json</code> 이 내려받아집니다.</li>
+</ol>
+<h3>배포하기</h3>
+<p>검사기 링크 + 프로필 JSON 파일을 학교 메신저로 함께 안내합니다.
+선생님들은 「프로필 불러오기」를 한 번 하면 브라우저가 기억합니다.
+프로필을 갱신해 재배포한 경우(예: 새 학기 시험 일정), 선생님들도 새 파일을 <strong>한 번 다시 불러와야</strong> 적용됩니다.</p>
+<h3>알아둘 것</h3>
+<ul>
+<li>성취기준 코드 대조는 전국 공통 교육과정 DB 기반이라 어느 고등학교든 작동합니다.</li>
+<li>정기시험 기간 대조(X8)는 프로필에 지필평가 기간을 입력한 경우에만 작동합니다. 입력이 없으면 해당 검사만 건너뜁니다.</li>
+<li>교육과정 편제표 대조(E1·F4)는 현재 원조 학교(복정고) 전용입니다. 다른 학교 프로필에서는 자동으로 「적용 안 함」 처리됩니다.</li>
+<li>중학교 프로필은 수치·형식 규칙 위주로 동작하며, 고교 전용 규칙(성취기준 DB 대조 등)은 자동 제외됩니다.</li>
+<li>프로필을 수정하면 새 JSON을 다시 배포하고, 선생님들도 새 파일을 한 번 다시 불러와야 합니다. 브라우저는 이전 프로필을 기억하고 있기 때문입니다.</li>
+<li>학교 기준(비율·기본점수 등)은 한 번 만들면 계속 쓰지만, <strong>지필평가 기간은 학기마다 갱신</strong>해야 X8 검사가 올바르게 작동합니다.</li>
+</ul>
+<hr />
+<h2>3. 운영자용 — 저장소 구조</h2>
+<pre><code>저장소 (GitHub Pages)
+├── index.html              ← 검사기 (프로필 지원판)
+├── profile_generator.html  ← 프로필 생성 도구
+└── guide.html              ← 이 안내 문서
+</code></pre>
+<ul>
+<li>검사기 규칙 업데이트 시 <code>index.html</code> 하나만 교체하면 모든 사용자에게 즉시 반영됩니다. 각 학교의 프로필 JSON은 건드릴 필요 없습니다.</li>
+</ul>
+<hr />
+<h2>자주 묻는 질문</h2>
+<p><strong>Q. 파일이 외부로 전송되나요?</strong>
+아니요. 평가계획 파일은 서버로 업로드되지 않고, 검사·프로필 생성 모두 브라우저 안에서만 처리됩니다. 페이지를 한 번 연 뒤에는 인터넷이 끊겨도 작동합니다.</p>
+<p><strong>Q. 프로필 없이 그냥 검사하면 안 되나요?</strong>
+됩니다. 다만 학교별 수치 기준(수행 하한, 기본점수 범위 등)은 검사되지 않고 공통 규칙만 적용됩니다. 결과 화면의 「적용 안 함」 항목이 그 표시입니다.</p>
+<p><strong>Q. 우리 학교 양식을 올렸는데 아무것도 인식되지 않아요.</strong>
+양식에 유의사항 문구가 없거나 표 구조상 문장이 조각나 있으면 인식되지 않을 수 있습니다. ③ 표에서 직접 입력하면 결과는 동일합니다.</p>
+<p><strong>Q. hwp 파일은 왜 안 되나요?</strong>
+구형 hwp는 브라우저에서 읽을 수 없는 형식입니다. 한글에서 hwpx로 다른 이름 저장 후 사용하세요.</p>
+</body>
+</html>
