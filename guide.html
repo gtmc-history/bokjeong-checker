@@ -14,6 +14,9 @@
   ol>li{margin:8px 0;}
   ol ul, ol ol{margin:6px 0 6px 4px;}
   ol ul li{margin:3px 0;font-size:14.5px;color:#2A2E33;}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;}
+  th,td{border:1px solid var(--line-soft);padding:7px 10px;text-align:left;vertical-align:top;}
+  th{background:#F1F3F5;font-size:13px;color:var(--muted);}
   code{background:#EFEFEA;padding:1px 5px;border-radius:3px;font-size:13.5px;}
   pre{background:#F1F2EE;border:1px solid var(--line-soft);border-radius:4px;padding:14px;overflow-x:auto;font-size:13px;line-height:1.6;}
   pre code{background:none;padding:0;}
@@ -23,7 +26,7 @@
 </style>
 </head>
 <body>
-<p class="top"><a href="./">← 검사기로 돌아가기</a></p>
+<p class="top"><a href="./">← 개별 검사기</a> · <a href="./review.html">일괄 검토</a> · <a href="./profile_generator.html">프로필 생성기</a></p>
 <h1>평가계획 제출 전 검사기 — 사용 안내</h1>
 <p><strong>검사기 V2.2.0</strong> · 학교 프로필 지원 · 설치 없음 · 파일은 브라우저 밖으로 전송되지 않습니다</p>
 <hr />
@@ -50,7 +53,35 @@
 <hr />
 <h2>2. 학교 담당자용 — 우리 학교 프로필 만들기 (10분)</h2>
 <p>검사기는 학교마다 다른 기준(수행평가 하한, 기본점수 범위 등)을 <strong>프로필 파일</strong>로 읽습니다.
-프로필이 없으면 해당 규칙은 검사에서 자동 제외되고, 전국 공통 규칙(반영비율 합계, 평가요소 형태, 표 간 교차검증 등)만 적용됩니다.</p>
+프로필이 없으면 해당 규칙은 검사에서 자동 제외되고, 공통 규칙만 적용됩니다.</p>
+<p>검사 규칙은 세 층으로 나뉩니다.</p>
+<table>
+<thead>
+<tr>
+<th>층</th>
+<th>내용</th>
+<th>프로필 없을 때</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>지침·법령</strong></td>
+<td>반영비율 합계 100%, 용어(정기시험·미인정), 성취수준 표, 동점자 처리 등</td>
+<td>적용됨</td>
+</tr>
+<tr>
+<td><strong>문서 정합성</strong></td>
+<td>총괄표 ↔ 세부기준표 ↔ 교수학습계획의 영역·평가요소·성취기준 대응</td>
+<td>적용됨</td>
+</tr>
+<tr>
+<td><strong>학교 내부 규정</strong></td>
+<td>수행평가 하한·기본점수 범위 같은 수치, 범교과 연계주제, 평가요소 표현 형태, 결시자 점수 관계식, 지필평가 기간, 편제표</td>
+<td><strong>적용 안 함</strong></td>
+</tr>
+</tbody>
+</table>
+<p>특정 학교의 내부 규정을 다른 학교 문서에 적용하면 근거 없는 오류가 되기 때문에, 학교 프로필을 불러오기 전에는 세 번째 층을 검사하지 않습니다.</p>
 <h3>만들기</h3>
 <ol>
 <li><strong>학교 프로필 생성기</strong>를 엽니다.</li>
@@ -84,12 +115,16 @@
 <hr />
 <h2>3. 운영자용 — 저장소 구조</h2>
 <pre><code>저장소 (GitHub Pages)
-├── index.html              ← 검사기 (프로필 지원판)
+├── index.html              ← 개별 검사기 (선생님용)
+├── review.html             ← 일괄 검토 (수합 담당자용)
 ├── profile_generator.html  ← 프로필 생성 도구
 └── guide.html              ← 이 안내 문서
 </code></pre>
 <ul>
-<li>검사기 규칙 업데이트 시 <code>index.html</code> 하나만 교체하면 모든 사용자에게 즉시 반영됩니다. 각 학교의 프로필 JSON은 건드릴 필요 없습니다.</li>
+<li>검사 규칙을 업데이트할 때는 <strong><code>index.html</code>과 <code>review.html</code>을 함께 교체</strong>해야 합니다. 두 화면이 같은 검사 엔진을 각자 품고 있어서, 한쪽만 바꾸면 선생님이 본 결과와 담당자가 본 결과가 달라집니다.</li>
+<li>배포 전 <code>check_engine_sync.sh</code>를 실행하면 두 파일의 엔진이 같은지 확인할 수 있습니다.</li>
+<li>각 학교의 프로필 JSON은 건드릴 필요 없습니다.</li>
+<li>특정 학교 기준을 기본값으로 적용하려면 주소에 <code>?preset=</code> 파라미터를 씁니다. (예: <code>index.html?preset=bokjeong</code>)</li>
 </ul>
 <hr />
 <h2>자주 묻는 질문</h2>

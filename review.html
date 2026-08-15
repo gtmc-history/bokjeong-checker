@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 제출 전 검사기 V2.2.0</title>
+<title>평가계획 일괄 검토 — 수합 담당자용</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -13,82 +13,88 @@
   *{box-sizing:border-box; margin:0; padding:0;}
   body{background:var(--paper); color:var(--ink);
     font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",system-ui,sans-serif;
-    line-height:1.55; padding:28px 16px 60px; font-size:15px;}
-  .wrap{max-width:860px; margin:0 auto;}
-  header.doc-head{border-top:3px solid var(--ink); border-bottom:1px solid var(--ink); padding:18px 4px 14px; margin-bottom:20px;}
+    line-height:1.55; padding:28px 16px 70px; font-size:15px;}
+  .wrap{max-width:1100px; margin:0 auto;}
+  header.doc-head{border-top:3px solid var(--ink); border-bottom:1px solid var(--ink); padding:18px 4px 14px; margin-bottom:16px;}
   .eyebrow{font-size:12px; letter-spacing:.35em; color:var(--muted); margin-bottom:6px;}
   h1{font-size:22px; letter-spacing:-.01em; font-weight:800;}
   .subtitle{margin-top:6px; color:var(--muted); font-size:13.5px;}
   .rulever{float:right; font-size:12px; color:var(--muted); border:1px solid var(--line-soft); padding:2px 8px; border-radius:3px; margin-top:4px;}
-  #drop{border:2px dashed var(--line); border-radius:6px; background:#fff; padding:44px 20px; text-align:center; cursor:pointer; transition:border-color .15s, background .15s;}
+  .navlink{font-size:12.5px; color:var(--muted); margin-bottom:10px;}
+  .navlink a{color:var(--seal);}
+
+  #profileBar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff;
+    border:1px solid var(--line-soft); border-radius:4px; padding:8px 12px; margin-bottom:14px; font-size:12.5px;}
+  #profileBar .pname{font-weight:700;}
+  #profileBar button{font:inherit; font-size:12px; padding:4px 12px; border-radius:3px; cursor:pointer; background:#fff;}
+  #btnLoadProfile{font-weight:700; border:1px solid var(--ink); color:var(--ink);}
+  #btnResetProfile{border:1px solid var(--line-soft); color:var(--muted);}
+  #profileInput{display:none;}
+
+  #drop{border:2px dashed var(--line); border-radius:6px; background:#fff; padding:34px 20px; text-align:center; cursor:pointer;}
   #drop.over{border-color:var(--seal); background:#FFF8F6;}
-  #drop .big{font-size:17px; font-weight:700;}
+  #drop .big{font-size:16px; font-weight:700;}
   #drop .small{color:var(--muted); font-size:13px; margin-top:6px;}
   #drop input{display:none;}
   #drop:focus-visible{outline:3px solid var(--seal); outline-offset:2px;}
-  .privacy{margin-top:12px; font-size:12.5px; color:var(--muted); display:flex; gap:8px; align-items:flex-start;}
+  .privacy{margin-top:10px; font-size:12.5px; color:var(--muted); display:flex; gap:8px;}
   .privacy .dot{color:var(--pass); font-weight:900;}
-  .result{margin-top:34px; animation:fade .35s ease;}
-  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
-  @media (prefers-reduced-motion: reduce){ .result{animation:none;} }
-  table.gyeoljae{width:100%; border-collapse:collapse; background:#fff; border:1.5px solid var(--ink); font-size:13.5px;}
-  table.gyeoljae th, table.gyeoljae td{border:1px solid var(--line-soft); padding:7px 10px; text-align:left; vertical-align:middle;}
-  table.gyeoljae th{background:#F1F3F5; font-weight:700; width:110px; color:var(--muted); font-size:12.5px; letter-spacing:.06em; white-space:nowrap;}
-  .verdict{font-weight:900; font-size:15px;}
-  .verdict.red{color:var(--seal);}
-  .verdict.yellow{color:var(--warn);}
-  .verdict.green{color:var(--pass);}
-  .verdict.gray{color:var(--gray);}
-  .verdict-note{font-weight:400; font-size:12px; color:var(--muted); display:block;}
-  .counts{display:flex; gap:8px; margin:14px 0 4px; flex-wrap:wrap;}
+
+  .prog{margin:14px 0 2px; font-size:13.5px; color:var(--muted);}
+  .prog.done{color:var(--pass); font-weight:700;}
+  .prog.warn{background:var(--chip-yellow); border:1px solid var(--warn); color:#6B4A00; padding:8px 12px; border-radius:4px;}
+  .prog .skip{font-size:12px;}
+  .err-parse{background:var(--chip-red); color:var(--seal); border-radius:4px; padding:10px 12px; font-size:13px;}
+
+  .counts{display:flex; gap:8px; margin:18px 0 10px; flex-wrap:wrap;}
   .chip{font-size:12.5px; font-weight:700; padding:4px 12px; border-radius:14px;}
   .chip.red{background:var(--chip-red); color:var(--seal);}
   .chip.yellow{background:var(--chip-yellow); color:var(--warn);}
   .chip.green{background:var(--chip-green); color:var(--pass);}
   .chip.gray{background:var(--chip-gray); color:var(--gray);}
-  .grp{margin-top:18px;}
-  .grp > h2{font-size:14px; letter-spacing:.04em; padding-bottom:6px; margin-bottom:8px; border-bottom:2px solid currentColor; display:flex; align-items:center; gap:8px;}
-  .grp.red > h2{color:var(--seal);}
-  .grp.yellow > h2{color:var(--warn);}
-  .grp.green > h2{color:var(--pass);}
-  .grp.gray > h2{color:var(--gray);}
-  .grp .none{color:var(--muted); font-size:13px; padding:4px 2px;}
-  details.item{background:#fff; border:1px solid var(--line-soft); border-left-width:4px; border-radius:4px; margin-bottom:8px;}
-  .grp.red details.item{border-left-color:var(--seal);}
-  .grp.yellow details.item{border-left-color:var(--warn);}
-  .grp.green details.item{border-left-color:var(--pass);}
-  .grp.gray details.item{border-left-color:var(--gray);}
-  details.item summary{padding:10px 14px; cursor:pointer; font-weight:700; font-size:14px; display:flex; gap:10px; align-items:baseline; list-style:none;}
-  details.item summary::-webkit-details-marker{display:none;}
-  details.item summary .rid{font-size:11px; color:var(--muted); font-weight:400; letter-spacing:.05em; border:1px solid var(--line-soft); border-radius:3px; padding:1px 6px; white-space:nowrap;}
-  details.item summary .cnt{margin-left:auto; font-size:12.5px; color:var(--muted); font-weight:400; white-space:nowrap;}
-  details.item .body{padding:2px 14px 12px; font-size:13.5px;}
-  .basis{font-size:12px; color:var(--muted); margin-bottom:8px; padding:6px 10px; background:#F6F7F8; border-radius:3px;}
-  .basis b{color:var(--ink);}
-  ul.hits{list-style:none;}
-  ul.hits li{padding:6px 0; border-top:1px dashed var(--line-soft); font-size:13px;}
-  ul.hits li:first-child{border-top:none;}
-  .loc{color:var(--muted); font-size:12px; display:block; margin-bottom:2px;}
-  .snippet{font-family:"D2Coding","Consolas",monospace; background:#F6F7F8; padding:2px 6px; border-radius:3px; word-break:break-all;}
-  .more{color:var(--muted); font-size:12px; margin-top:4px;}
-  .howfix{font-size:12.5px; color:var(--ink); margin-top:8px; padding-left:10px; border-left:2px solid var(--line-soft);}
-  details.extract{margin-top:20px; background:#fff; border:1px solid var(--line-soft); border-radius:4px;}
-  details.extract > summary{padding:10px 14px; cursor:pointer; font-weight:700; font-size:13.5px; color:var(--muted);}
-  details.extract .ebody{padding:4px 14px 14px; font-size:13px;}
-  table.ext{width:100%; border-collapse:collapse; background:#fff; font-size:12.5px; border:1px solid var(--line-soft); margin-top:8px;}
-  table.ext th, table.ext td{border:1px solid var(--line-soft); padding:5px 8px; vertical-align:top;}
-  table.ext th{background:#F1F3F5; font-size:11.5px; color:var(--muted); white-space:nowrap;}
-  .unk-list{background:#EEF0F2; border-radius:4px; padding:10px 14px; font-size:12.5px; margin-top:10px; color:var(--gray);}
-  details.json{margin-top:10px;}
-  details.json summary{cursor:pointer; font-size:12px; color:var(--muted);}
-  details.json pre{padding:8px 0; font-size:11px; overflow-x:auto; font-family:Consolas,monospace; line-height:1.4;}
-  .filecard{margin-top:30px; padding-top:8px;}
-  .filecard + .filecard{border-top:1px solid var(--line-soft); margin-top:40px; padding-top:30px;}
-  .fname{font-size:15px; font-weight:800; margin-bottom:10px; word-break:break-all;}
-  .err-parse{background:var(--chip-red); color:var(--seal); border-radius:4px; padding:12px 14px; font-size:13.5px; margin-top:10px;}
-  footer{margin-top:56px; padding-top:14px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--muted);}
-  button.reset{margin-top:20px; font:inherit; font-size:13px; padding:8px 18px; cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:4px; color:var(--ink);}
-  button.reset:hover{border-color:var(--ink);}
+
+  .btnrow{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+  button.act{font:inherit; font-size:13px; font-weight:700; padding:8px 16px; border-radius:4px; cursor:pointer;
+    border:1.5px solid var(--ink); background:var(--ink); color:#fff;}
+  button.act.ghost{background:#fff; color:var(--ink);}
+  button.act:hover{opacity:.88;}
+  .savedmsg{font-size:12.5px; color:var(--pass); font-weight:700; opacity:0; transition:opacity .2s;}
+  .savedmsg.on{opacity:1;}
+
+  table.board{width:100%; border-collapse:collapse; background:#fff; border:1.5px solid var(--ink); font-size:13.5px;}
+  table.board th{background:#F1F3F5; border:1px solid var(--line-soft); padding:6px 8px; font-size:12px;
+    color:var(--muted); letter-spacing:.04em; text-align:left; white-space:nowrap;}
+  table.board td{border:1px solid var(--line-soft); padding:6px 8px; vertical-align:middle;}
+  tr.r.hasfail td{background:#FFFBFA;}
+  td.subj{font-weight:700;}
+  td.subj .fn{display:block; font-weight:400; font-size:11px; color:var(--gray); word-break:break-all;}
+  td.num{text-align:center; font-variant-numeric:tabular-nums;}
+  td.num.bad{color:var(--seal); font-weight:800;}
+  td.num.warn{color:var(--gray); font-weight:700;}
+  td.verdict{font-weight:800; font-size:12.5px; white-space:nowrap;}
+  td.verdict.red{color:var(--seal);} td.verdict.yellow{color:var(--warn);}
+  td.verdict.green{color:var(--pass);} td.verdict.gray{color:var(--gray);}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:5px; background:var(--gray);}
+  .dot.red{background:var(--seal);} .dot.yellow{background:var(--warn);}
+  .dot.green{background:var(--pass);} .dot.gray{background:#C9CFD6;}
+  button.mini{font:inherit; font-size:11.5px; padding:3px 10px; border:1px solid var(--line-soft);
+    background:#fff; border-radius:3px; cursor:pointer; color:var(--ink);}
+  button.mini:hover{border-color:var(--ink);}
+  .nodash{color:#C9CFD6; font-size:12px;}
+  tr.d td{background:#FCFCFB; padding:0 8px;}
+  tr.d details{margin:0;}
+  tr.d summary{cursor:pointer; font-size:12px; color:var(--muted); padding:5px 0;}
+  .dbody{padding:2px 0 10px;}
+  .glist{margin-bottom:8px; font-size:12.5px;}
+  .glist b{font-size:12px; letter-spacing:.04em;}
+  .glist.red b{color:var(--seal);} .glist.gray b{color:var(--gray);} .glist.yellow b{color:var(--warn);}
+  .glist ul{list-style:none; margin-top:3px;}
+  .glist li{padding:2px 0 2px 10px; border-left:2px solid var(--line-soft); margin-bottom:2px;}
+  .glist .rid{font-size:10.5px; color:var(--muted); border:1px solid var(--line-soft); border-radius:3px; padding:0 5px; margin-right:4px;}
+  .note{font-size:12px; color:var(--muted); margin-top:6px;}
+  .none{font-size:12.5px; color:var(--muted); padding:4px 0;}
+  .hint{font-size:12.5px; color:var(--muted); margin-top:10px;}
+  footer{margin-top:40px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--muted);}
 </style>
 </head>
 <body>
@@ -96,37 +102,38 @@
   <header class="doc-head">
     <span class="rulever" id="ruleVer"></span>
     <div class="eyebrow" id="schoolEyebrow"></div>
-    <h1>평가계획 제출 전 검사기</h1>
-    <p class="subtitle">작성 방식은 그대로 두세요. 아래 상자에 hwpx 파일을 끌어 놓으면 삭제하지 않은 안내문·메모와 함께 반영비율 합계, 수행평가 기준, 정기시험 상한, 평가요소 형태까지 확인해 드립니다.</p>
+    <h1>평가계획 일괄 검토</h1>
+    <p class="subtitle">수합한 평가계획서를 한꺼번에 넣으면 어느 과목이 무엇에 걸렸는지 한 표로 정리해 드립니다. 반려 사유는 복사해서 메신저에 그대로 붙여넣고, 진행 관리는 CSV로 하세요.</p>
   </header>
 
-  <div id="profileBar" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid var(--line-soft); border-radius:4px; padding:8px 12px; margin-bottom:14px; font-size:12.5px;">
+  <p class="navlink">선생님들께 안내할 개별 검사기는 <a href="./">여기</a>입니다 · 학교 기준 설정은 <a href="./profile_generator.html">프로필 생성기</a></p>
+
+  <div id="profileBar">
     <span style="font-weight:800; letter-spacing:.06em; color:var(--muted); font-size:11.5px;">검사 프로필</span>
-    <span class="pname" style="font-weight:700;"></span>
+    <span class="pname"></span>
     <span class="phint" style="color:var(--muted); font-size:12px;"></span>
     <span style="flex:1"></span>
-    <button id="btnLoadProfile" type="button" style="font:inherit; font-size:12px; font-weight:700; padding:4px 12px; border:1px solid var(--ink); background:#fff; color:var(--ink); border-radius:3px; cursor:pointer;">프로필 불러오기 (.json)</button>
+    <button id="btnLoadProfile" type="button">프로필 불러오기 (.json)</button>
     <a href="./profile_generator.html" style="font:inherit; font-size:12px; font-weight:700; padding:4px 12px; border:1px solid var(--line-soft); background:#fff; color:var(--ink); border-radius:3px; text-decoration:none;">학교 프로필 만들기</a>
-    <button id="btnResetProfile" type="button" style="font:inherit; font-size:12px; padding:4px 10px; border:1px solid var(--line-soft); background:#fff; color:var(--muted); border-radius:3px; cursor:pointer;">프로필 해제</button>
-    <input type="file" id="profileInput" accept=".json" style="display:none">
+    <button id="btnResetProfile" type="button">프로필 해제</button>
+    <input type="file" id="profileInput" accept=".json">
   </div>
 
   <div id="drop" tabindex="0" role="button" aria-label="hwpx 파일 선택 또는 끌어놓기">
-    <div class="big">완성한 평가계획 hwpx 파일을 여기에 끌어 놓으세요</div>
-    <div class="small">클릭해서 선택할 수도 있습니다 · 여러 파일 동시 검사 가능 · hwpx 형식만 지원(hwp는 한글에서 hwpx로 다른 이름 저장)</div>
+    <div class="big">수합한 평가계획서를 한꺼번에 끌어다 놓으세요</div>
+    <div class="small">여러 파일 동시 선택 가능 · hwpx 형식만 지원 · 같은 파일을 다시 넣으면 최신 결과로 바뀝니다</div>
     <input type="file" id="fileInput" accept=".hwpx" multiple>
   </div>
-  <p class="privacy"><span class="dot">●</span> 이 검사는 파일을 서버로 전송하지 않으며, 모든 분석은 지금 이 브라우저 안에서만 이루어집니다. 인터넷이 끊긴 상태에서도 작동합니다.</p>
+  <p class="privacy"><span class="dot">●</span> 파일은 서버로 전송되지 않습니다. 검사는 이 브라우저 안에서만 이루어집니다.</p>
 
-
-  <div id="results"></div>
-
+  <div id="progress"></div>
+  <div id="board"></div>
 
   <footer>
-    판정 근거는 각 항목에 표시됩니다(경기도교육청 지침 / 문서 정합성 / 학교 프로필 기준 / 양식 정리 규칙). 학교 내부 규정에 해당하는 항목은 학교 프로필을 불러왔을 때만 적용됩니다. 회색 「검사 미완료」는 통과가 아니라 값을 읽지 못해 검사하지 못했다는 뜻입니다. 수치 판정의 근거 값은 「검사기가 읽은 값」에서 원문과 대조할 수 있습니다.
+    판정 기준은 개별 검사기와 동일합니다(검사 규칙 45종 · 파서 P0.9). 학교별 수치 기준은 프로필을 불러오면 반영됩니다.<br>
+    성취기준 DB 대조(S2·S3·S4)는 문서의 과목명이 자동 인식될 때만 수행됩니다. 인식되지 않으면 「검사 미완료」로 남으며, 개별 검사기에서 과목을 직접 선택하면 확인할 수 있습니다.
   </footer>
 </div>
-
 
 <script>
 "use strict";
@@ -3190,14 +3197,25 @@ function runX1Shadow(doc){
 
 
 /* ============================================================
-   UI (V1.0 통합)
+   담당자용 일괄 검토 UI (review v1.0)
+   · 검사 엔진(규칙 45종·파서 P0.9)은 index.html과 동일한 코드를 그대로 사용한다.
+     이 파일은 결과를 '한 장의 표'로 보여주는 렌더링 계층만 다르다.
+   · 목적: 46부를 한 번에 넣고 어느 과목이 무엇에 걸렸는지 한눈에 보기,
+           반려 사유를 복사해 메신저에 붙여넣기, 진행 관리는 CSV로.
    ============================================================ */
-const V1_VERSION = RULE_VERSION + " · 파서 " + PARSER_VERSION;
+const REVIEW_VERSION = "일괄 검토 v1.4";
+
+function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function fmtNum(n){ if(!n) return "—"; if(n.notApplicable) return "·"; const parts=[]; if(n.score!=null)parts.push(n.score+"점"); if(n.ratio!=null)parts.push(n.ratio+"%"); return parts.join(" · ")||"판독 실패"; }
 
 const drop = document.getElementById("drop");
 const fileInput = document.getElementById("fileInput");
-const resultsEl = document.getElementById("results");
+const boardEl = document.getElementById("board");
+const progEl = document.getElementById("progress");
 updateProfileUI_("default");
+
+/** 검사 결과 누적 — 같은 파일을 다시 넣으면 최신 결과로 교체 */
+let ROWS = [];
 
 if(typeof DecompressionStream === "undefined"){
   drop.innerHTML = '<div class="big">이 브라우저에서는 검사기를 실행할 수 없습니다</div>' +
@@ -3205,29 +3223,25 @@ if(typeof DecompressionStream === "undefined"){
   drop.style.pointerEvents = "none";
 } else {
   drop.addEventListener("click", () => fileInput.click());
-  drop.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " ") fileInput.click(); });
+  drop.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); fileInput.click(); } });
   ["dragover","dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => handleFiles(e.dataTransfer.files));
   fileInput.addEventListener("change", e => handleFiles(e.target.files));
 
-  /* ----- 학교 프로필 배선 ----- */
+  /* 학교 프로필 — index.html과 동일한 배선 */
   const profileInput = document.getElementById("profileInput");
   document.getElementById("btnLoadProfile").addEventListener("click", () => profileInput.click());
-  document.getElementById("btnResetProfile").addEventListener("click", resetProfile);
+  document.getElementById("btnResetProfile").addEventListener("click", () => { resetProfile(); onProfileChanged(); });
   profileInput.addEventListener("change", async e => {
     const f = e.target.files[0]; if(!f) return;
-    try{
-      applyProfile(JSON.parse(await f.text()));
-    }catch(err){
-      resetProfile();
-      alert("프로필을 읽지 못해 기본 프로필로 돌아갑니다: " + err.message);
-    }
+    try{ applyProfile(JSON.parse(await f.text())); }
+    catch(err){ resetProfile(); alert("프로필을 읽지 못해 기본 프로필로 돌아갑니다: " + err.message); }
+    onProfileChanged();          // 성공·실패 모두 기준이 바뀌었을 수 있으므로 항상 호출
     profileInput.value = "";
   });
-
-  /* 프로필 우선순위: ?profile= > ?preset= > 저장된 사용자 프로필 > 중립
-     주소로 명시한 기준이 브라우저에 저장된 것보다 우선해야 한다.
+  /* 프로필 우선순위 — 개별 검사기(index.html)와 동일해야 한다.
+     ?profile= > ?preset= > 저장된 사용자 프로필 > 중립
      (학교 포털이 ?preset=... 링크를 주면 그 링크가 항상 그 학교 기준을 강제한다) */
   (async () => {
     const q = new URLSearchParams(location.search);
@@ -3246,199 +3260,272 @@ if(typeof DecompressionStream === "undefined"){
     }
     try{
       const saved = localStorage.getItem("checkerProfile");
-      if(saved) applyProfile(JSON.parse(saved));
-      else updateProfileUI_("default");
+      if(saved) applyProfile(JSON.parse(saved)); else updateProfileUI_("default");
     }catch(e){ resetProfile(); }
   })();
 }
 
-function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function fmtNum(n){ if(!n) return "—"; if(n.notApplicable) return "·"; const parts=[]; if(n.score!=null)parts.push(n.score+"점"); if(n.ratio!=null)parts.push(n.ratio+"%"); return parts.join(" · ")||"판독 실패"; }
-
+/* ============================================================
+   파일 처리
+   ============================================================ */
 async function handleFiles(fileList){
   const files = Array.from(fileList).filter(f => /\.hwpx$/i.test(f.name));
   const skipped = Array.from(fileList).length - files.length;
-  resultsEl.innerHTML = "";
   if(files.length === 0){
-    resultsEl.innerHTML = '<div class="err-parse">hwpx 파일이 아닙니다. 한글에서 [파일 ▸ 다른 이름으로 저장 ▸ HWPX] 형식으로 저장한 뒤 다시 시도하세요.</div>';
+    progEl.innerHTML = '<div class="err-parse">hwpx 파일이 없습니다. 한글에서 [파일 ▸ 다른 이름으로 저장 ▸ HWPX]로 저장한 뒤 다시 시도하세요.</div>';
     return;
   }
-  if(skipped > 0){
-    resultsEl.innerHTML = '<div class="err-parse">hwpx가 아닌 파일 ' + skipped + '개는 건너뛰었습니다.</div>';
-  }
+  let done = 0;
+  const tick = () => { progEl.innerHTML = '<div class="prog">검사 중… <b>' + done + ' / ' + files.length + '</b>' +
+    (skipped ? ' <span class="skip">(hwpx가 아닌 파일 ' + skipped + '개는 건너뜀)</span>' : '') + '</div>'; };
+  tick();
+  let dupName = 0, dupHash = 0;
   for(const f of files){
-    const card = document.createElement("div");
-    card.className = "filecard result";
-    card.innerHTML = '<div class="fname">' + esc(f.name) + '</div><p class="none">검사 중…</p>';
-    resultsEl.appendChild(card);
-    try{
-      const buf = await f.arrayBuffer();
-      const zip = await readZip(buf);
-      // 파서 (P0.9) — mimetype·section 검증 포함
-      const doc = await parseDoc(zip);
-      // 텍스트 규칙 (기존 검사기 15종 + F0)
-      const secNames = zip.names.filter(n => /^Contents\/section\d+\.xml$/.test(n))
-        .sort((a, b) => parseInt(a.match(/(\d+)/)[1], 10) - parseInt(b.match(/(\d+)/)[1], 10));
-      const headerXml = await zip.extract("Contents/header.xml");
-      if(!headerXml) throw new Error("글자 속성 정보(header.xml)를 찾지 못해 전체 검사를 수행할 수 없습니다.");
-      const sections = [];
-      for(const n of secNames) sections.push({ label: secNames.length > 1 ? "섹션 " + (sections.length + 1) : "", xml: await zip.extract(n) });
-      const checks = runChecks({ headerXml, sections, fileName: f.name }, doc.document);
-      // V1 수치·형식 규칙
-      const v1 = runV1(doc);
-      v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
-                    ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc), ...runF23(doc), ...runCurriculumRules(doc));
-      // X7(선행학습)은 시기 판정 결과를 참고해야 하므로 뒤에 붙입니다
-      const timingBroken = v1.items.some(i =>
-        (i.id === "X8" || i.id === "X9") && (i.status === ST.FAIL || i.status === ST.REVIEW));
-      v1.items.push(...runX7(doc, timingBroken));
-      const x1 = runX1Shadow(doc);   // 그림자 — 판정 미반영
-      // S규칙: 과목 자동 인식(정규화 일치) → 카드별 드롭다운으로 교정 가능
-      const sCtx = { course: (doc.document.curriculum === "2022" ? stdCourseMatch(doc.document.subject) : null),
-                     auto: true };
-      const draw = () => {
-        const sItems = runSRules(doc, sCtx.course);
-        const verdict = computeVerdict(checks, v1, sItems);
-        renderResult(card, f.name, doc, checks, v1, verdict, x1, sItems, sCtx);
-        const sel = card.querySelector(".course-sel");
-        if(sel) sel.addEventListener("change", () => { sCtx.course = sel.value || null; sCtx.auto = false; draw(); });
+    const row = await inspect(f);
+    /* 재제출 판별: 파일명이 같아도 다른 문서일 수 있다.
+       (46명이 같은 양식을 받아 '2026학년도 평가계획.hwpx'로 내는 일이 흔하다)
+       학년·학기·과목·교사가 모두 같을 때만 같은 문서로 보고 교체한다. */
+    const at = ROWS.findIndex(r => sameDoc(r, row));
+    if(at >= 0) ROWS[at] = row;
+    else{
+      if(ROWS.some(r => r.name === row.name)) dupName++;
+      if(row.hash && ROWS.some(r => r.hash === row.hash && r.name !== row.name)) dupHash++;
+      ROWS.push(row);
+    }
+    done++; tick(); render();
+  }
+  progEl.innerHTML = '<div class="prog done">검사 완료 — <b>' + files.length + '개</b>' +
+    (skipped ? ' <span class="skip">(건너뜀 ' + skipped + '개)</span>' : '') + '</div>' +
+    (dupName ? '<div class="prog warn">파일명이 같지만 다른 문서로 보이는 것이 ' + dupName +
+      '건 있어 <b>각각 별도 행으로</b> 넣었습니다. 표의 과목·교사를 확인해 주세요.</div>' : '') +
+    (dupHash ? '<div class="prog warn">내용이 완전히 같은데 파일명이 다른 문서가 ' + dupHash +
+      '건 있습니다. 두 분이 같은 양식을 그대로 내신 것일 수 있어 <b>합치지 않고 각각</b> 표시했습니다.</div>' : '');
+}
+
+/** 파일 내용 SHA-256 (같은 파일인지 판별) */
+async function fileHash(buf){
+  try{
+    const h = await crypto.subtle.digest("SHA-256", buf);
+    return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2,"0")).join("");
+  }catch(e){ return null; }
+}
+
+/** 같은 문서인가 — 담당자 도구에서는 '수합 부수를 조용히 줄이지 않는 것'이 최우선이다.
+    ① 파일명과 내용 해시가 모두 같다  → 같은 파일 재투입, 교체
+    ② 학년·학기·과목·교사가 충분히 읽혔고 모두 같다 → 재제출, 교체
+    ③ 그 외 → 절대 자동 교체하지 않고 별도 행
+       (내용이 같아도 파일명이 다르면 두 사람이 같은 양식을 낸 '2부'일 수 있다) */
+function sameDoc(a, b){
+  if(a.name === b.name && a.hash && b.hash && a.hash === b.hash) return true;
+  const ka = keyOf(a);
+  return ka !== null && ka === keyOf(b);
+}
+/** 문서 식별 키 — 과목이 있고 학년·교사 중 하나 이상이 있어야 '충분히 읽힌' 것으로 본다 */
+function keyOf(r){
+  if(!r.subject) return null;
+  if(r.grade == null && !r.teacher) return null;
+  return [r.grade ?? "", r.semester ?? "", r.subject, r.teacher ?? ""].join("|");
+}
+
+/** 파일 1개 검사 → 요약 행 1개 */
+async function inspect(file){
+  const row = { name:file.name, subject:null, grade:null, semester:null, teacher:null,
+                verdict:null, cls:"gray", fail:0, review:0, unknown:0, items:[], error:null };
+  try{
+    const buf = await file.arrayBuffer();
+    row.hash = await fileHash(buf);      // 같은 파일 재투입 판별용
+    const zip = await readZip(buf);
+    const doc = await parseDoc(zip);
+    const secNames = zip.names.filter(n => /^Contents\/section\d+\.xml$/.test(n))
+      .sort((a,b) => parseInt(a.match(/(\d+)/)[1],10) - parseInt(b.match(/(\d+)/)[1],10));
+    const headerXml = await zip.extract("Contents/header.xml");
+    if(!headerXml) throw new Error("글자 속성 정보(header.xml)를 찾지 못했습니다.");
+    const sections = [];
+    for(const n of secNames) sections.push({ label: secNames.length > 1 ? "섹션 " + (sections.length+1) : "", xml: await zip.extract(n) });
+
+    const checks = runChecks({ headerXml, sections, fileName:file.name }, doc.document);
+    const v1 = runV1(doc);
+    v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
+                  ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc),
+                  ...runF23(doc), ...runCurriculumRules(doc));
+    const timingBroken = v1.items.some(i => (i.id==="X8"||i.id==="X9") && (i.status===ST.FAIL || i.status===ST.REVIEW));
+    v1.items.push(...runX7(doc, timingBroken));
+    const course = doc.document.curriculum === "2022" ? stdCourseMatch(doc.document.subject) : null;
+    const sItems = runSRules(doc, course);
+    const verdict = computeVerdict(checks, v1, sItems);
+
+    const lvMap = { red:"FAIL", yellow:"REVIEW", unknown:"UNKNOWN", na:"NOT_APPLICABLE" };
+    const all = [];
+    for(const f of checks.findings) all.push({ id:f.id, title:f.title, status:lvMap[f.level] || "REVIEW" });
+    for(const it of v1.items) all.push({ id:it.id, title:it.title, status:it.status });
+    for(const it of (sItems||[])) all.push({ id:it.id, title:it.title, status:it.status });
+
+    row.subject  = doc.document.subject;
+    row.grade    = doc.document.grade;
+    row.semester = doc.document.semester;
+    row.teacher  = doc.document.teacher;
+    row.verdict  = verdict.label;
+    row.cls      = verdict.cls;
+    row.items    = all;
+    row.fail     = all.filter(x => x.status === "FAIL").length;
+    row.review   = all.filter(x => x.status === "REVIEW").length;
+    row.unknown  = all.filter(x => x.status === "UNKNOWN").length;
+    row.courseAuto = course;
+  }catch(err){
+    row.error = err.message;
+    row.verdict = "검사 실패";
+    row.cls = "gray";
+  }
+  return row;
+}
+
+/** 프로필이 바뀌면 판정 기준 자체가 달라진다.
+    원본 파일을 보관하지 않으므로 자동 재검사는 불가능하고,
+    옛 기준 결과와 새 기준 결과가 한 표에 섞이는 것이 담당자 도구에서 가장 위험하다.
+    → 기존 결과를 즉시 비운다. */
+function onProfileChanged(){
+  const had = ROWS.length;
+  ROWS = [];
+  boardEl.innerHTML = "";
+  progEl.innerHTML = had
+    ? '<div class="prog warn">검사 기준(프로필)이 바뀌어 이전 결과를 지웠습니다. <b>파일을 다시 넣어 검사해 주세요.</b> (옛 기준 결과와 섞이면 판정을 신뢰할 수 없습니다)</div>'
+    : "";
+}
+
+/* ============================================================
+   요약표 렌더링
+   ============================================================ */
+function render(){
+  if(ROWS.length === 0){ boardEl.innerHTML = ""; return; }
+  // 오류 많은 순 → 미완료 많은 순 → 파일명
+  const rows = [...ROWS].sort((a,b) => b.fail - a.fail || b.unknown - a.unknown || a.name.localeCompare(b.name, "ko"));
+  /* 문서별 배타 분류 — 한 문서가 두 칸에 동시에 잡히면 안 된다 (합이 총 부수와 같아야 함) */
+  const cFail    = rows.filter(r => !r.error && r.fail > 0).length;
+  const cUnknown = rows.filter(r => !r.error && r.fail === 0 && r.unknown > 0).length;
+  const cReview  = rows.filter(r => !r.error && r.fail === 0 && r.unknown === 0 && r.review > 0).length;
+  const cOk      = rows.filter(r => !r.error && r.fail === 0 && r.unknown === 0 && r.review === 0).length;
+  const cErr     = rows.filter(r => r.error).length;
+
+  let h = '<div class="counts">' +
+    '<span class="chip gray">검사한 문서 ' + rows.length + '부</span>' +
+    '<span class="chip red">수정 필요 ' + cFail + '부</span>' +
+    '<span class="chip gray">검사 미완료 ' + cUnknown + '부</span>' +
+    '<span class="chip yellow">확인 권장 ' + cReview + '부</span>' +
+    '<span class="chip green">이상 없음 ' + cOk + '부</span>' +
+    (cErr ? '<span class="chip red">검사 실패 ' + cErr + '부</span>' : '') + '</div>';
+
+  h += '<div class="btnrow">' +
+    '<button class="act" id="btnCsv">전체 CSV 내려받기</button>' +
+    '<button class="act ghost" id="btnCopyAll">수정 필요 문서 사유 전체 복사</button>' +
+    '<button class="act ghost" id="btnClear">목록 비우기</button>' +
+    '<span class="savedmsg" id="savedMsg">복사했습니다</span></div>';
+
+  h += '<table class="board"><thead><tr>' +
+    '<th style="width:26px"></th><th>과목</th><th style="width:52px">학년</th><th style="width:88px">담당 교사</th>' +
+    '<th style="width:104px">판정</th><th style="width:58px">필수<br>오류</th><th style="width:58px">확인<br>필요</th>' +
+    '<th style="width:58px">검사<br>미완료</th><th style="width:78px">사유</th></tr></thead><tbody>';
+
+  rows.forEach((r, i) => {
+    const dot = '<span class="dot ' + r.cls + '"></span>';
+    h += '<tr class="r ' + (r.fail ? "hasfail" : "") + '" data-i="' + i + '">' +
+      '<td>' + dot + '</td>' +
+      '<td class="subj">' + esc(r.subject || "(과목 판독 실패)") +
+        '<span class="fn">' + esc(r.name) + '</span></td>' +
+      '<td>' + (r.grade ? r.grade + "학년" : "—") + '</td>' +
+      '<td>' + esc(r.teacher || "—") + '</td>' +
+      '<td class="verdict ' + r.cls + '">' + esc(r.verdict || "—") + '</td>' +
+      '<td class="num ' + (r.fail ? "bad" : "") + '">' + (r.error ? "—" : r.fail) + '</td>' +
+      '<td class="num">' + (r.error ? "—" : r.review) + '</td>' +
+      '<td class="num ' + (r.unknown ? "warn" : "") + '">' + (r.error ? "—" : r.unknown) + '</td>' +
+      '<td>' + copyBtn(r, i) + '</td></tr>';
+    // 상세 행
+    h += '<tr class="d"><td></td><td colspan="8"><details><summary>지적 내용 보기</summary><div class="dbody">';
+    if(r.error){
+      h += '<div class="err-parse">검사하지 못했습니다: ' + esc(r.error) + '</div>';
+    }else{
+      const grp = (label, st, cls) => {
+        const xs = r.items.filter(x => x.status === st);
+        if(!xs.length) return "";
+        return '<div class="glist ' + cls + '"><b>' + label + ' ' + xs.length + '건</b><ul>' +
+          xs.map(x => '<li><span class="rid">' + esc(x.id) + '</span> ' + esc(x.title) + '</li>').join("") + '</ul></div>';
       };
-      draw();
-    }catch(err){
-      card.innerHTML = '<div class="fname">' + esc(f.name) + '</div>' +
-        '<div class="err-parse">검사하지 못했습니다: ' + esc(err.message) + '</div>';
+      h += grp("필수 오류", "FAIL", "red") + grp("검사 미완료", "UNKNOWN", "gray") + grp("확인 필요", "REVIEW", "yellow");
+      if(!r.fail && !r.unknown && !r.review) h += '<p class="none">지적 사항이 없습니다.</p>';
+      if(r.courseAuto) h += '<p class="note">성취기준 DB 대조 과목: ' + esc(r.courseAuto) + ' (문서의 과목명으로 자동 인식)</p>';
+      else if(r.subject) h += '<p class="note">「' + esc(r.subject) + '」은 성취기준 DB에서 자동 인식되지 않아 S2·S3·S4가 「검사 미완료」로 남습니다. 개별 검사기에서 과목을 직접 고르면 확인할 수 있습니다.</p>';
     }
-  }
-  const btn = document.createElement("button");
-  btn.className = "reset"; btn.textContent = "다른 파일 검사하기";
-  btn.addEventListener("click", () => { resultsEl.innerHTML = ""; fileInput.value = ""; window.scrollTo({top:0}); });
-  resultsEl.appendChild(btn);
+    h += '</div></details></td></tr>';
+  });
+  h += '</tbody></table>';
+  h += '<p class="hint">회색 「검사 미완료」는 통과가 아니라 <b>값을 읽지 못해 검사하지 못했다</b>는 뜻입니다. 해당 문서는 눈으로 한 번 확인해 주세요.</p>';
+  boardEl.innerHTML = h;
+
+  document.getElementById("btnCsv").addEventListener("click", () => downloadCsv(rows));
+  document.getElementById("btnClear").addEventListener("click", () => { ROWS = []; boardEl.innerHTML = ""; progEl.innerHTML = ""; });
+  document.getElementById("btnCopyAll").addEventListener("click", () => {
+    const txt = rows.filter(r => r.fail > 0 || r.error).map(reasonText).join("\n\n");
+    copy(txt || "수정이 필요한 문서가 없습니다.");
+  });
+  for(const b of boardEl.querySelectorAll("[data-copy]"))
+    b.addEventListener("click", e => { e.stopPropagation(); copy(reasonText(rows[+b.dataset.copy])); });
 }
 
-function renderResult(card, fname, doc, checks, v1, verdict, x1, sItems, sCtx){
-  // 상태 통합: V0 findings(level) + V1 items(status)
-  const lvMap = { red:"FAIL", yellow:"REVIEW", unknown:"UNKNOWN", na:"NOT_APPLICABLE" };
-  const all = [];
-  for(const f of checks.findings) all.push(Object.assign({}, f, { status: lvMap[f.level] || "REVIEW" }));
-  for(const p of checks.passes) all.push({ id:p.id, title:p.title, status:"PASS" });
-  for(const it of v1.items) all.push(it);
-  for(const it of (sItems||[])) all.push(it);
-
-  const by = s => all.filter(x => x.status === s);
-  const fails = by("FAIL"), unknowns = by("UNKNOWN"), reviews = by("REVIEW"), passesAll = by("PASS"), nas = by("NOT_APPLICABLE");
-
-  const D = doc.document || {};
-  const metaBits = [];
-  if(D.year) metaBits.push(D.year + "학년도");
-  if(D.semester) metaBits.push(D.semester + "학기");
-  if(D.grade) metaBits.push(D.grade + "학년");
-  if(D.subject) metaBits.push(D.subject);
-
-  let html = '<div class="fname">' + esc(fname) + '</div>';
-  html += '<table class="gyeoljae"><tbody>' +
-    '<tr><th>문서 정보</th><td>' + (metaBits.length ? esc(metaBits.join(" · ")) : "문서 정보를 읽지 못했습니다") + '</td>' +
-    '<th>검사 규칙</th><td>' + esc(V1_VERSION) + '</td></tr>' +
-    '<tr><th>판정</th><td class="verdict ' + verdict.cls + '">' + esc(verdict.label) +
-    (verdict.note ? '<span class="verdict-note">' + esc(verdict.note) + '</span>' : '') + '</td>' +
-    '<th>검사 항목</th><td>' + (all.length - nas.length) + '개 규칙 적용' + (nas.length ? ' · 해당 없음 ' + nas.length + '개' : '') + '</td></tr>' +
-    (doc.document && doc.document.curriculum === "2022" && typeof STD_DATA !== "undefined" && !isMiddleProfile_() ?
-      '<tr><th>성취기준 검사 과목</th><td colspan="3"><select class="course-sel"><option value="">— 과목 선택 (2022 개정) —</option>' +
-      stdCourseNames().map(n => '<option value="' + esc(n) + '"' + (sCtx && sCtx.course === n ? ' selected' : '') + '>' + esc(n) + '</option>').join("") +
-      '</select> <span class="verdict-note">' +
-      (sCtx && sCtx.course ? (sCtx.auto ? '과목명 자동 인식 — 다르면 바꿔 주세요' : '수동 선택됨') :
-        '과목을 선택하면 성취기준 코드 검사(S2·S3·S4)가 실행됩니다') + '</span></td></tr>' : '') +
-    '</tbody></table>';
-  html += '<div class="counts">' +
-    '<span class="chip red">필수 오류 ' + fails.length + '개</span>' +
-    (unknowns.length ? '<span class="chip gray">검사 미완료 ' + unknowns.length + '개</span>' : '') +
-    '<span class="chip yellow">확인 필요 ' + reviews.length + '개</span>' +
-    '<span class="chip green">통과 ' + passesAll.length + '건</span></div>';
-
-  html += group("red", "필수 오류 — 수정 전에는 제출하면 안 됩니다", fails, "필수 오류가 없습니다.", true);
-  if(unknowns.length) html += group("gray", "검사 미완료 — 값을 읽지 못해 검사하지 못했습니다 (통과 아님)", unknowns, "", true);
-  html += group("yellow", "확인 필요 — 맞을 수도 있지만 한 번 봐 주세요", reviews, "확인 필요 항목이 없습니다.", true);
-  html += '<div class="grp green"><h2>통과한 검사</h2><ul class="hits">' +
-    passesAll.map(p => '<li>' + esc(p.id) + ' · ' + esc(p.title) + '</li>').join("") + '</ul></div>';
-  if(nas.length){
-    html += '<div class="grp gray"><details class="item"><summary><span class="rid">해당 없음</span>이 문서에는 적용되지 않는 규칙 ' + nas.length + '개</summary><div class="body"><ul class="hits">' +
-      nas.map(p => '<li>' + esc(p.id) + ' · ' + esc(p.title) + '</li>').join("") + '</ul></div></details></div>';
-  }
-  html += s4Section(sItems);
-  html += x1Section(x1);
-  html += extractSection(doc);
-  card.innerHTML = html;
+/** 행별 복사 버튼 — 복사할 내용이 있는 행에만 둔다 */
+function copyBtn(r, i){
+  if(r.error)      return '<button class="mini" data-copy="' + i + '">사유 복사</button>';
+  if(r.fail > 0)   return '<button class="mini" data-copy="' + i + '">반려 사유</button>';
+  if(r.unknown > 0)return '<button class="mini" data-copy="' + i + '">확인 요청</button>';
+  return '<span class="nodash">—</span>';
 }
 
-function group(cls, title, items, emptyMsg, open){
-  let h = '<div class="grp ' + cls + '"><h2>' + title + '</h2>';
-  if(items.length === 0){ h += emptyMsg ? '<p class="none">' + emptyMsg + '</p>' : ''; }
-  for(const it of items){
-    h += '<details class="item"' + (open ? " open" : "") + '><summary><span class="rid">' + esc(it.id) + '</span>' + esc(it.title);
-    if(it.hits && it.hits.length) h += '<span class="cnt">발견 위치 ' + it.hits.length + (it.moreCount ? "+" : "") + '곳</span>';
-    h += '</summary><div class="body">';
-    if(it.basis) h += '<div class="basis"><b>근거</b> · ' + esc(it.basis) + '</div>';
-    if(it.hits && it.hits.length){
-      h += '<ul class="hits">' + it.hits.map(x =>
-        '<li><span class="loc">' + esc(x.loc || "") + '</span><span class="snippet">' + esc(x.text) + '</span></li>'
-      ).join("") + '</ul>';
-      if(it.moreCount) h += '<p class="more">외 ' + it.moreCount + '곳 더 있습니다.</p>';
-    }
-    if(it.fix) h += '<p class="howfix">' + esc(it.fix) + '</p>';
-    h += '</div></details>';
-  }
-  h += '</div>';
-  return h;
+/** 메신저에 붙여넣을 반려 사유 텍스트 */
+function reasonText(r){
+  const who = [r.subject || r.name, r.grade ? r.grade + "학년" : null, r.teacher].filter(Boolean).join(" · ");
+  if(r.error) return "[" + who + "] 검사 실패 — " + r.error;
+  const lines = ["[" + who + "] " + r.verdict];
+  const add = (label, st) => {
+    const xs = r.items.filter(x => x.status === st);
+    if(!xs.length) return;
+    lines.push("· " + label);
+    for(const x of xs) lines.push("  - " + x.id + " " + x.title);
+  };
+  add("수정이 필요합니다", "FAIL");
+  add("값을 읽지 못해 검사하지 못했습니다 (직접 확인 필요)", "UNKNOWN");
+  return lines.join("\n");
 }
 
-function x1Section(x1){
-  if(!x1 || !x1.areas || x1.areas.length===0) return '';
-  let b='<p style="font-size:12px;color:var(--muted);margin-bottom:6px">X1 「확인 후 제출」 판정의 근거 자료입니다. 차이가 의도한 요약·표현이면 그대로 둬도 되고, 오탈자·누락이면 두 표를 맞춰 주세요.</p>';
-  for(const a of x1.areas){
-    const perfect = a.nameMatch && a.onlySummary.length===0 && a.onlyRubric.length===0 && !a.rubricHasNoElements;
-    b += '<table class="ext"><tr><th colspan="2">'+esc(a.summaryName)+
-      (perfect? ' — <span style="color:var(--pass)">완전 대응</span>' :
-       !a.nameMatch? ' — <span style="color:var(--warn)">세부기준표에서 같은 영역을 찾지 못함</span>' :
-       a.rubricHasNoElements? ' — <span style="color:var(--warn)">세부기준표에 평가요소 없음</span>' :
-       ' — <span style="color:var(--warn)">차이 '+(a.onlySummary.length+a.onlyRubric.length)+'건</span>')+'</th></tr>';
-    if(!perfect){
-      b += '<tr><th style="width:50%">총괄표</th><th>세부기준표</th></tr>';
-      for(const p of a.pairs) b += '<tr><td>'+esc(p.summary)+'</td><td>'+esc(p.rubric)+(p.kind==='표현만 다름'?' <span style="color:var(--muted);font-size:11px">(표현만 다름)</span>':'')+'</td></tr>';
-      for(const s of a.onlySummary) b += '<tr><td>'+esc(s)+'</td><td style="color:var(--warn)">— 세부기준표에 없음</td></tr>';
-      for(const s of a.onlyRubric) b += '<tr><td style="color:var(--warn)">— 총괄표에 없음</td><td>'+esc(s)+'</td></tr>';
-    }
-    b += '</table>';
-  }
-  if(x1.unmatchedRubrics.length) b += '<div class="unk-list">총괄표와 짝이 없는 세부기준 영역: '+x1.unmatchedRubrics.map(esc).join(' · ')+'</div>';
-  return '<details class="extract"><summary>평가요소 교차 대조 (총괄표 ↔ 수행평가 세부기준) — X1 판정 근거</summary><div class="ebody">'+b+'</div></details>';
+async function copy(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    const m = document.getElementById("savedMsg");
+    if(m){ m.classList.add("on"); setTimeout(() => m.classList.remove("on"), 1600); }
+  }catch(e){ alert("복사에 실패했습니다. 아래 내용을 직접 선택해 복사하세요.\n\n" + text); }
 }
 
-function extractSection(d){
-  // 접힌 "검사기가 읽은 값": 수치 판정의 근거를 원문과 대조할 수 있게
-  let b = '';
-  const S = d.summary;
-  if(S){
-    b += '<p style="font-size:12.5px;margin-top:6px">반영 비율 — 정기시험 <b>' + fmtNum(S.ratios.exam) + '</b> / 수행평가 <b>' + fmtNum(S.ratios.perf) + '</b> / 합계 <b>' + fmtNum(S.ratios.total) + '</b>' + (S.essayTotal ? ' / 논술형 합계 <b>' + fmtNum(S.essayTotal) + '</b>' : '') + '</p>';
-    b += '<table class="ext"><tr><th>구분</th><th>영역·시험명</th><th>만점(비율)</th><th>논술형</th><th>평가 시기</th><th>평가 요소(항목 수)</th></tr>';
-    const rowOf = (u, kind) => '<tr><td>' + kind + '</td><td>' + esc(u.name) + '</td>' +
-      '<td>' + fmtNum(u.max) + (u.max && u.max.raw ? '<span class="loc">' + esc(u.max.raw) + '</span>' : '') + '</td>' +
-      '<td>' + (u.essay ? fmtNum(u.essay) : "—") + '</td>' +
-      '<td>' + esc(u.time && u.time.raw || "—") + '</td>' +
-      '<td>' + (u.elements && u.elements.items ? u.elements.items.length + "개" : "—") + '</td></tr>';
-    for(const e of S.exams) b += rowOf(e, "정기시험");
-    for(const p of S.performanceTasks) b += rowOf(p, "수행평가");
-    b += '</table>';
-  } else {
-    b += '<p class="none">평가총괄표를 판독하지 못했습니다.</p>';
-  }
-  if(d.rubrics && d.rubrics.length){
-    b += '<table class="ext"><tr><th>세부기준 영역</th><th>만점</th></tr>';
-    for(const r of d.rubrics) b += '<tr><td>' + esc(r.name.slice(0,50)) + '</td><td>' + fmtNum(r.max) + '</td></tr>';
-    b += '</table>';
-  }
-  if(d.unknowns && d.unknowns.length) b += '<div class="unk-list"><b>읽지 못한 값 ' + d.unknowns.length + '개</b> (0이나 빈칸으로 간주하지 않았습니다)<br>' + d.unknowns.map(esc).join('<br>') + '</div>';
-  b += '<details class="json"><summary>추출 JSON 전체 보기 (원문·출처 좌표 포함)</summary><pre>' + esc(JSON.stringify(d, null, 2)) + '</pre></details>';
-  return '<details class="extract"><summary>검사기가 읽은 값 — 수치 판정의 근거 (펼쳐서 원문과 대조)</summary><div class="ebody">' + b + '</div></details>';
+function downloadCsv(rows){
+  const q = s => '"' + String(s ?? "").replace(/"/g, '""') + '"';
+  const head = ["과목","학년","학기","담당교사","판정","필수오류","확인필요","검사미완료",
+                "필수오류 목록","검사미완료 목록","확인필요 목록","파일명"];
+  const body = rows.map(r => [
+    r.subject || "", r.grade || "", r.semester || "", r.teacher || "",
+    r.error ? "검사 실패" : r.verdict,
+    r.error ? "" : r.fail, r.error ? "" : r.review, r.error ? "" : r.unknown,
+    r.items.filter(x => x.status === "FAIL").map(x => x.id + " " + x.title).join(" / "),
+    r.items.filter(x => x.status === "UNKNOWN").map(x => x.id + " " + x.title).join(" / "),
+    r.items.filter(x => x.status === "REVIEW").map(x => x.id + " " + x.title).join(" / "),
+    r.name
+  ].map(q).join(","));
+  // 엑셀에서 한글이 깨지지 않도록 BOM 추가
+  const csv = "\uFEFF" + [head.map(q).join(","), ...body].join("\r\n");
+  const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  a.href = URL.createObjectURL(blob);
+  a.download = "평가계획_검토결과_" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
+
 </script>
 </body>
 </html>
