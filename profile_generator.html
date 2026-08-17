@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.4</title>
+<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.5</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -95,7 +95,7 @@
 <div class="wrap">
 
 <header class="doc-head">
-  <span class="rulever">생성기 v0.3.4 · 프로필 스키마 v1</span>
+  <span class="rulever">생성기 v0.3.5 · 프로필 스키마 v1</span>
   <div class="eyebrow">평가계획 제출 전 검사기</div>
   <h1>학교 프로필 생성기</h1>
   <p class="subtitle">우리 학교 평가계획 양식(hwpx)을 올리면 유의사항 문구에서 검사 기준을 자동으로 읽어냅니다. 인식 결과를 확인·수정한 뒤 프로필 파일을 내려받아 검사기에 적용하세요.</p>
@@ -150,7 +150,7 @@
   <tr class="paramrow" data-key="perfAreaMaxRatio">
     <td>수행 영역별 상한 <span class="rulecode">N8</span></td>
     <td><input type="number" min="0" max="100" data-f="v"> % 이내
-      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
+      · 판정 <select data-f="verdict"><option>REVIEW</option><option>FAIL</option><option value="">— 판정 선택 —</option></select></td>
     <td class="auto-mark"></td>
   </tr>
   <tr class="paramrow" data-key="longAbsencePositive">
@@ -163,6 +163,12 @@
     <td>급간 균등 규정 <span class="rulecode">N5·N6b</span></td>
     <td><select data-f="v"><option value="">규정 없음 (검사 제외)</option><option value="uniform">균등 급간 요구</option></select>
       · 판정 <select data-f="verdict"><option>REVIEW</option><option>FAIL</option><option value="">— 판정 선택 —</option></select></td>
+    <td class="auto-mark"></td>
+  </tr>
+  <tr class="paramrow" data-key="combinedScoreTableRequired">
+    <td>합산점수표 필수 <span class="rulecode">N4c</span></td>
+    <td><select data-f="v"><option value="">규정 없음 (검사 제외)</option><option value="true">요소별 합산형은 합산점수표 필수</option></select>
+      · 판정 <select data-f="verdict"><option>FAIL</option><option>REVIEW</option><option value="">— 판정 선택 —</option></select></td>
     <td class="auto-mark"></td>
   </tr>
 </table>
@@ -201,7 +207,7 @@
 </div>
 
 <footer>
-  이 도구는 검사 기준(파라미터)만 만듭니다. 편제표 연동 규칙(E1·F4)은 미지정 시 검사에서 자동 제외됩니다.<br>
+  이 도구는 <b>학교별 검사 기준(파라미터)</b>만 만듭니다. 경기도 공통 규칙(N3 논술형 등)은 프로필과 무관하게 검사기가 적용합니다. 편제표 연동 규칙(E1·F4)은 미지정 시 검사에서 자동 제외됩니다.<br>
   자동 인식은 <b>담당자가 입력할 값을 찾아주는 보조 기능</b>입니다. 최종 값은 언제나 ③에서 직접 확인하세요.<br>
   인식되지 않은 유의사항 문구가 있으면 그 문장을 <b>gtmc@gtmc.kr</b>로 보내주시면 다음 버전에 반영하겠습니다.
 </footer>
@@ -209,7 +215,7 @@
 
 <script>
 "use strict";
-const GEN_VERSION = "학교프로필_생성기 v0.3.4";
+const GEN_VERSION = "학교프로필_생성기 v0.3.5";
 
 /* ===== 최소 ZIP 리더 (deflate-raw / stored) ===== */
 async function readZip(buf){
@@ -264,7 +270,7 @@ function extractParagraphs(xml){
      (첫 값을 몰래 채우면 사용자가 경고를 못 볼 때 틀린 기준이 확정된다.)
    · 부정문("~할 필요가 없다")은 규칙으로 확정하지 않는다.
    ============================================================ */
-const RULE_KEYWORD = /수행|정기\s*시험|지필|기본\s*점수|급간|영역|장기|결석|미인정/;
+const RULE_KEYWORD = /수행|정기\s*시험|지필|기본\s*점수|급간|영역|장기|결석|미인정|합산\s*점수/;
 
 /* 참고: 체육·예술 20% 예외는 수행평가 총비율(N2)이 아니라 논술형(N3) 규정의 예외다.
    (명세서 v1.0 §3 — "N3 논술형 합계 ≥ 30%, 예외 20%")
@@ -315,6 +321,9 @@ const PATTERNS = [
   //    이 규칙만 고유 기본 판정을 둔다. 강제 규정으로 운용하는 학교는 ③에서 FAIL로 올린다.
   { key:"gapUniform", rule:"N5·N6b", label:"급간 균등 규정",
     re:/급간[^\n]{0,45}?(?:균등|일정|통일|같게|동일)/g, g:null, val:"uniform", defaultVerdict:"REVIEW" },
+  // ── 요소별 합산점수표 필수 (N4c) — 학교 양식/규정에서 명시된 경우만 프로필에 저장 ──
+  { key:"combinedScoreTableRequired", rule:"N4c", label:"합산점수표 필수",
+    re:/(?:배점의\s*)?합산\s*점수[^\n]{0,45}?(?:기재|표시|작성|필수|오류\s*방지)/g, g:null, val:"true", defaultVerdict:"FAIL", allowNegation:true },
 ];
 
 function detectStrength(ctx){
@@ -509,10 +518,10 @@ const ASK_TEXT = {
   both:"값과 판정이 모두 달라 자동으로 정하지 않았습니다. ③ 표에서 값과 판정을 직접 골라 주세요."
 };
 
-function valStr(v){
+function valStr(v, key){
   if(Array.isArray(v)) return v.join("~") + "%";
   if(v === "uniform") return "균등 요구";
-  if(v === "true") return "0점 초과 요구";
+  if(v === "true") return key === "combinedScoreTableRequired" ? "합산점수표 필수" : "0점 초과 요구";
   return v + "%";
 }
 
@@ -539,7 +548,7 @@ function renderFound(found, fname){
         '<div class="cand">';
       const num = ["①","②","③","④","⑤"];
       f.candidates.forEach((c, i) => {
-        html += '<div style="margin:6px 0"><b>' + (num[i] || "·") + ' ' + esc(valStr(c.value)) + '</b> <span style="font-size:12px;color:var(--muted)">(판정 ' + esc(c.verdict) + ')</span>' +
+        html += '<div style="margin:6px 0"><b>' + (num[i] || "·") + ' ' + esc(valStr(c.value, k)) + '</b> <span style="font-size:12px;color:var(--muted)">(판정 ' + esc(c.verdict) + ')</span>' +
           '<div class="src">' + esc(c.source.slice(0, 160)) + '</div></div>';
       });
       html += '</div><div class="ask">' + esc(ASK_TEXT[f.axis] || ASK_TEXT.both) + '</div></div>';
@@ -547,7 +556,7 @@ function renderFound(found, fname){
       const c = f.candidates[0];
       html += '<div class="fcard"><div class="top">' +
         '<span class="rule">' + esc(f.rule) + '</span>' +
-        '<span class="lbl">' + esc(f.label) + ' = ' + esc(valStr(c.value)) + '</span>' +
+        '<span class="lbl">' + esc(f.label) + ' = ' + esc(valStr(c.value, k)) + '</span>' +
         '<span style="font-size:12px;color:var(--muted)">판정 ' + esc(c.verdict) + '</span></div>' +
         '<div class="src">' + esc(c.source.slice(0, 160)) + '</div></div>';
     }
@@ -698,9 +707,8 @@ function collect(){
     if(raw === "") continue;                                    // 미입력 = 검사 제외
 
     if(k === "gapUniform"){ params[k] = { value:"uniform", verdict }; continue; }
-    if(k === "longAbsencePositive"){
-      // 계약 주의: 검사기는 값의 참·거짓이 아니라 '키의 존재'로 규칙 적용을 판단한다.
-      //           미적용은 반드시 키를 생략해야 하므로 false는 내보내지 않는다.
+    if(k === "longAbsencePositive" || k === "combinedScoreTableRequired"){
+      // 불리언 규칙은 선택했을 때만 true를 저장한다. 미적용은 키 자체를 생략한다.
       params[k] = { value:true, verdict };
       continue;
     }
