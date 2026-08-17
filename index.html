@@ -139,7 +139,7 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
                   '배점'이 머리글이 아닌 「채점 기준|배점」 서브헤더에 오는 양식 인식
    ============================================================ */
 const RULE_VERSION = "V2.2.0";
-const RULE_COUNT = 45;
+const RULE_COUNT = 46;
 const PARSER_VERSION = "P0.9";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
@@ -1237,7 +1237,10 @@ else if(kind==="rubric22"){
           for(const cell of grid.all){
             if(cell.r==null||cell.r<=rElemHead) continue;
             if(specialRow.basic!=null && cell.r>=specialRow.basic) continue;
-            const mm=cell.t.trim().match(/^(.{1,40}?)\(\s*(\d+(?:\.\d+)?)\s*점\s*\)$/);
+            /* [PARSER-018] 요소명 셀 내 ※ 주석 문단 허용 — "(N점) ※…" 및 "※… (N점)" 양형태 */
+            const rawT=cell.t.trim();
+            let mm=rawT.match(/^(.{1,40}?)\(\s*(\d+(?:\.\d+)?)\s*점\s*\)\s*(?:※[\s\S]*)?$/);
+            if(!mm) mm=rawT.match(/^(.{1,40}?)\s*※[\s\S]*?\(\s*(\d+(?:\.\d+)?)\s*점\s*\)$/);
             if(mm) cand.push({name:mm[1].trim(), maxScore:+mm[2], rStart:cell.r, rEnd:cell.r+cell.rs-1, cell});
           }
           elemObjs=cand.filter(a=>!cand.some(b=>b!==a && a.rStart<=b.rStart && b.rEnd<=a.rEnd));
@@ -2246,6 +2249,45 @@ function runN4(doc){
   return items;
 }
 
+/* ---------- N4b. 요소별 최저 급간 합계 = 기본점수 (요소별 채점 영역만) ---------- */
+function runN4b(doc){
+  const items = [];
+  const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
+  const B = "양식 정리 규칙 — 기본점수는 요소별 최저 급간의 합계입니다. 요소별 최저점 합계는 기본점수와 같아야 합니다 (통합 점수열 영역은 판정 제외).";
+  const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계/;
+  const hits = []; let checked = 0;
+  for(const r of (doc.rubrics || [])){
+    const basic = r.basicScore && r.basicScore.value;
+    const crit = (r.scoreCriteria || []).filter(c => c && c.score != null && !EXCL.test(c.label || ""));
+    if(basic == null || crit.length === 0) continue;
+    const groups = new Map();
+    let hasGrouped = false;
+    for(const c of crit){
+      if(!(c.label || "").includes(" · ")) continue;
+      hasGrouped = true;
+      const key = c.label.split(" · ")[0];
+      groups.set(key, Math.min(groups.get(key) ?? Infinity, c.score));
+    }
+    if(!hasGrouped) continue;
+    checked++;
+    const mins = [...groups.entries()];
+    const sum = mins.reduce((a, [, v]) => a + v, 0);
+    if(Math.abs(sum - basic) > EPS){
+      const bd = mins.map(([k, v]) => k.slice(0, 16) + " " + v + "점").join(" + ");
+      hits.push({ loc: "세부기준표 「" + String(r.name || "").slice(0, 20) + "」",
+        text: "요소별 최저점 합계 " + sum + "점 ≠ 기본점수 " + basic + "점 (" + bd + ")" });
+    }
+  }
+  if(hits.length)
+    push("N4b", ST.FAIL, "요소별 최저점 합계가 기본점수와 다른 영역이 " + hits.length + "개 있습니다",
+      { basis:B, hits, fix:"요소별 최저 급간(정상 수행 최저점)의 합이 기본점수가 되도록 급간 또는 기본점수를 수정하세요." });
+  else if(checked === 0)
+    push("N4b", ST.NA, "요소별 최저점 검사 — 요소별 채점 영역 없음");
+  else
+    push("N4b", ST.PASS, "요소별 최저점 합계 = 기본점수 (" + checked + "개 영역 확인)");
+  return items;
+}
+
 /* ---------- X3. 영역명 일치 · X5. 논술 표기·배점 · F5. 분량·횟수 기준 ---------- */
 function runX3(doc){
   const items = [];
@@ -2881,7 +2923,7 @@ function runNumericBundle(doc){
     else push("N6d", ST.PASS, "기본점수 > 0 확인 ("+checked+"개 영역)");
   }
 
-/* ----- N6e. 결시자 점수 차등 (FAIL) + 학교 규정 관계식 대조 (REVIEW) -----
+/* ----- N6e. 결시자 점수 차등 (FAIL) + 학교 규정 관계식 대조 (FAIL) -----
      학교 규정(8번 섹션): 백지·자발적 미응시 = 기본점수 −1점 / 장기 미인정 = 기본점수 −2점 */
   if(!schoolRulesActive()){
     push("N6e", ST.NA, "결시자 점수 관계식 — 학교 성적처리 규정이므로 이 프로필에는 적용하지 않습니다");
@@ -2903,8 +2945,8 @@ function runNumericBundle(doc){
     if(checked===0) push("N6e", ST.UNKNOWN, "결시자 점수를 읽지 못해 차등 여부를 검사하지 못했습니다");
     else if(fails.length) push("N6e", ST.FAIL, "결시자 점수가 차등되지 않은 영역이 "+fails.length+"개 있습니다", { basis:B, hits:fails,
       fix:"장기 미인정 결석자 점수를 자발적 미응시 점수보다 낮게 조정하세요. (규정: 기본점수 −1 / −2)" });
-    else if(revs.length) push("N6e", ST.REVIEW, "결시자 점수가 학교 규정 관계식(기본 −1/−2)과 다른 영역이 "+revs.length+"개 있습니다", { basis:B, hits:revs,
-      fix:"8번 성적처리 규정의 −1점/−2점과 일치하는지 확인하세요. 의도한 별도 기준이면 그대로 둬도 됩니다." });
+    else if(revs.length) push("N6e", ST.FAIL, "결시자 점수가 학교 규정 관계식(기본 −1/−2)과 다른 영역이 "+revs.length+"개 있습니다", { basis:B, hits:revs,
+      fix:"8번 성적처리 규정에 따라 미응시=기본점수−1점, 장기 미인정=기본점수−2점으로 수정하세요." });
     else push("N6e", ST.PASS, "결시자 점수 차등·규정 관계식 확인 ("+checked+"개 영역)");
   }
 
@@ -3286,7 +3328,7 @@ async function handleFiles(fileList){
       const checks = runChecks({ headerXml, sections, fileName: f.name }, doc.document);
       // V1 수치·형식 규칙
       const v1 = runV1(doc);
-      v1.items.push(...runN4(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
+      v1.items.push(...runN4(doc), ...runN4b(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX5(doc),
                     ...runX8(doc), ...runX9(doc), ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc), ...runF23(doc), ...runCurriculumRules(doc));
       // X7(선행학습)은 시기 판정 결과를 참고해야 하므로 뒤에 붙입니다
       const timingBroken = v1.items.some(i =>
