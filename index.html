@@ -137,10 +137,14 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
    v1.20 변경점
    · PARSER-018 : rubric15 변형 B-2(서브헤더 급간형) 지원
                   '배점'이 머리글이 아닌 「채점 기준|배점」 서브헤더에 오는 양식 인식
+   · PARSER-024 : rubric15 「평가 내용 | 채점」 머리글형 지원
+                  '평가 내용'과 정확히 짝인 '채점' 열을 배점 열로 인식
+   · PARSER-025 : rubric15 특수점수 행 독립 판독
+                  별도 '채점 기준' 서브헤더가 없어도 기본점수·미응시·장기 미인정 점수 인식
    ============================================================ */
 const RULE_VERSION = "V2.2.0";
 const RULE_COUNT = 46;
-const PARSER_VERSION = "P0.9";
+const PARSER_VERSION = "P0.11";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 /* ============================================================
@@ -269,7 +273,7 @@ const BASIS = {
 
 // 패턴 설정 (규칙 데이터와 판정 코드 분리)
 const CFG = {
-  placeholder: [ /◯\s*학년/, /◯{2,}/, /○{2,}/, /◯\s*~\s*◯\s*반/, /○\s*~\s*○\s*반/, /\[과목명\]/, /\(\s*과목명\s*\)/ ],
+  placeholder: [ /◯\s*학년/, /◯{2,}/, /○{2,}/, /◯\s*~\s*◯\s*반/, /○\s*~\s*○\s*반/, /\[과목명\]/, /\(\s*과목명\s*\)/, /^\s*[가-하]\s*[.．]\s*평가\s*영역명\s*\d*\s*$/ ],
   exampleStaff: [ /김○빈/, /추○우/ ],  // 익명 표기(이○철 등)는 정보공시 제출 형식이므로 검사하지 않음
   instructions: [
     /파란색\s*글씨\s*삭제/, /사용하지\s*않는\s*표도?\s*삭제/, /메모\s*지우기/,
@@ -595,10 +599,10 @@ function runChecks(doc, docInfo){
   {
     const hits = hitsFor(CFG.placeholder, scanTexts);
     if(hits.length){
-      findings.push({ id:"R3", level:"red", title:"미완성 자리표시가 " + hits.length + "곳 있습니다 (◯학년, [과목명] 등)",
-        basis: BASIS.CLEAN, fix:"학년·과목명·학급을 실제 값으로 바꿔 입력하세요.", hits: hits.slice(0,10),
+      findings.push({ id:"R3", level:"red", title:"미완성 자리표시가 " + hits.length + "곳 있습니다 (◯학년, [과목명], 평가 영역명 등)",
+        basis: BASIS.CLEAN, fix:"학년·과목명·학급·평가 영역명을 실제 값으로 바꿔 입력하세요.", hits: hits.slice(0,10),
         moreCount: Math.max(0, hits.length - 10) });
-    } else passes.push({ id:"R3", title:"자리표시(◯학년, [과목명] 등) 없음" });
+    } else passes.push({ id:"R3", title:"자리표시(◯학년, [과목명], 평가 영역명 등) 없음" });
   }
 
   /* R4. 3학년 문서의 2022 교육과정 안내 — 본문·메모 각각 검사 */
@@ -898,7 +902,7 @@ function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
-const P_VER = "P0.9";
+const P_VER = "P0.11";
 /* ===== ZIP (V0.9와 동일) ===== */
 /* readZip·stripMemos·cleanT는 공통 유틸(기존 검사기 정의)을 사용 — TECH-001 */
 /* ===== XML 유틸 ===== */
@@ -1225,6 +1229,18 @@ else if(kind==="rubric22"){
           if(specialRow.voluntary==null && /백지|미응시|미제출/.test(t)) specialRow.voluntary=f.r;
           if(specialRow.absence==null && /장기미인정|장결/.test(t)) specialRow.absence=f.r;
         }
+        /* PARSER-026: rubric22에서 점수 셀과 [기본점수] 마커가 분리된 행 지원.
+           예: '만족하는 항목이 없는 경우 | 5 | [기본점수]'. 이 점수는 요소 최저급간 합이 아니라
+           영역 전체의 별도 기본점수이므로 N4b 판정 대상에서는 제외한다. */
+        let separatedBasicMarkerRow=null;
+        if(specialRow.basic==null){
+          for(const row of grid.rows){
+            const marker=row.find(c=>c.t && /[\[\(]\s*기본\s*점수\s*[\]\)]/.test(c.t));
+            if(!marker) continue;
+            const r0=row.find(c=>c.r!=null);
+            if(r0){ specialRow.basic=r0.r; separatedBasicMarkerRow=r0.r; break; }
+          }
+        }
         // PARSER-015d: '6 (기본점수)'처럼 한글 괄호 주석이 붙은 점수 셀 대응 (숫자 괄호·%는 보존)
         const numOf=(cell)=>{ const n=parseNums(cell.t.replace(/\[[^\]]*\]/g,"").replace(/\([^)]*[가-힣][^)]*\)/g,""),"score"); return n.score!=null?n.score:n.ratio; };
         const rightNum=(row)=>row.filter(c=>c.c!==0 && c.t && /\d/.test(c.t) && /^[\s\d.점\[\]\(\)가-힣]*$/.test(c.t.trim())).sort((a,b)=>b.c-a.c)[0]||null;
@@ -1290,7 +1306,7 @@ else if(kind==="rubric22"){
             const r0=row.find(c=>c.r!=null); if(!r0) continue; const rr=r0.r;
             const sc=rightNum(row); if(!sc) continue;
             const val=numOf(sc); if(val==null) continue;
-            if(specialRow.basic!=null && rr===specialRow.basic){ basicScore={raw:sc.t, value:val, source:{...src,row:sc.r,col:sc.c}}; continue; }
+            if(specialRow.basic!=null && rr===specialRow.basic){ basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===rr?"fallback":null), source:{...src,row:sc.r,col:sc.c}}; continue; }
             if(specialRow.voluntary!=null && rr===specialRow.voluntary){ voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
             if(specialRow.absence!=null && rr===specialRow.absence){ longAbsenceScore={raw:sc.t, value:val}; continue; }
             /* PARSER-023: 요소 셀 사이의 ※ 주석행은 투명하게 취급 — 다음 요소 시작 전까지 직전 요소에 급간 귀속 */
@@ -1352,7 +1368,7 @@ else if(kind==="rubric22"){
               const isBasic=(specialRow.basic!=null&&fr===specialRow.basic)||BASIC_MARK.test(sc.t)||/만족하는항목이없는|충족하지못하/.test(label.replace(/\s/g,""));
               const isVol=specialRow.voluntary!=null&&fr===specialRow.voluntary;
               const isAbs=specialRow.absence!=null&&fr===specialRow.absence;
-              if(isBasic && basicScore==null){ basicScore={raw:sc.t, value:val, source:{...src,row:sc.r,col:sc.c}}; continue; }
+              if(isBasic && basicScore==null){ basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===fr?"fallback":null), source:{...src,row:sc.r,col:sc.c}}; continue; }
               if(isVol){ if(voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
               if(isAbs){ if(longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val}; continue; }
               /* PARSER-014: c0 병합 요소 셀(rs>1)의 하위 행을 요소 그룹으로 귀속 */
@@ -1389,7 +1405,10 @@ else if(kind==="rubric22"){
         const head=grid.rows[0]||[];
         const colOf=w=>{ const h=head.find(c=>c.t.replace(/\s/g,"").includes(w)); return h?h.c:null; };
         const cG=colOf("학년"), cA=colOf("평가영역"), cT=colOf("평가시기"), cE=colOf("평가요소");
-        const cScore=colOf("배점");   // PARSER-013: 변형 B 판별 키
+        /* PARSER-024: 「평가 내용 | 채점」 머리글형(미술 실증) — 정확히 '채점'인 열만 배점 열로 인정.
+           '평가 기준(채점 기준)'처럼 설명 열에 '채점'이 포함된 경우는 오인하지 않는다. */
+        const colExact=w=>{ const h=head.find(c=>c.t.replace(/\s/g,"")===w); return h?h.c:null; };
+        const cScore=colOf("배점") ?? (colExact("평가내용")!=null ? colExact("채점") : null);   // PARSER-013 + PARSER-024
         const dataRow=grid.rows.slice(1).find(row=>{
           const g=row.find(c=>c.c===cG), a=row.find(c=>c.c===cA);
           return g && /^\s*[123]\s*$/.test(g.t) && a && a.t.trim();
@@ -1412,6 +1431,7 @@ else if(kind==="rubric22"){
           const rightNum15=(row)=>row.filter(c=>c.c!==cE && c.t && /\d/.test(c.t) && /^[\s\d.점\[\]\(\)가-힣]*$/.test(c.t.trim())).sort((a,b)=>b.c-a.c)[0]||null;
           const elements=[]; const scoreCriteria=[];
           let basicScore=null, voluntaryNonSubmissionScore=null, longAbsenceScore=null;
+          const SPECIAL15=/기본\s*점수|(?:만족|충족)하는[\s\S]{0,20}?(?:항목|평가\s*요소)[\s\S]{0,10}?없는|백지|미응시|미제출|본인\s*의사|자발적\s*미참여|장기\s*미인정|장결|감점|총점|소계|합계/;
 
           /* PARSER-013: 변형 B(요소별 급간형) 수집.
              머리글에 '배점' 열이 있으면 '채점 기준' 헤더 위쪽 요소 행에 급간 배점이 들어 있다.
@@ -1428,6 +1448,7 @@ else if(kind==="rubric22"){
               if(!owner||!owner.t.trim()) continue;
               const sCell=coveringCell(grid,rr,cScore);
               if(!sCell||sCell.r!==rr) continue;       // 배점 셀 앵커 행에서만
+              if(SPECIAL15.test(owner.t)||/기본\s*점수/.test(sCell.t)) continue;
               const n=parseNums(sCell.t.replace(/[\[\(]기본점수[\]\)]/g,""),"score");
               const v=n.score!=null?n.score:n.ratio;
               if(v==null) continue;
@@ -1489,21 +1510,33 @@ else if(kind==="rubric22"){
 
           for(const e of eRows){
             const row=grid.rows.find(r=>r.some(c=>c===e));
+            const label=e.t.trim();
+            const tN=label.replace(/\s/g,"");
+
+            /* PARSER-025: 기본점수·미응시·장기결석 특수행은 '채점 기준' 서브헤더 유무와 무관하게 읽는다.
+               머리글 자체가 「평가 기준(채점 기준) | 배점」인 표는 rScore가 null이므로,
+               기존 isPre 분기보다 먼저 특수행을 판독해야 한다 (심화 국어 실증). */
+            {
+              const sc=rightNum15(row);
+              if(sc){
+                const val=numOf15(sc);
+                if(val!=null){
+                  const isBasic=/기본\s*점수/.test(sc.t)||/기본점수/.test(tN)||/(?:만족|충족)하는[\s\S]{0,20}?(?:항목|평가요소)[\s\S]{0,10}?없는/.test(tN);
+                  const isVol=/백지|미응시|미제출|본인\s*의사|자발적\s*미참여/.test(label);
+                  const isAbs=/장기\s*미인정|장결/.test(label);
+                  if(isBasic && basicScore==null){ basicScore={raw:sc.t, value:val, source:{...src,row:sc.r,col:sc.c}}; continue; }
+                  if(isVol){ if(voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
+                  if(isAbs){ if(longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val}; continue; }
+                }
+              }
+            }
+
             const isPre = rScore==null || e.r<rScore;
             // PARSER-013: 변형 B는 위에서 배점과 함께 수집했으므로 이름만 중복 push 하지 않는다
             if(isPre){ if(!variantB && !variantB2){ for(const it of splitElements(e.t)) elements.push({name:it, maxScore:null, criteria:[], minimumPerformanceScore:null}); } continue; }
             if(variantB2 && b2map.has(e.r)) continue;   // PARSER-018: 그룹 앵커 행은 위에서 급간과 함께 수집됨
             const sc=rightNum15(row); if(!sc) continue;
             const val=numOf15(sc); if(val==null) continue;
-            const label=e.t.trim();
-            const tN=label.replace(/\s/g,"");
-            // PARSER-013: 기본점수 마커가 배점 셀(7(기본점수))이 아니라 요소 셀((기본점수))에 오는 양식 대응
-            const isBasic=/기본점수/.test(sc.t)||/기본점수/.test(tN)||/만족하는항목이없는/.test(tN);
-            const isVol=/백지|미응시|미제출|본인\s*의사/.test(label);
-            const isAbs=/장기\s*미인정|장결/.test(label);
-            if(isBasic && basicScore==null){ basicScore={raw:sc.t, value:val, source:{...src,row:sc.r,col:sc.c}}; continue; }
-            if(isVol){ if(voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
-            if(isAbs){ if(longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val}; continue; }
             scoreCriteria.push({label:label.slice(0,40), score:val});
           }
           const achievementCodes=[]; const codeRanges=[];
@@ -1604,7 +1637,7 @@ else if(kind==="rubric22"){
 
 ;
 /* ============================================================
-   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.9 JSON 기반
+   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.11 JSON 기반
    F0(수식 오류 문자열)은 텍스트 규칙이므로 runChecks 내부에 있음.
    상태 5단계: PASS / FAIL / REVIEW / UNKNOWN / NOT_APPLICABLE
    ※ RULE-012: 구버전 N4 블록은 이 함수에서 제거됨. N4는 runN4()가 단독 담당.
@@ -2283,6 +2316,7 @@ function runN4b(doc){
   for(const r of (doc.rubrics || [])){
     const basic = r.basicScore && r.basicScore.value;
     const els = (r.elements || []).filter(e=>e && e.name);
+    if(r.basicScore && r.basicScore.kind === "fallback") continue;
     // 요소가 하나뿐이거나 요소별 급간 자체를 읽지 못한 표는 통합 점수열로 보아 판정하지 않는다.
     if(basic == null || els.length < 2) continue;
     const mins=[]; let readable=true;
@@ -3354,7 +3388,7 @@ async function handleFiles(fileList){
     try{
       const buf = await f.arrayBuffer();
       const zip = await readZip(buf);
-      // 파서 (P0.9) — mimetype·section 검증 포함
+      // 파서 (P0.11) — mimetype·section 검증 포함
       const doc = await parseDoc(zip);
       // 텍스트 규칙 (기존 검사기 15종 + F0)
       const secNames = zip.names.filter(n => /^Contents\/section\d+\.xml$/.test(n))
