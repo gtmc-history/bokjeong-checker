@@ -1227,9 +1227,27 @@ else if(kind==="rubric22"){
         }
         // PARSER-015d: '6 (기본점수)'처럼 한글 괄호 주석이 붙은 점수 셀 대응 (숫자 괄호·%는 보존)
         const numOf=(cell)=>{ const n=parseNums(cell.t.replace(/\[[^\]]*\]/g,"").replace(/\([^)]*[가-힣][^)]*\)/g,""),"score"); return n.score!=null?n.score:n.ratio; };
-        const rightNum=(row)=>row.filter(c=>c.c!==0 && c.t && /\d/.test(c.t) && /^[\s\d.점\[\]가-힣]*$/.test(c.t.trim())).sort((a,b)=>b.c-a.c)[0]||null;
+        const rightNum=(row)=>row.filter(c=>c.c!==0 && c.t && /\d/.test(c.t) && /^[\s\d.점\[\]\(\)가-힣]*$/.test(c.t.trim())).sort((a,b)=>b.c-a.c)[0]||null;
         const pureNum=(c)=>/^\d+(?:\.\d+)?점?$/.test(c.t.trim());
         const BASIC_MARK=/[\[\(]\s*기본\s*점수\s*[\]\)]/;
+        /* PARSER-022: 세부기준표의 실제 「평가 요소」 열을 채점 구성요소와 분리해 보존 — X1 교차검증용 */
+        const evalElements=[];
+        if(rElemHead!=null){
+          const stopRow=[specialRow.basic,specialRow.voluntary,specialRow.absence].filter(x=>x!=null).sort((a,b)=>a-b)[0] ?? Infinity;
+          const seenEval=new Set();
+          const EVAL_EXCL=/^(?:※|채점\s*기준|배점|수행\s*수준|기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계|만족하는\s*항목이\s*없는)/;
+          for(const cell of grid.all){
+            if(cell.c!==0 || cell.r==null || cell.r<=rElemHead || cell.r>=stopRow) continue;
+            const raw=((cell.lines&&cell.lines.length)?cell.lines.join("\n"):cell.t).trim();
+            if(!raw || EVAL_EXCL.test(raw)) continue;
+            const parts=splitElements(raw.replace(/[⋅∙]/g,"\n"));
+            for(const part of parts){
+              const t=part.replace(/\(\s*\d+(?:\.\d+)?\s*점\s*\)\s*(?:※[\s\S]*)?$/," ").trim();
+              if(t.length<2 || EVAL_EXCL.test(t) || seenEval.has(t)) continue;
+              seenEval.add(t); evalElements.push(t);
+            }
+          }
+        }
         // 변형 B: (N점) 접미 요소 (기존)
         let elemObjs=[];
         if(rElemHead!=null){
@@ -1275,8 +1293,11 @@ else if(kind==="rubric22"){
             if(specialRow.basic!=null && rr===specialRow.basic){ basicScore={raw:sc.t, value:val, source:{...src,row:sc.r,col:sc.c}}; continue; }
             if(specialRow.voluntary!=null && rr===specialRow.voluntary){ voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
             if(specialRow.absence!=null && rr===specialRow.absence){ longAbsenceScore={raw:sc.t, value:val}; continue; }
-            const owner=elements.find((e,i)=>rr>=elemObjs[i].rStart && rr<=elemObjs[i].rEnd);
-            if(!owner) continue;
+            /* PARSER-023: 요소 셀 사이의 ※ 주석행은 투명하게 취급 — 다음 요소 시작 전까지 직전 요소에 급간 귀속 */
+            let ownerIdx=-1;
+            for(let i=0;i<elemObjs.length;i++){ if(elemObjs[i].rStart<=rr) ownerIdx=i; else break; }
+            if(ownerIdx<0 || (specialRow.basic!=null && rr>=specialRow.basic)) continue;
+            const owner=elements[ownerIdx];
             const label=(row.find(c=>c.t && c.c!==sc.c && /충족|경우|항목|기준/.test(c.t))||{t:"(급간)"}).t.trim();
             const isMin=BASIC_MARK.test(sc.t)||/만족하는\s*항목이\s*없는/.test(label);
             if(isMin){ if(owner.minimumPerformanceScore==null) owner.minimumPerformanceScore=val; }
@@ -1360,7 +1381,7 @@ else if(kind==="rubric22"){
         }
         doc.rubrics.push({type:"22", name,
           max: maxCell? {...parseNums(maxCell.t,"score"), source:{...src,row:maxCell.r,col:maxCell.c}} : {raw:null,unknown:true},
-          achievementCodes, codeRanges, elements, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore,
+          achievementCodes, codeRanges, evalElements, elements, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore,
           source:src});
         if(!maxCell) doc.unknowns.push(`세부기준표 '${name}'의 영역 만점을 읽지 못함`);
       }
@@ -2213,7 +2234,7 @@ function runN4(doc){
   const items = [];
   const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
   const B = "양식 정리 규칙 — 평가요소별 정상 수행 최고점의 합계는 영역 만점과 같아야 합니다 (기본점수·백지·미응시·장기결석·감점·소계 제외).";
-  const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계/;
+  const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계|만족하는\s*항목이\s*없는/;
   const rubrics = doc.rubrics || [];
   if(rubrics.length === 0){
     push("N4", ST.UNKNOWN, "수행평가 세부기준표를 읽지 못해 최고점 합계를 검사하지 못했습니다", { basis:B });
@@ -2234,6 +2255,10 @@ function runN4(doc){
     const tops = [...groups.entries()];
     const sum = tops.reduce((a, [, v]) => a + v, 0);
     if(Math.abs(sum - maxV) > EPS){
+      // 체크리스트 가산형은 같은 요소 안의 각 항목 점수를 더해 만점을 구성한다.
+      // 대안 합계가 정확히 영역 만점이면 요소별 급간형이 아닌 가산형으로 인정한다.
+      const additive = crit.reduce((a,c)=>a+c.score,0);
+      if(Math.abs(additive - maxV) <= EPS) continue;
       const bd = tops.map(([k, v]) => (k === "(통합)" ? "최고점" : k.slice(0, 16)) + " " + v + "점").join(" + ");
       hits.push({ loc: "세부기준표 「" + String(r.name || "").slice(0, 20) + "」",
         text: "요소별 최고점 합계 " + sum + "점 ≠ 영역 만점 " + maxV + "점 (" + bd + ")" });
@@ -2254,33 +2279,38 @@ function runN4b(doc){
   const items = [];
   const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
   const B = "양식 정리 규칙 — 기본점수는 요소별 최저 급간의 합계입니다. 요소별 최저점 합계는 기본점수와 같아야 합니다 (통합 점수열 영역은 판정 제외).";
-  const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계/;
   const hits = []; let checked = 0;
   for(const r of (doc.rubrics || [])){
     const basic = r.basicScore && r.basicScore.value;
-    const crit = (r.scoreCriteria || []).filter(c => c && c.score != null && !EXCL.test(c.label || ""));
-    if(basic == null || crit.length === 0) continue;
-    const groups = new Map();
-    let hasGrouped = false;
-    for(const c of crit){
-      if(!(c.label || "").includes(" · ")) continue;
-      hasGrouped = true;
-      const key = c.label.split(" · ")[0];
-      groups.set(key, Math.min(groups.get(key) ?? Infinity, c.score));
+    const els = (r.elements || []).filter(e=>e && e.name);
+    // 요소가 하나뿐이거나 요소별 급간 자체를 읽지 못한 표는 통합 점수열로 보아 판정하지 않는다.
+    if(basic == null || els.length < 2) continue;
+    const mins=[]; let readable=true;
+    for(const e of els){
+      let v = e.minimumPerformanceScore;
+      if(v == null){
+        const scores=(e.criteria||[]).map(c=>c&&c.score).filter(v=>v!=null && Number.isFinite(v));
+        const distinct=[...new Set(scores)];
+        // 한 요소 안의 모든 항목이 같은 점수면 급간형이 아니라 체크리스트 가산형일 가능성이 높다.
+        // N4b는 대체 급간이 2개 이상인 요소별 채점형에만 적용한다.
+        if(distinct.length < 2){ readable=false; break; }
+        v=Math.min(...distinct);
+      }
+      if(v == null || !Number.isFinite(v)){ readable=false; break; }
+      mins.push([e.name, v]);
     }
-    if(!hasGrouped) continue;
+    if(!readable) continue;
     checked++;
-    const mins = [...groups.entries()];
     const sum = mins.reduce((a, [, v]) => a + v, 0);
     if(Math.abs(sum - basic) > EPS){
-      const bd = mins.map(([k, v]) => k.slice(0, 16) + " " + v + "점").join(" + ");
+      const bd = mins.map(([k, v]) => String(k).slice(0, 16) + " " + v + "점").join(" + ");
       hits.push({ loc: "세부기준표 「" + String(r.name || "").slice(0, 20) + "」",
         text: "요소별 최저점 합계 " + sum + "점 ≠ 기본점수 " + basic + "점 (" + bd + ")" });
     }
   }
   if(hits.length)
     push("N4b", ST.FAIL, "요소별 최저점 합계가 기본점수와 다른 영역이 " + hits.length + "개 있습니다",
-      { basis:B, hits, fix:"요소별 최저 급간(정상 수행 최저점)의 합이 기본점수가 되도록 급간 또는 기본점수를 수정하세요." });
+      { basis:B, hits, fix:"요소별 최저 급간의 합이 기본점수가 되도록 급간 또는 기본점수를 수정하세요." });
   else if(checked === 0)
     push("N4b", ST.NA, "요소별 최저점 검사 — 요소별 채점 영역 없음");
   else
@@ -3210,20 +3240,28 @@ function runX1Shadow(doc){
     usedR.add(ri); area.rubricIndex=ri;
     const r=doc.rubrics[ri];
     area.rubricName=r.name; area.nameMatch=true;
-    const rItems=(r.elements||[]).map(e=>String(e.name).replace(/\s+/g," ").trim());
-    if(rItems.length===0){ area.rubricHasNoElements=true; area.onlySummary=sItems; out.areas.push(area); continue; }
-    const sLeft=[...sItems], rLeft=[...rItems];
-    // 1) 정규화 일치
-    for(let i=sLeft.length-1;i>=0;i--){
-      const j=rLeft.findIndex(x=>normX1_(x)===normX1_(sLeft[i]));
-      if(j>=0){ area.pairs.push({summary:sLeft[i], rubric:rLeft[j], kind:"동일"}); sLeft.splice(i,1); rLeft.splice(j,1); }
-    }
-    // 2) 토큰 유사
-    for(let i=sLeft.length-1;i>=0;i--){
-      const j=rLeft.findIndex(x=>simX1_(x,sLeft[i]));
-      if(j>=0){ area.pairs.push({summary:sLeft[i], rubric:rLeft[j], kind:"표현만 다름"}); sLeft.splice(i,1); rLeft.splice(j,1); }
-    }
-    area.onlySummary=sLeft; area.onlyRubric=rLeft;
+    /* X1-PARSER: 실제 「평가 요소」 열과 채점 구성요소 두 후보를 모두 대조해 더 잘 맞는 쪽을 사용한다.
+       양식에 따라 두 층위가 같은 경우와 다른 경우가 공존하므로 한쪽을 고정하면 오탐이 늘어난다. */
+    const candidates=[];
+    if(r.evalElements&&r.evalElements.length) candidates.push(r.evalElements);
+    if(r.elements&&r.elements.length) candidates.push(r.elements.map(e=>e.name));
+    const matchSet=(arr)=>{
+      const rItems=arr.map(e=>String(e).replace(/\s+/g," ").trim()).filter(Boolean);
+      const sLeft=[...sItems], rLeft=[...rItems], pairs=[];
+      for(let i=sLeft.length-1;i>=0;i--){
+        const j=rLeft.findIndex(x=>normX1_(x)===normX1_(sLeft[i]));
+        if(j>=0){ pairs.push({summary:sLeft[i], rubric:rLeft[j], kind:"동일"}); sLeft.splice(i,1); rLeft.splice(j,1); }
+      }
+      for(let i=sLeft.length-1;i>=0;i--){
+        const j=rLeft.findIndex(x=>simX1_(x,sLeft[i]));
+        if(j>=0){ pairs.push({summary:sLeft[i], rubric:rLeft[j], kind:"표현만 다름"}); sLeft.splice(i,1); rLeft.splice(j,1); }
+      }
+      return {pairs, onlySummary:sLeft, onlyRubric:rLeft, cost:sLeft.length+rLeft.length};
+    };
+    if(candidates.length===0){ area.rubricHasNoElements=true; area.onlySummary=sItems; out.areas.push(area); continue; }
+    const variants=candidates.map(matchSet).sort((a,b)=>a.cost-b.cost || b.pairs.length-a.pairs.length);
+    const best=variants[0];
+    area.pairs=best.pairs; area.onlySummary=best.onlySummary; area.onlyRubric=best.onlyRubric;
     out.areas.push(area);
   }
   doc.rubrics.forEach((r,i)=>{ if(!usedR.has(i)) out.unmatchedRubrics.push(r.name); });
