@@ -144,7 +144,7 @@
   <div id="board"></div>
 
   <footer>
-    판정 기준은 개별 검사기와 동일합니다(검사 규칙 49종 · 파서 P0.13). 학교별 수치 기준은 프로필을 불러오면 반영됩니다.<br>
+    판정 기준은 개별 검사기와 동일합니다(검사 규칙 49종 · 파서 P0.14). 학교별 수치 기준은 프로필을 불러오면 반영됩니다.<br>
     성취기준 DB 대조(S2·S3·S4)는 문서의 과목명이 자동 인식될 때만 수행됩니다. 인식되지 않으면 「검사 미완료」로 남으며, 개별 검사기에서 과목을 직접 선택하면 확인할 수 있습니다.
   </footer>
 </div>
@@ -173,7 +173,7 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
    ============================================================ */
 const RULE_VERSION = "V2.3.2";
 const RULE_COUNT = 49;
-const PARSER_VERSION = "P0.13";
+const PARSER_VERSION = "P0.14";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 /* ============================================================
@@ -936,7 +936,7 @@ function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
-const P_VER = "P0.13";
+const P_VER = "P0.14";  // PARSER-030(총괄표 영역행 일반화·미해당기호) + 031(변형E 세로형 세부기준표·이중귀속) + 032(gradeType 확장·narrative F4 폴백)
 /* ===== ZIP (V0.9와 동일) ===== */
 /* readZip·stripMemos·cleanT는 공통 유틸(기존 검사기 정의)을 사용 — TECH-001 */
 /* ===== XML 유틸 ===== */
@@ -1057,6 +1057,8 @@ function classify(grid){
      (hasExam && hasPerf && hasTotal)) return "summaryTable";
   if(has("학년","학기","평가영역","평가시기")) return "rubric15";
   if(h.includes("영역만점")) return "rubric22";
+  // PARSER-031: 변형 E — '수행과제' 헤더형 세부기준표 (영역만점이 하단 행)
+  if(/^수행과제/.test(hz) && grid.all.some(c=>c.c===0 && /^영역\s*만점\s*$/.test(c.t.trim()))) return "rubric22";
   if(/영역별 성취수준|최소 능력/.test(h)) return "minLevel"; // PARSER-011: '최소 성취수준 보장' 표 — achv22 오분류 차단
   if(has("성취기준","성취기준별 성취수준")) return "achv22";
   if(has("교육과정 성취기준","평가기준")) return "achv15";
@@ -1064,7 +1066,8 @@ function classify(grid){
   if(/영역별 성취수준|최소/.test(h)) return "minLevel";
   if(h.includes("정의적")) return "affective";
   if(/추정분할|고정분할|분할 점수|성취수준별/.test(h)) return "splitScore";
-  if(has("과목 구분","성취도")) return "gradeType";
+  const gradeTypeLabel = hz.includes("과목구분") || hz.includes("공통과목") || hz.includes("선택과목");
+  if(gradeTypeLabel && hz.includes("성취도")) return "gradeType";  // PARSER-032
   if(/^[A-E]\|/.test(h)) return "semLevel22";
   return "etc";
 }
@@ -1083,7 +1086,7 @@ function extractSummary(grid, src){
     for(const row of grid.rows){ const f=row.find(c=>c.c===0||c.t); if(row[0] && pat.test(row[0].t)) return row[0].r; }
     return null;
   };
-  const rRatio=label(/반영\s*비율/), rArea=label(/횟수\s*\/\s*영역|영역\s*\/\s*횟수|^영역$/);
+  const rRatio=label(/반영\s*비율/), rArea=label(/(?:평가\s*)?(?:횟수|시기)\s*[\/·ㆍ]\s*영역|영역\s*[\/·ㆍ]\s*(?:평가\s*)?(?:횟수|시기)|^영역$/);  // PARSER-030: 영역행 라벨 일반화 — 기존 패턴의 상위집합
   const rMax=label(/만점/), rEssay=label(/논술형/), rTime=label(/평가\s*시기/);
   const rElem=label(/평가\s*요소/), rStd=label(/성취\s*기준/);
   const inRange=(cell,R)=>R && cell.c!=null && cell.c>=R[0] && cell.c<=R[1];
@@ -1106,9 +1109,10 @@ function extractSummary(grid, src){
       const unit={name:cell.t, colStart:cell.c, colEnd:cell.c+cell.cs-1};
       const grab=(rAddr,key,numeric)=>{
         if(rAddr==null) return;
-        const hits=cellsAt(rAddr).filter(x=>overlap(x,unit.colStart,unit.colEnd) && x.t && x.t!=="ㆍ" && x.t!=="·");
-        const allNA = cellsAt(rAddr).filter(x=>overlap(x,unit.colStart,unit.colEnd)).every(x=>!x.t||x.t==="ㆍ"||x.t==="·");
-        if(!hits.length){ unit[key]= allNA && cellsAt(rAddr).some(x=>overlap(x,unit.colStart,unit.colEnd)&&(x.t==="ㆍ"||x.t==="·")) ? {raw:"·", notApplicable:true} : {raw:null, unknown:true}; return; }
+        const NA=t=>/^[ㆍ·\-－–—―]$/.test(t);  // PARSER-030: '-' 등 미해당 기호 확장
+        const hits=cellsAt(rAddr).filter(x=>overlap(x,unit.colStart,unit.colEnd) && x.t && !NA(x.t));
+        const allNA = cellsAt(rAddr).filter(x=>overlap(x,unit.colStart,unit.colEnd)).every(x=>!x.t||NA(x.t));
+        if(!hits.length){ unit[key]= allNA && cellsAt(rAddr).some(x=>overlap(x,unit.colStart,unit.colEnd)&&NA(x.t)) ? {raw:"·", notApplicable:true} : {raw:null, unknown:true}; return; }
         const raw=hits.map(x=>x.t).join(" / ");
         if(numeric){
           const n=parseNums(raw);
@@ -1276,14 +1280,32 @@ async function parseDoc(zip){
         doc.document.teacher=get("지도교사")||get("교사"); doc.document.classes=get("학급");
       }
       else if(kind==="summaryTable" && !doc.summary){ doc.summary=extractSummary(grid,src); doc.warnings.push(...doc.summary.warnings); }
+      else if(kind==="gradeType" && !doc.gradeTypeTable){
+        // PARSER-032: 서술형 F4 폴백용 — 과목구분·단계 수 채집
+        const headGT=(grid.rows[0]||[]).map(c=>c.t.replace(/\s/g,"")).join("|");
+        const gradesGT=new Set();
+        for(const row of grid.rows.slice(1)){ const g=row.map(c=>c.t.trim()).find(t=>/^[A-E]$/.test(t)); if(g) gradesGT.add(g); }
+        doc.gradeTypeTable={ header:headGT,
+          type: headGT.includes("공통과목")?"공통과목": headGT.includes("선택과목")?"선택과목":null,
+          steps:gradesGT.size, source:src };
+      }
       else if(kind==="teachingPlan"){ const p=extractPlan(grid, src); doc.teachingPlan.weeks+=p.weeks; p.codes.forEach(c=>{ if(!doc.teachingPlan.codes.includes(c)) doc.teachingPlan.codes.push(c); }); doc.teachingPlan.tables++; doc.teachingPlan.detail.push(...p.detail); }
 else if(kind==="rubric22"){
         const topRow=grid.rows[0]||[];
-        const maxLabel=topRow.find(c=>/영역\s*만점/.test(c.t));
-        let maxCell=null, nameCell=null;
+        let maxLabel=topRow.find(c=>/영역\s*만점/.test(c.t));
+        let maxCell=null, nameCell=null, bottomMaxRow=null;
         if(maxLabel){
           maxCell=topRow.find(c=>c.c===maxLabel.c+maxLabel.cs && /\d/.test(c.t));
           nameCell=topRow.filter(c=>c.c!=null && c.c<maxLabel.c && c.t.trim()).sort((a,b)=>b.c-a.c)[0]||null;
+        } else {
+          // PARSER-031: 변형 E — '영역 만점' 라벨이 하단 행 c0에 위치 (수행과제 헤더형)
+          for(const row of grid.rows){
+            const f=row.find(c=>c.c===0 && /^영역\s*만점\s*$/.test(c.t.trim()));
+            if(f){ maxLabel=f; bottomMaxRow=f.r;
+              maxCell=row.filter(c=>c.c!=null && c.c>f.c && /\d/.test(c.t)).sort((a,b)=>a.c-b.c)[0]||null; break; }
+          }
+          if(/^수행\s*과제/.test((topRow[0]||{t:""}).t.trim()))
+            nameCell=topRow.filter(c=>c.c!=null && c.c>0 && c.t.trim()).sort((a,b)=>a.c-b.c)[0]||null;
         }
         const name=nameCell?nameCell.t.trim():"(영역명 판독 실패)";
         // 코드 + 범위 표기([A]~[B]) 수집 (RULE-045)
@@ -1303,7 +1325,7 @@ else if(kind==="rubric22"){
           const f=row.find(c=>c.c===0); if(!f||!f.t) continue;
           const t=f.t.replace(/[\s\[\]()]/g,"");   // PARSER-017: [기본점수]·(기본점수) 괄호 라벨 인식
           if(specialRow.basic==null && /^기본점수/.test(t)) specialRow.basic=f.r;
-          if(specialRow.voluntary==null && /백지|미응시|미제출/.test(t)) specialRow.voluntary=f.r;
+          if(specialRow.voluntary==null && /백지|미응시|미제출|본인의사|자발적미참여/.test(t)) specialRow.voluntary=f.r;  // PARSER-031: 통합 라벨 키워드 확장
           if(specialRow.absence==null && /장기미인정|장결/.test(t)) specialRow.absence=f.r;
         }
         /* PARSER-026: rubric22에서 점수 셀과 [기본점수] 마커가 분리된 행 지원.
@@ -1383,9 +1405,18 @@ else if(kind==="rubric22"){
             const r0=row.find(c=>c.r!=null); if(!r0) continue; const rr=r0.r;
             const sc=rightNum(row); if(!sc) continue;
             const val=numOf(sc); if(val==null) continue;
-            if(specialRow.basic!=null && rr===specialRow.basic){ basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===rr?"fallback":null), source:{...src,row:sc.r,col:sc.c}}; continue; }
-            if(specialRow.voluntary!=null && rr===specialRow.voluntary){ voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
-            if(specialRow.absence!=null && rr===specialRow.absence){ longAbsenceScore={raw:sc.t, value:val}; continue; }
+            {   // PARSER-031: 통합 라벨('기본점수(백지…포함)') 이중 귀속 — basic·vol 동일 행 허용
+              const isB=specialRow.basic!=null && rr===specialRow.basic;
+              const isV=specialRow.voluntary!=null && rr===specialRow.voluntary;
+              const isA=specialRow.absence!=null && rr===specialRow.absence;
+              if(isB||isV||isA){
+                const comb=isB&&isV?{sourceKind:"combinedSpecialRow"}:{};
+                if(isB && basicScore==null) basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===rr?"fallback":null), source:{...src,row:sc.r,col:sc.c}, ...comb};
+                if(isV && voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val, ...comb};
+                if(isA && longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val};
+                continue;
+              }
+            }
             /* PARSER-023: 요소 셀 사이의 ※ 주석행은 투명하게 취급 — 다음 요소 시작 전까지 직전 요소에 급간 귀속 */
             let ownerIdx=-1;
             for(let i=0;i<elemObjs.length;i++){ if(elemObjs[i].rStart<=rr) ownerIdx=i; else break; }
@@ -1416,11 +1447,15 @@ else if(kind==="rubric22"){
                 const cCell=coveringCell(grid,fr,p.pC);
                 const label=(cCell?cCell.t.trim():"(급간)");
                 const isBasic2=BASIC_MARK.test(sCell.t)||/기본\s*점수/.test(sCell.t)||/충족하지\s*못하|만족하는\s*항목이\s*없/.test(label);
-                const isVol2=/백지|미응시|미제출|본인\s*의사/.test(label);
+                const isVol2=/백지|미응시|미제출|본인\s*의사|자발적\s*미참여/.test(label);  // PARSER-031: 키워드 확장
                 const isAbs2=/장기\s*미인정|장결/.test(label);
-                if(isBasic2){ if(basicScore==null) basicScore={raw:sCell.t, value:val, source:{...src,row:sCell.r,col:sCell.c}}; continue; }
-                if(isVol2){ if(voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sCell.t, value:val}; continue; }
-                if(isAbs2){ if(longAbsenceScore==null) longAbsenceScore={raw:sCell.t, value:val}; continue; }
+                if(isBasic2||isVol2||isAbs2){  // PARSER-031: 통합 라벨 이중 귀속
+                  const comb=isBasic2&&isVol2?{sourceKind:"combinedSpecialRow"}:{};
+                  if(isBasic2 && basicScore==null) basicScore={raw:sCell.t, value:val, source:{...src,row:sCell.r,col:sCell.c}, ...comb};
+                  if(isVol2 && voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sCell.t, value:val, ...comb};
+                  if(isAbs2 && longAbsenceScore==null) longAbsenceScore={raw:sCell.t, value:val};
+                  continue;
+                }
                 scoreCriteria.push({label:label.slice(0,40), score:val});
               }
               continue;
@@ -1439,15 +1474,21 @@ else if(kind==="rubric22"){
               elements.push(el); elemByAnchor.set(f.r, el);
             }
             if(rElemHead!=null && fr>rElemHead){
+              if(bottomMaxRow!=null && fr===bottomMaxRow) continue;  // PARSER-031: 하단 영역만점 행은 급간 아님
               const sc=rightNum(row); if(!sc) continue;
               const val=numOf(sc); if(val==null) continue;
               const label=(f&&f.t.trim())||"(급간)";
               const isBasic=(specialRow.basic!=null&&fr===specialRow.basic)||BASIC_MARK.test(sc.t)||/만족하는항목이없는|충족하지못하/.test(label.replace(/\s/g,""));
               const isVol=specialRow.voluntary!=null&&fr===specialRow.voluntary;
               const isAbs=specialRow.absence!=null&&fr===specialRow.absence;
-              if(isBasic && basicScore==null){ basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===fr?"fallback":null), source:{...src,row:sc.r,col:sc.c}}; continue; }
-              if(isVol){ if(voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val}; continue; }
-              if(isAbs){ if(longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val}; continue; }
+              // PARSER-031: 통합 라벨 이중 귀속 — 라벨에 백지·미응시 등이 명시된 경우에만 vol도 같은 값
+              if(isBasic||isVol||isAbs){
+                const comb=isBasic&&isVol?{sourceKind:"combinedSpecialRow"}:{};
+                if(isBasic && basicScore==null) basicScore={raw:sc.t, value:val, kind:(separatedBasicMarkerRow===fr?"fallback":null), source:{...src,row:sc.r,col:sc.c}, ...comb};
+                if(isVol && voluntaryNonSubmissionScore==null) voluntaryNonSubmissionScore={raw:sc.t, value:val, ...comb};
+                if(isAbs && longAbsenceScore==null) longAbsenceScore={raw:sc.t, value:val};
+                continue;
+              }
               /* PARSER-014: c0 병합 요소 셀(rs>1)의 하위 행을 요소 그룹으로 귀속 */
               const owner=coveringCell(grid,fr,0);
               const grpEl=owner && owner.rs>1 && owner.r>rElemHead && (firstSpecial==null||owner.r<firstSpecial)
@@ -1671,6 +1712,25 @@ else if(kind==="rubric22"){
   }
   doc.document.curriculum = doc.document.grade===3? "2015" : (doc.document.grade? "2022" : null);
   doc.gradeSelect = extractGradeSelect(sectionXmlCache);
+  // PARSER-032: 서술형 폴백 — checkBtn 양식 부재 시, 방식·평정표 둘 다 판독된 경우에만 활성
+  if((!doc.gradeSelect.found || doc.gradeSelect.checks.length===0) && doc.gradeTypeTable && doc.gradeTypeTable.type){
+    const flatGS=doc.fullText.replace(/\s+/g," ");
+    const miGS=flatGS.search(/분할\s*점수\s*산출\s*방법/);
+    const segGS=miGS>=0? flatGS.slice(miGS, miGS+120) : "";
+    let methodGS=null;
+    if(/추정\s*분할/.test(segGS)) methodGS="추정";
+    else if(/고정\s*분할|원점수/.test(segGS)) methodGS="고정";
+    const tGS=doc.gradeTypeTable; let scaleGS=null;
+    if(tGS.type==="공통과목" && tGS.steps===5) scaleGS="5단계공통";
+    else if(tGS.type==="선택과목" && tGS.steps===5) scaleGS="5단계선택";
+    if(methodGS && scaleGS){
+      const gsF=doc.gradeSelect;
+      gsF.found=true; gsF.mode="narrative";
+      gsF.checks.push({ kind:"narrative", checked:true, label:segGS.slice(0,60) });
+      gsF.method=[methodGS];
+      gsF.scales=[{ scale:scaleGS, block:methodGS, sourceKind:"narrative" }];
+    }
+  }
   // parseStatus
   const ps=doc.parseStatus;
   ps.docInfo = doc.document.subject? "PASS":"UNKNOWN";
@@ -1718,7 +1778,7 @@ else if(kind==="rubric22"){
 
 ;
 /* ============================================================
-   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.13 JSON 기반
+   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.14 JSON 기반
    F0(수식 오류 문자열)은 텍스트 규칙이므로 runChecks 내부에 있음.
    상태 5단계: PASS / FAIL / REVIEW / UNKNOWN / NOT_APPLICABLE
    ※ RULE-012: 구버전 N4 블록은 이 함수에서 제거됨. N4는 runN4()가 단독 담당.
@@ -1737,7 +1797,7 @@ function unitRatio(u){
   let sum = 0, any = false, missing = false;
   for(const p of parts){
     const t = p.trim();
-    if(!t || t==="ㆍ" || t==="·") continue;
+    if(!t || /^[ㆍ·\-－–—―]$/.test(t)) continue;  // PARSER-030: 미해당 기호 확장
     const n = parseNums(t);
     if(n.ratio!=null){ sum += n.ratio; any = true; }
     else missing = true; // 점수만 있거나 숫자 없음 → 비율 판독 실패
@@ -3606,7 +3666,7 @@ function runX1Shadow(doc){
 
 /* ============================================================
    담당자용 일괄 검토 UI (review v1.0)
-   · 검사 엔진(규칙 49종·파서 P0.13)은 index.html과 동일한 코드를 그대로 사용한다.
+   · 검사 엔진(규칙 49종·파서 P0.14)은 index.html과 동일한 코드를 그대로 사용한다.
      이 파일은 결과를 '한 장의 표'로 보여주는 렌더링 계층만 다르다.
    · 목적: 46부를 한 번에 넣고 어느 과목이 무엇에 걸렸는지 한눈에 보기,
            반려 사유를 복사해 메신저에 붙여넣기, 진행 관리는 CSV로.
