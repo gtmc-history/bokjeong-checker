@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.6</title>
+<title>평가계획 검사기 — 학교 프로필 생성기 v0.3.7</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -95,7 +95,7 @@
 <div class="wrap">
 
 <header class="doc-head">
-  <span class="rulever">생성기 v0.3.6 · 프로필 스키마 v1</span>
+  <span class="rulever">생성기 v0.3.7 · 프로필 스키마 v1</span>
   <div class="eyebrow">평가계획 제출 전 검사기</div>
   <h1>학교 프로필 생성기</h1>
   <p class="subtitle">우리 학교 평가계획 양식(hwpx)을 올리면 유의사항 문구에서 검사 기준을 자동으로 읽어냅니다. 인식 결과를 확인·수정한 뒤 프로필 파일을 내려받아 검사기에 적용하세요.</p>
@@ -197,6 +197,30 @@
 </table>
 <p class="hint" style="margin-top:6px;">예: 2차 지필이 학년별로 다르면 행을 나눠 입력하세요 (2차·3학년 11/25~27 / 2차·1·2학년 12/10~15).</p>
 
+<h2 class="step"><span class="n">③-3</span> 수행평가 실시기간 <span class="opt">(선택 — 학교에서 정한 수행평가 실시 가능 기간을 학년별로 입력합니다)</span></h2>
+<p class="hint"><b>이 항목은 학기마다 갱신해야 합니다.</b> 학교가 정한 수행평가 실시 가능 기간을 <b>월·주</b>로 직접 입력하세요. 같은 기간을 적용하는 학년은 한 행에서 함께 선택할 수 있습니다. 비워 둔 학년은 수행평가 기간 검사를 하지 않습니다.<br>예: 1·2학년 <b>9월 1주~11월 2주</b> / 3학년 <b>9월 1주~10월 5주</b></p>
+<table class="form" id="perfWindowTable">
+  <tr class="perfwinrow">
+    <th>기간 1</th>
+    <td>학년 <label><input type="checkbox" data-pg="1">1</label> <label><input type="checkbox" data-pg="2">2</label> <label><input type="checkbox" data-pg="3">3</label>
+      · 시작 <select data-f="startMonth" aria-label="수행평가 기간 1 시작 월"></select>월 <select data-f="startWeek" aria-label="수행평가 기간 1 시작 주"></select>주
+      ~ 종료 <select data-f="endMonth" aria-label="수행평가 기간 1 종료 월"></select>월 <select data-f="endWeek" aria-label="수행평가 기간 1 종료 주"></select>주</td>
+  </tr>
+  <tr class="perfwinrow">
+    <th>기간 2</th>
+    <td>학년 <label><input type="checkbox" data-pg="1">1</label> <label><input type="checkbox" data-pg="2">2</label> <label><input type="checkbox" data-pg="3">3</label>
+      · 시작 <select data-f="startMonth" aria-label="수행평가 기간 2 시작 월"></select>월 <select data-f="startWeek" aria-label="수행평가 기간 2 시작 주"></select>주
+      ~ 종료 <select data-f="endMonth" aria-label="수행평가 기간 2 종료 월"></select>월 <select data-f="endWeek" aria-label="수행평가 기간 2 종료 주"></select>주</td>
+  </tr>
+  <tr class="perfwinrow">
+    <th>기간 3</th>
+    <td>학년 <label><input type="checkbox" data-pg="1">1</label> <label><input type="checkbox" data-pg="2">2</label> <label><input type="checkbox" data-pg="3">3</label>
+      · 시작 <select data-f="startMonth" aria-label="수행평가 기간 3 시작 월"></select>월 <select data-f="startWeek" aria-label="수행평가 기간 3 시작 주"></select>주
+      ~ 종료 <select data-f="endMonth" aria-label="수행평가 기간 3 종료 월"></select>월 <select data-f="endWeek" aria-label="수행평가 기간 3 종료 주"></select>주</td>
+  </tr>
+</table>
+<p class="hint" style="margin-top:6px;">프로필 스키마는 <b>v1을 유지</b>합니다. 이 값은 <code>calendar.performanceWindows</code> 선택 필드로 저장되므로 기존 프로필·기존 검사기와 호환됩니다.</p>
+
 <h2 class="step"><span class="n">④</span> 프로필 내려받기</h2>
 <div id="gate" class="ok"></div>
 <textarea id="jsonbox" readonly aria-label="프로필 JSON 미리보기"></textarea>
@@ -215,7 +239,7 @@
 
 <script>
 "use strict";
-const GEN_VERSION = "학교프로필_생성기 v0.3.6";
+const GEN_VERSION = "학교프로필_생성기 v0.3.7";
 
 /* ===== 최소 ZIP 리더 (deflate-raw / stored) ===== */
 async function readZip(buf){
@@ -632,6 +656,29 @@ function applyFound(found){
    ============================================================ */
 const INT_RE = /^-?\d+$/;
 
+function fillPerformanceWindowSelects(){
+  const monthOpts = ['<option value="">—</option>'].concat(
+    Array.from({length:12}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>')
+  ).join("");
+  const weekOpts = ['<option value="">—</option>'].concat(
+    Array.from({length:5}, (_,i) => '<option value="'+(i+1)+'">'+(i+1)+'</option>')
+  ).join("");
+  for(const row of document.querySelectorAll(".perfwinrow")){
+    row.querySelector('[data-f="startMonth"]').innerHTML = monthOpts;
+    row.querySelector('[data-f="endMonth"]').innerHTML = monthOpts;
+    row.querySelector('[data-f="startWeek"]').innerHTML = weekOpts;
+    row.querySelector('[data-f="endWeek"]').innerHTML = weekOpts;
+  }
+}
+function monthInSemester_(m, sem){
+  return sem === 1 ? (m >= 3 && m <= 7) : ((m >= 8 && m <= 12) || m === 1 || m === 2);
+}
+function monthWeekKey_(m, w, sem){
+  let mm = m;
+  if(sem === 2 && m <= 2) mm += 12;   // 2학기에서 1·2월은 12월 뒤로 정렬
+  return mm * 10 + w;
+}
+
 function collect(){
   const errors = [], warnings = [];
   const params = {};
@@ -774,15 +821,67 @@ function collect(){
     }
     exams.push({ name, grades, start: mw(s), end: mw(e), dates: s + "~" + e });
   }
-  const calendar = exams.length ? { semester, exams } : null;
+  /* ③-3 수행평가 실시 가능 기간 — profile v1 optional extension */
+  const performanceWindows = [];
+  const gradeOwner = new Map();
+  let pwi = 0;
+  for(const row of document.querySelectorAll(".perfwinrow")){
+    pwi++;
+    const gradeEls = [...row.querySelectorAll("[data-pg]")];
+    const grades = gradeEls.filter(c => c.checked).map(c => +c.dataset.pg);
+    const smEl = row.querySelector('[data-f="startMonth"]'), swEl = row.querySelector('[data-f="startWeek"]');
+    const emEl = row.querySelector('[data-f="endMonth"]'), ewEl = row.querySelector('[data-f="endWeek"]');
+    const vals = [smEl.value, swEl.value, emEl.value, ewEl.value];
+    const anyInput = grades.length > 0 || vals.some(Boolean);
+    if(!anyInput) continue;
+
+    const missing = [];
+    if(!grades.length) missing.push("대상 학년");
+    if(!smEl.value) missing.push("시작 월");
+    if(!swEl.value) missing.push("시작 주");
+    if(!emEl.value) missing.push("종료 월");
+    if(!ewEl.value) missing.push("종료 주");
+    if(missing.length){
+      errors.push("수행평가 기간 " + pwi + ": " + missing.join("·") + "을(를) 입력하세요. (행 전체를 비우면 등록되지 않습니다)");
+      if(!smEl.value) flag(smEl); if(!swEl.value) flag(swEl);
+      if(!emEl.value) flag(emEl); if(!ewEl.value) flag(ewEl);
+      continue;
+    }
+
+    const sm = +smEl.value, sw = +swEl.value, em = +emEl.value, ew = +ewEl.value;
+    if(!monthInSemester_(sm, semester) || !monthInSemester_(em, semester)){
+      errors.push("수행평가 기간 " + pwi + ": " + sm + "월~" + em + "월이 " + semester + "학기 범위에 맞지 않습니다. ①의 학기 또는 월을 확인하세요.");
+      flag(smEl); flag(emEl);
+      continue;
+    }
+    if(monthWeekKey_(sm, sw, semester) > monthWeekKey_(em, ew, semester)){
+      errors.push("수행평가 기간 " + pwi + ": 종료(" + em + "월 " + ew + "주)가 시작(" + sm + "월 " + sw + "주)보다 빠릅니다.");
+      flag(smEl); flag(swEl); flag(emEl); flag(ewEl);
+      continue;
+    }
+
+    const dup = grades.filter(g => gradeOwner.has(g));
+    if(dup.length){
+      errors.push("수행평가 기간 " + pwi + ": " + dup.join("·") + "학년이 이미 기간 " + dup.map(g => gradeOwner.get(g)).join("·") + "에 지정되어 있습니다. 한 학년은 한 기간에만 지정하세요.");
+      continue;
+    }
+    grades.forEach(g => gradeOwner.set(g, pwi));
+    performanceWindows.push({ grades, start:[sm, sw], end:[em, ew] });
+  }
+
+  // 기존 profile v1 형태를 보존: 수행평가 기간을 쓰지 않으면 calendar 구조는 예전과 동일하다.
+  const calendar = (exams.length || performanceWindows.length) ? { semester, exams } : null;
+  if(calendar && performanceWindows.length) calendar.performanceWindows = performanceWindows;
 
   /* 경고 (다운로드는 막지 않음) */
   if(Object.keys(params).length === 0 && !calendar)
     warnings.push("설정된 검사 기준이 하나도 없습니다. 이 프로필로는 학교별 수치 규칙이 모두 「적용 안 함」이 되고 전국 공통 규칙만 검사됩니다.");
   if(unresolved.length)
     warnings.push("자동 인식 결과가 갈린 항목이 있습니다 — " + unresolved.join(", ") + ". ③에서 값을 직접 확인해 입력하세요. (비워 두면 그 규칙은 검사하지 않습니다)");
-  if(!calendar)
+  if(exams.length === 0)
     warnings.push("정기시험 기간이 없어 시험 시기 대조(X8)는 검사에서 제외됩니다.");
+  if(performanceWindows.length === 0)
+    warnings.push("수행평가 실시기간이 없어 수행평가 기간 대조(X10)는 검사에서 제외됩니다.");
 
   const profile = {
     profileVersion: 1,
@@ -836,9 +935,12 @@ function buildJson(){
     btn.disabled = true; $("#btnCopy").disabled = true;
   }else{
     gate.className = "ok";
+    const examCount = profile.calendar && Array.isArray(profile.calendar.exams) ? profile.calendar.exams.length : 0;
+    const perfWindowCount = profile.calendar && Array.isArray(profile.calendar.performanceWindows) ? profile.calendar.performanceWindows.length : 0;
     html = '<span class="g-title">✅ 저장할 수 있습니다</span>' +
       '검사 기준 ' + Object.keys(profile.params).length + '개' +
-      (profile.calendar ? ' · 정기시험 ' + profile.calendar.exams.length + '개 기간' : '') +
+      (examCount ? ' · 정기시험 ' + examCount + '개 기간' : '') +
+      (perfWindowCount ? ' · 수행평가 ' + perfWindowCount + '개 기간' : '') +
       ' · ' + esc(profile.meta.academicYear + "학년도 " + profile.meta.semester + "학기 기준");
     btn.disabled = false; $("#btnCopy").disabled = false;
   }
@@ -881,6 +983,7 @@ $("#btnCopy").addEventListener("click", async () => {
   const yr = now.getMonth() + 1 >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   $("#metaYear").value = yr;
   $("#metaSemester").value = (now.getMonth() + 1 >= 3 && now.getMonth() + 1 <= 7) ? "1" : "2";
+  fillPerformanceWindowSelects();
   buildJson();
 })();
 </script>
