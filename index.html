@@ -159,12 +159,15 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
                   평가종류/평가유형/평가구분 + 정기시험·수행평가·합계 구조 표지 병용
    · PARSER-034 : 동점자 처리 기준의 머리글과 실제 기재 내용 분리 추출
                   F7은 석차등급 산출 과목에서 내용 존재 여부만 확인하며 우선순위는 판정하지 않음
+   · PARSER-037 : 2015 무괄호 성취기준 코드(12경수01-01 등) 인식
+   · PARSER-038 : 2015 복합 수행평가 하위영역·대안급간 구조 보존 — N4 거짓 합산 방지
+   · PARSER-039 : 2015 과목구분·성취도·등급 직접기입 표 인식
    · RULE-N3/N3b : 논술형 30%/20% 기준 + 수행평가 논술형-only 금지
                     학교급·편제에 따른 예외 판정과 공식 업무매뉴얼 근거를 분리
    ============================================================ */
 const RULE_VERSION = "V2.3.6";
 const RULE_COUNT = 53;
-const PARSER_VERSION = "P0.20";
+const PARSER_VERSION = "P0.21";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 /* ============================================================
@@ -323,9 +326,28 @@ function normalizeSubjectName(text){
     .replace(/[\s·․‧ㆍ⋅.]/g,"").toUpperCase();
 }
 function parseAchievementCode(code){
-  const m = code.match(/^\[(\d{2})([^\[\]\s-]+?)(?:(\d{2}-\d{2}(?:-\d{2})?)|(-\d{2}(?:-\d{2}){0,2}))\]$/);
+  // PARSER-037: 2015 양식은 총괄표에서 대괄호 없이 12경수01-01처럼 기재되는 경우가 있다.
+  // 비교용 파서는 대괄호 유무를 모두 허용하되, 형식 자체는 기존 코드 규칙으로 검증한다.
+  let s=String(code||"").replace(/\s/g,"");
+  if(s.startsWith("[") && s.endsWith("]")) s=s.slice(1,-1);
+  const m = s.match(/^(\d{2})([^\[\]\s-]+?)(?:(\d{2}-\d{2}(?:-\d{2})?)|(-\d{2}(?:-\d{2}){0,2}))$/);
   if(!m) return null;
   return { schoolLevel:m[1], prefix:m[2], suffix:m[3]||m[4], format:m[3]?"attached":"hyphen" };
+}
+function canonicalAchievementCode_(raw){
+  let s=String(raw||"").replace(/\s/g,"");
+  if(s.startsWith("[") && s.endsWith("]")) s=s.slice(1,-1);
+  return parseAchievementCode(s) ? "["+s+"]" : null;
+}
+function extractAchievementCodes_(text){
+  const s=String(text||""); const out=[]; const seen=new Set();
+  const add=raw=>{ const c=canonicalAchievementCode_(raw); if(c&&!seen.has(c)){seen.add(c);out.push(c);} };
+  // 기존 대괄호형
+  for(const m of s.matchAll(/\[\s*\d{2}[^\[\]\s]{1,16}\s*\]/g)) add(m[0]);
+  // 2015 총괄표의 무괄호형: 연도·날짜·배점 오탐을 막기 위해 두 자리 학교급 뒤 과목 문자와 하이픈 구조를 요구한다.
+  const bare=/\d{2}[가-힣A-Za-zⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ][가-힣A-Za-zⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ0-9]{0,12}?(?:-\d{2}){1,3}(?=\d{2}[가-힣A-Za-zⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]|[^0-9A-Za-z가-힣ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ-]|$)/g;
+  for(const m of s.matchAll(bare)) add(m[0]);
+  return out;
 }
 
 /* ============================================================
@@ -794,8 +816,8 @@ function runChecks(doc, docInfo){
     const seenOcc = new Set();
     for(const x of scanTexts){
       // 결합 텍스트에서는 ]뒤 숫자 오타 검사를 생략 (조각 이어붙임이 ]3 형태를 만들 수 있음)
-      const codes = x.t.match(x.joined ? /\[\s*\d{2}[^\[\]]{0,12}\]/g : CFG.codeCatch);
-      if(!codes) continue;
+      const codes = extractAchievementCodes_(x.t);
+      if(!codes.length) continue;
       for(const c of codes){
         const norm = c.trim();
         const parsed = parseAchievementCode(norm);
@@ -927,7 +949,7 @@ function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
-const P_VER = "P0.20";  // PARSER-030(총괄표 영역행 일반화·미해당기호) + 031(변형E 세로형 세부기준표·이중귀속) + 032(gradeType 확장·narrative F4 폴백) + 033(수업·평가 연계 주안점 선택 추출) + 035(총괄표 좌측 보조열 행라벨) + 036(합본 다중과목 자동 분할)
+const P_VER = "P0.21";  // PARSER-030~036 기존 + 037(2015 무괄호 성취기준) + 038(복합 하위영역 N4) + 039(2015 직접기입 성취도·등급)
 /* ===== ZIP (V0.9와 동일) ===== */
 /* readZip·stripMemos·cleanT는 공통 유틸(기존 검사기 정의)을 사용 — TECH-001 */
 /* ===== XML 유틸 ===== */
@@ -1241,7 +1263,7 @@ function extractPlan(grid, src){
     if(mCell && mCell.t){ const mm=toHalf(mCell.t).match(/\d+/); if(mm) curMonth=+mm[0]; }
     if(wCell.r===r) weeks++;  // 주차 수는 병합 앵커 행에서만 증가 (기존과 동일 계산)
     const wm=toHalf(wCell.t).match(/\d+/);
-    const rowCodes=(sCell && sCell.r===r)? (sCell.t.match(/\[\d{2}[^\[\]\s]{1,12}\]/g)||[]) : [];
+    const rowCodes=(sCell && sCell.r===r)? extractAchievementCodes_(sCell.t) : [];
     rowCodes.forEach(x=>codes.add(x));
     // PARSER-033: 병합 셀은 앵커 행에서 한 번만 저장해 같은 문구가 중복되지 않게 한다.
     const evaluationText=(eCell && eCell.r===r && eCell.t)? eCell.t.trim() : null;
@@ -1344,9 +1366,18 @@ async function parseDoc(zip, options){
         const headGT=(grid.rows[0]||[]).map(c=>c.t.replace(/\s/g,"")).join("|");
         const gradesGT=new Set();
         for(const row of grid.rows.slice(1)){ const g=row.map(c=>c.t.trim()).find(t=>/^[A-E]$/.test(t)); if(g) gradesGT.add(g); }
+        // PARSER-039: 2015 양식은 체크·괄호가 아니라 「일반 선택 과목 | 5 단계 | 9 등급」처럼 값 셀에 직접 기입되기도 한다.
+        const firstGT=(grid.rows[1]||[]).slice().sort((a,b)=>(a.c??0)-(b.c??0));
+        const typeRawGT=(firstGT[0]&&firstGT[0].t||"").trim();
+        const stepRawGT=(firstGT[1]&&firstGT[1].t||"").trim();
+        const rankRawGT=(firstGT[2]&&firstGT[2].t||"").trim();
+        const stepMGT=stepRawGT.match(/([0-9]+|P)\s*단계/i);
+        const rankMGT=rankRawGT.match(/([0-9]+)\s*등급/i);
+        const rankXGT=/^\s*X\s*$/i.test(rankRawGT)?"X":null;
+        const valueTypeGT=/과목/.test(typeRawGT)?typeRawGT.replace(/\s/g,""):null;
         doc.gradeTypeTable={ header:headGT,
-          type: headGT.includes("공통과목")?"공통과목": headGT.includes("선택과목")?"선택과목":null,
-          steps:gradesGT.size, source:src };
+          type: headGT.includes("공통과목")?"공통과목": headGT.includes("선택과목")?"선택과목":valueTypeGT,
+          steps:gradesGT.size || (stepMGT?+stepMGT[1]:0), rank:rankMGT?rankMGT[1]:rankXGT, source:src };
       }
       else if(kind==="teachingPlan"){ const p=extractPlan(grid, src); doc.teachingPlan.weeks+=p.weeks; p.codes.forEach(c=>{ if(!doc.teachingPlan.codes.includes(c)) doc.teachingPlan.codes.push(c); }); doc.teachingPlan.tables++; if(p.hasEvaluationColumn) doc.teachingPlan.evaluationColumns++; doc.teachingPlan.detail.push(...p.detail); }
 else if(kind==="rubric22"){
@@ -1370,7 +1401,7 @@ else if(kind==="rubric22"){
         // 코드 + 범위 표기([A]~[B]) 수집 (RULE-045)
         const achievementCodes=[]; const codeRanges=[];
         for(const cell of grid.all){
-          for(const c of (cell.t.match(/\[\d{2}[^\[\]\s]{1,12}\]/g)||[])) if(!achievementCodes.includes(c)) achievementCodes.push(c);
+          for(const c of extractAchievementCodes_(cell.t)) if(!achievementCodes.includes(c)) achievementCodes.push(c);
           for(const m of cell.t.matchAll(/\[(\d{2}[^\[\]\s]{1,12})\]\s*~\s*\[(\d{2}[^\[\]\s]{1,12})\]/g))
             codeRanges.push({from:m[1], to:m[2]});
         }
@@ -1586,6 +1617,24 @@ else if(kind==="rubric22"){
            '평가 기준(채점 기준)'처럼 설명 열에 '채점'이 포함된 경우는 오인하지 않는다. */
         const colExact=w=>{ const h=head.find(c=>c.t.replace(/\s/g,"")===w); return h?h.c:null; };
         const cScore=colOf("배점") ?? (colExact("평가내용")!=null ? colExact("채점") : null);   // PARSER-013 + PARSER-024
+        // PARSER-038: 한 표 안에 복수의 평가영역(예: 20점+5점, 10점+10점)이 들어 있는 2015 복합 수행평가.
+        // 각 영역 셀의 rowSpan과 명시 만점을 보존해 N4가 '대안 급간'과 '독립 요소'를 구분할 수 있게 한다.
+        const subAreas15=[];
+        if(cA!=null){
+          const seenSA=new Set();
+          for(const cell of grid.all){
+            if(cell.c!==cA || cell.r==null || cell.r===0 || !cell.t.trim()) continue;
+            const sm=cell.t.trim().match(/\(\s*(\d+(?:\.\d+)?)\s*점\s*\)\s*$/);
+            if(!sm || seenSA.has(cell.r)) continue;
+            seenSA.add(cell.r);
+            subAreas15.push({name:cell.t.replace(/\(\s*\d+(?:\.\d+)?\s*점\s*\)\s*$/,'').trim(), maxScore:+sm[1], rStart:cell.r, rEnd:cell.r+Math.max(1,cell.rs||1)-1});
+          }
+          subAreas15.sort((a,b)=>a.rStart-b.rStart);
+        }
+        // 같은 평가영역명이 표 구조상 여러 rowSpan으로 반복된 것은 하나의 영역으로 본다.
+        // 서로 다른 이름의 하위영역이 2개 이상일 때만 '복합 수행평가'로 활성화한다.
+        const distinctSubNames15=new Set(subAreas15.map(a=>a.name.replace(/\s/g,"").normalize("NFKC")));
+        const combinedSubAreas15=distinctSubNames15.size>1 ? subAreas15 : [];
         const dataRow=grid.rows.slice(1).find(row=>{
           const g=row.find(c=>c.c===cG), a=row.find(c=>c.c===cA);
           return g && /^\s*[123]\s*$/.test(g.t) && a && a.t.trim();
@@ -1644,12 +1693,12 @@ else if(kind==="rubric22"){
               if(!gmap.has(owner.r)) gmap.set(owner.r,{name:owner.t.trim(), rows:[]});
               gmap.get(owner.r).rows.push({score:v, label:lblCell?lblCell.t.trim():"(급간)"});
             }
-            for(const [,g] of [...gmap.entries()].sort((a,b)=>a[0]-b[0])){
+            for(const [gr,g] of [...gmap.entries()].sort((a,b)=>a[0]-b[0])){
               const scores=g.rows.map(x=>x.score);
               const gname=g.name.replace(/^[가나다라마바사아자차카타파하]\.\s*/,"").trim();
               elements.push({name:gname.slice(0,50), maxScore:Math.max(...scores),
                 criteria:g.rows.map(x=>({label:x.label.slice(0,40), score:x.score})),
-                minimumPerformanceScore:null});
+                minimumPerformanceScore:null, source:{...src,row:gr,col:cE}});
               for(const x of g.rows) scoreCriteria.push({label:gname.slice(0,20)+" · "+x.label.slice(0,40), score:x.score});
             }
           }
@@ -1784,7 +1833,7 @@ else if(kind==="rubric22"){
             /* PARSER-027: 2015 양식의 평가요소 셀은 여러 문단을 한 셀에 담을 수 있으므로 문단 경계를 보존해 분리 */
             if(isPre){ if(!variantB && !variantB2 && !variantC){
               const eraw=(e.lines&&e.lines.length)?e.lines.join("\n"):e.t;
-              for(const it of splitElements(eraw)) elements.push({name:it, maxScore:null, criteria:[], minimumPerformanceScore:null});
+              for(const it of splitElements(eraw)) elements.push({name:it, maxScore:null, criteria:[], minimumPerformanceScore:null, source:{...src,row:e.r,col:cE}});
             } continue; }
             if(variantB2 && b2map.has(e.r)) continue;   // PARSER-018: 그룹 앵커 행은 위에서 급간과 함께 수집됨
             const sc=rightNum15(row); if(!sc) continue;
@@ -1793,20 +1842,23 @@ else if(kind==="rubric22"){
           }
           const achievementCodes=[]; const codeRanges=[];
           for(const cell of grid.all){
-            for(const c of (cell.t.match(/\[\d{2}[^\[\]\s]{1,12}\]/g)||[])) if(!achievementCodes.includes(c)) achievementCodes.push(c);
+            for(const c of extractAchievementCodes_(cell.t)) if(!achievementCodes.includes(c)) achievementCodes.push(c);
             for(const m of cell.t.matchAll(/\[(\d{2}[^\[\]\s]{1,12})\]\s*~\s*\[(\d{2}[^\[\]\s]{1,12})\]/g)) codeRanges.push({from:m[1], to:m[2]});
           }
+          const combinedMax15=(combinedSubAreas15.length>1 && combinedSubAreas15.every(a=>Number.isFinite(a.maxScore)))
+            ? combinedSubAreas15.reduce((a,x)=>a+x.maxScore,0) : null;
           doc.rubrics.push({type:"15",
             name: rawName.replace(/\(\s*\d+(?:\.\d+)?\s*[점%]?\s*\)\s*$/,"").trim(), rawName,
-            max: mm? {raw:mm[0], score:+mm[1], ratio:null} : {raw:rawName, score:null, ratio:null, unknown:true},
+            max: combinedMax15!=null ? {raw:combinedSubAreas15.map(a=>a.name+" "+a.maxScore+"점").join(" + "), score:combinedMax15, ratio:null, sourceKind:"combinedSubAreas"}
+              : (mm? {raw:mm[0], score:+mm[1], ratio:null} : {raw:rawName, score:null, ratio:null, unknown:true}),
             time: timeCell?timeCell.t:null,
             elements, achievementCodes, codeRanges, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore,
-            combinedScores:extractCombinedScores(grid), source:{...src, row:areaCell.r, col:areaCell.c}});
+            subAreas:combinedSubAreas15, combinedScores:extractCombinedScores(grid), source:{...src, row:areaCell.r, col:areaCell.c}});
         }
       }
       else if(kind==="achv22"||kind==="achv15"){
         doc.achievementTables++;
-        const codeCells=grid.all.filter(c=>/\[\d{2}[^\[\]\s]{1,12}\]/.test(c.t));
+        const codeCells=grid.all.filter(c=>extractAchievementCodes_(c.t).length>0);
         const LV22=["A","B","C","D","E"], LV15=["상","중","하"];
         const entries=new Map(); // code → entry
         for(const row of grid.rows){
@@ -1816,7 +1868,7 @@ else if(kind==="rubric22"){
           if(!stmt) continue;
           const owner=codeCells.find(cc=>cc.r<=lvCell.r && lvCell.r<cc.r+cc.rs) ||
                       codeCells.filter(cc=>cc.r<=lvCell.r).sort((a,b)=>b.r-a.r)[0] || null;
-          const code=owner? (owner.t.match(/\[\d{2}[^\[\]\s]{1,12}\]/)||[null])[0] : null;
+          const code=owner? (extractAchievementCodes_(owner.t)[0]||null) : null;
           const key=code||"(코드없음:"+si+"-"+ti+")";
           if(!entries.has(key)) entries.set(key, {
             type: kind==="achv22"?"achievementLevel22":"evaluationCriteria15",
@@ -1842,6 +1894,14 @@ else if(kind==="rubric22"){
   }
   doc.document.curriculum = doc.document.grade===3? "2015" : (doc.document.grade? "2022" : null);
   doc.gradeSelect = extractGradeSelect(sectionXmlCache);
+  // PARSER-039: 2015 직접기입 표 폴백 — 괄호형 추출이 실패했을 때 gradeType 표의 값 셀을 사용한다.
+  if(doc.document.curriculum==="2015" && (!doc.gradeSelect.c2015) && doc.gradeTypeTable){
+    const t=doc.gradeTypeTable;
+    if(t.type || t.steps || t.rank){
+      doc.gradeSelect.found=true;
+      doc.gradeSelect.c2015={type:t.type||null, steps:t.steps?String(t.steps):null, rank:t.rank||null, sourceKind:"gradeTypeTable"};
+    }
+  }
   // PARSER-032: 서술형 폴백 — checkBtn 양식 부재 시, 방식·평정표 둘 다 판독된 경우에만 활성
   if((!doc.gradeSelect.found || doc.gradeSelect.checks.length===0) && doc.gradeTypeTable && doc.gradeTypeTable.type){
     const flatGS=doc.fullText.replace(/\s+/g," ");
@@ -1908,7 +1968,7 @@ else if(kind==="rubric22"){
 
 ;
 /* ============================================================
-   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.20 JSON 기반
+   V1 1단계 수치·형식 규칙 (N1·N2·N7·F1) — 파서 P0.21 JSON 기반
    F0(수식 오류 문자열)은 텍스트 규칙이므로 runChecks 내부에 있음.
    상태 5단계: PASS / FAIL / REVIEW / UNKNOWN / NOT_APPLICABLE
    ※ RULE-012: 구버전 N4 블록은 이 함수에서 제거됨. N4는 runN4()가 단독 담당.
@@ -2157,7 +2217,7 @@ function runV1(doc){
       { basis:"문서 정합성 — 총괄표에 적은 성취기준 코드는 해당 세부기준표에도 있어야 합니다." });
     else {
       const sh = runX1Shadow(doc);
-      const codeOf = s => (String(s||"").match(/\[[^\[\]\s]{4,16}\]/g)||[]);
+      const codeOf = s => extractAchievementCodes_(s);
       // 문서 전체 코드 집합 — 2015 개정(3학년)은 성취수준이 과목 전체 표에 모여 있어 영역별 세부표에 코드가 없음
       const docCodes = new Set();
       const docRanges = [];
@@ -2416,7 +2476,7 @@ function collectDocCodes(doc){
   if(S) for(const list of [["정기시험", S.exams||[]], ["수행평가", S.performanceTasks||[]]])
     for(const u of list[1]){
       const raw = u.standards && u.standards.raw;
-      for(const c of (String(raw||"").match(/\[[^\[\]]{4,16}\]/g)||[])) add(c, "평가총괄표 · " + u.name);
+      for(const c of extractAchievementCodes_(raw)) add(c, "평가총괄표 · " + u.name);
     }
   for(const r of (doc.rubrics||[]))
     for(const c of (r.achievementCodes||[])) add(c, "세부기준표 「" + String(r.name||"").slice(0,20) + "」");
@@ -2533,6 +2593,32 @@ function s4Section(sItems){
   b += '</table>';
   return '<details class="extract"><summary>평가계획에 없는 성취기준 ' + info.missing.length + '개 — S4 참고 자료 (오류 아님)</summary><div class="ebody">' + b + '</div></details>';
 }
+/* PARSER-038: 2015 복합 수행평가의 하위영역별 최고점 계산.
+   같은 하위영역 안에서 행 점수의 합이 하위영역 만점이면 독립 가산형,
+   행 점수의 최댓값이 하위영역 만점이면 서로 대체되는 급간형으로 해석한다. */
+function n4CombinedSubareaTop_(r){
+  const sas=(r&&r.subAreas||[]).filter(a=>a&&Number.isFinite(a.maxScore));
+  if(sas.length<2) return null;
+  let total=0; const parts=[];
+  for(const sa of sas){
+    const vals=[];
+    for(const e of (r.elements||[])){
+      const rr=e&&e.source&&e.source.row;
+      if(rr==null || rr<sa.rStart || rr>sa.rEnd) continue;
+      let v=e.maxScore;
+      if(v==null){ const cs=(e.criteria||[]).map(c=>c&&c.score).filter(Number.isFinite); if(cs.length) v=Math.max(...cs); }
+      if(v!=null&&Number.isFinite(v)) vals.push(v);
+    }
+    if(!vals.length) return {readable:false};
+    const add=vals.reduce((a,v)=>a+v,0), hi=Math.max(...vals);
+    let top=null, mode=null;
+    if(Math.abs(add-sa.maxScore)<=EPS){ top=add; mode="가산"; }
+    else if(Math.abs(hi-sa.maxScore)<=EPS){ top=hi; mode="대안급간"; }
+    else return {readable:false};
+    total+=top; parts.push(sa.name.slice(0,16)+" "+top+"점("+mode+")");
+  }
+  return {readable:true,sum:total,parts,target:sas.reduce((a,x)=>a+x.maxScore,0)};
+}
 /* ---------- N4. 평가요소별 최고점 합계 = 영역 만점 ---------- */
 function runN4(doc){
   const items = [];
@@ -2547,6 +2633,14 @@ function runN4(doc){
   const hits = []; let checked = 0, unread = 0;
   for(const r of rubrics){
     const maxV = r.max && r.max.score;
+    const comb=n4CombinedSubareaTop_(r);
+    if(comb){
+      if(maxV==null || !comb.readable){ unread++; continue; }
+      checked++;
+      if(Math.abs(comb.sum-maxV)>EPS) hits.push({loc:"세부기준표 「"+String(r.name||"").slice(0,20)+"」",
+        text:"복합 하위영역 최고점 합계 "+comb.sum+"점 ≠ 영역 만점 "+maxV+"점 ("+comb.parts.join(" + ")+")"});
+      continue;
+    }
     const crit = (r.scoreCriteria || []).filter(c => c && c.score != null && !EXCL.test(c.label || ""));
     if(maxV == null || crit.length === 0){ unread++; continue; }
     checked++;
@@ -3593,7 +3687,7 @@ function runX7(doc, timingBroken){
   const hits = []; let checked = 0, noTime = 0;
   for(const u of [...S.exams.map(u=>({u,k:"정기시험"})), ...S.performanceTasks.map(u=>({u,k:"수행평가"}))]){
     const start = parseTimeStart(u.u.time && u.u.time.raw);
-    const codes = (String(u.u.standards && u.u.standards.raw || "").match(/\[[^\[\]]{4,16}\]/g)||[]).map(c=>normStdCode(c));
+    const codes = extractAchievementCodes_(u.u.standards && u.u.standards.raw).map(c=>normStdCode(c));
     if(!start){ if(codes.length) noTime++; continue; }
     const seen = new Set();
     for(const c of codes){
@@ -3915,7 +4009,7 @@ function runX4(doc){
   // 평가 측 코드 수집: 총괄표(정기시험·수행) 성취기준 + 세부기준표 코드
   const asmt = new Map(); // norm → {disp, locs[]}
   const addA = (raw, loc) => {
-    for(const c of (String(raw||"").match(/\[[^\[\]]{4,16}\]/g)||[])){
+    for(const c of extractAchievementCodes_(raw)){
       const disp = c.replace(/[\[\]\s]/g,""), key = normStdCode(disp);
       if(!/^\d{2}/.test(key)) continue;
       let e = asmt.get(key); if(!e){ e={disp,locs:[]}; asmt.set(key,e); }
