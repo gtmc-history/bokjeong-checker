@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 제출 전 검사기 V2.3.6</title>
+<title>평가계획 제출 전 검사기 V2.3.7</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -165,9 +165,9 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
    · RULE-N3/N3b : 논술형 30%/20% 기준 + 수행평가 논술형-only 금지
                     학교급·편제에 따른 예외 판정과 공식 업무매뉴얼 근거를 분리
    ============================================================ */
-const RULE_VERSION = "V2.3.6";
+const RULE_VERSION = "V2.3.7";
 const RULE_COUNT = 53;
-const PARSER_VERSION = "P0.21";
+const PARSER_VERSION = "P0.22";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 /* ============================================================
@@ -301,13 +301,18 @@ const BASIS = {
 
 // 패턴 설정 (규칙 데이터와 판정 코드 분리)
 const CFG = {
-  placeholder: [ /◯\s*학년/, /◯{2,}/, /○{2,}/, /◯\s*~\s*◯\s*반/, /○\s*~\s*○\s*반/, /\[과목명\]/, /\(\s*과목명\s*\)/, /^\s*[가-하]\s*[.．]\s*평가\s*영역명\s*\d*\s*$/ ],
+  placeholder: [ /◯\s*학년/, /◯{2,}/, /○{2,}/, /◯\s*~\s*◯\s*반/, /○\s*~\s*○\s*반/, /\[과목명\]/, /\(\s*과목명\s*\)/, /00\s*과\s*평가\s*세부\s*계획/, /^\s*[가-하]\s*[.．]\s*평가\s*영역명\s*\d*\s*$/ ],
   exampleStaff: [ /김○빈/, /추○우/ ],  // 익명 표기(이○철 등)는 정보공시 제출 형식이므로 검사하지 않음
   instructions: [
     /파란색\s*글씨\s*삭제/, /사용하지\s*않는\s*표도?\s*삭제/, /메모\s*지우기/,
     /검정색으로\s*변경/, /이\s*박스는\s*삭제/, /아래\s*표\s*중\s*선택해서\s*한\s*가지\s*사용/,
     /^\s*<\s*제출\s*전에\s*>\s*$/, /['\u2019"]상시['\u2019"]\s*또는\s*['\u2019"]수시['\u2019"]\s*기재\s*불가/,
     /지금\s*읽고\s*계신\s*글상자\s*제거/, /학기\s*단위\s*성취수준\s*진술은\s*반드시\s*포함/, /1학년\s*공통과목\s*만\s*작성/, /과목별\s*평가\s*내용을\s*고려하여\s*작성/, /△{2,}\s*하는\s*행위/, /예시\)\s*AI를\s*활용하여/,
+    // P0.22/R6 보강 — 타교 양식에 남는 고신뢰 작성자용 지시문(단독 '삭제/필수'는 오탐 방지를 위해 잡지 않음)
+    /정기시험\s*미실시\s*교과는[\s\S]{0,40}?삭제/, /나이스\s*기준[\s\S]{0,40}?학급[\s\S]{0,30}?적어\s*주세요/,
+    /평가계획서\s*작성\s*편집자를\s*제일\s*앞에/, /새로운\s*페이지에서\s*시작[\s\S]{0,50}?Ctrl\s*\+\s*Enter/i,
+    /AI\s*활용\s*수행평가\s*시[\s\S]{0,80}?기재\s*필수/, /AI\s*미활용\s*시[\s\S]{0,40}?삭제/,
+    /정보공시[\s\S]{0,60}?입력\s*필수/,
   ],
   exampleAreas: [ /우리\s*땅\s*독도/, /우리나라의\s*명승/, /지역\s*탐구\s*포트폴리오/, /건강한\s*식생활\s*제안/ ],
   codeCatch: /\[\s*\d{2}[^\[\]]{0,12}\]\d?/g,  // ]뒤 즉시 붙은 숫자만(오타), 공백 후 숫자(배점)는 제외
@@ -949,7 +954,7 @@ function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
-const P_VER = "P0.21";  // PARSER-030~036 기존 + 037(2015 무괄호 성취기준) + 038(복합 하위영역 N4) + 039(2015 직접기입 성취도·등급)
+const P_VER = "P0.22";  // P0.21 전체 유지 + 040(한 section 내부 다과목 분리·부분 XML 소스 지원)
 /* ===== ZIP (V0.9와 동일) ===== */
 /* readZip·stripMemos·cleanT는 공통 유틸(기존 검사기 정의)을 사용 — TECH-001 */
 /* ===== XML 유틸 ===== */
@@ -970,6 +975,26 @@ function balanced(xml, tag){
     }
     if(end<0) break;
     out.push(xml.slice(s,end)); pos=end;
+  }
+  return out;
+}
+// PARSER-040: 균형 요소의 원문 위치까지 보존 — 한 section 안의 여러 과목을
+// docInfo 표 시작점 기준으로 안전하게 잘라 기존 파서에 그대로 공급한다.
+function balancedWithPos_(xml, tag){
+  const out=[]; let pos=0;
+  const openRe=new RegExp("<hp:"+tag+"[\\s>]");
+  const tokRe=new RegExp("<hp:"+tag+"[\\s>]|</hp:"+tag+">","g");
+  while(true){
+    const rest=xml.slice(pos); const m=rest.match(openRe);
+    if(!m) break;
+    const s=pos+m.index; tokRe.lastIndex=0;
+    let depth=0, end=-1; const seg=xml.slice(s); let tm;
+    while((tm=tokRe.exec(seg))!==null){
+      depth += tm[0].startsWith("</")? -1 : 1;
+      if(depth===0){ end=s+tm.index+tm[0].length; break; }
+    }
+    if(end<0) break;
+    out.push({start:s,end,xml:xml.slice(s,end)}); pos=end;
   }
   return out;
 }
@@ -1301,21 +1326,75 @@ function docInfoFromGrid_(grid){
 }
 async function detectCourseBlocks_(zip){
   const secNames=zip.names.filter(n=>/^Contents\/section\d+\.xml$/.test(n)).sort((a,b)=>parseInt(a.match(/(\d+)/)[1])-parseInt(b.match(/(\d+)/)[1]));
-  if(!secNames.length) return {secNames:[],blocks:[],preamble:[],memoTotal:0,globalMeta:{year:null,semester:null}};
-  const anchors=[];let memoTotal=0,year=null,semester=null;const ambiguousSections=[];
+  if(!secNames.length) return {secNames:[],blocks:[],preamble:[],memoTotal:0,globalMeta:{year:null,semester:null},ambiguous:false,fragmentMode:false};
+
+  const secData=[]; let memoTotal=0,year=null,semester=null,hasInnerMulti=false;
   for(let i=0;i<secNames.length;i++){
-    const raw=await zip.extract(secNames[i]);memoTotal+=countMemos(raw||"");const xml=stripMemos(raw||"");
-    const flat=[...xml.matchAll(/<hp:t\b[^>]*>([\s\S]*?)<\/hp:t>/g)].map(m=>cleanT(m[1])).join(" ");
+    const raw=(await zip.extract(secNames[i]))||"";
+    memoTotal+=countMemos(raw);
+    const clean=stripMemos(raw);
+    const flat=[...clean.matchAll(/<hp:t\b[^>]*>([\s\S]*?)<\/hp:t>/g)].map(m=>cleanT(m[1])).join(" ");
     if(year==null){const m=flat.match(/(\d{4})\s*학년도/);if(m)year=+m[1];}
-    if(semester==null){const m=flat.match(/[\(\[]\s*(\d)\s*[\)\]]\s*학기/);if(m)semester=+m[1];}
-    const infos=[];for(const tbl of balanced(xml,"tbl")){const g=parseGrid(tbl);if(classify(g)!=="docInfo")continue;const info=docInfoFromGrid_(g);if(info&&info.subject)infos.push(info);}
-    if(infos.length>1) ambiguousSections.push(secNames[i]);
-    if(infos.length) anchors.push({sectionIndex:i,sectionName:secNames[i],info:infos[0]});
+    if(semester==null){
+      const m=flat.match(/(?:[\(\[]\s*)?([12])\s*(?:[\)\]])?\s*학기/);
+      if(m)semester=+m[1];
+    }
+
+    const infos=[];
+    for(const rec of balancedWithPos_(raw,"tbl")){
+      const g=parseGrid(stripMemos(rec.xml));
+      if(classify(g)!=="docInfo") continue;
+      const info=docInfoFromGrid_(g);
+      if(info&&info.subject) infos.push({start:rec.start,end:rec.end,info});
+    }
+    if(infos.length>1) hasInnerMulti=true;
+    secData.push({sectionIndex:i,sectionName:secNames[i],raw,infos});
   }
-  if(ambiguousSections.length)return {secNames,blocks:[],preamble:[],memoTotal,globalMeta:{year,semester},ambiguous:true,ambiguousSections};
-  const blocks=[];for(let i=0;i<anchors.length;i++){const a=anchors[i],end=i+1<anchors.length?anchors[i+1].sectionIndex:secNames.length;blocks.push({index:i,info:a.info,start:a.sectionIndex,end:end-1,sectionNames:secNames.slice(a.sectionIndex,end)});}
+
+  // 기존 정상 경로는 그대로 둔다. section당 docInfo가 0~1개면 P0.21의
+  // section 단위 블록 묶기를 그대로 사용해 회귀 위험을 최소화한다.
+  if(!hasInnerMulti){
+    const anchors=[];
+    for(const s of secData) if(s.infos.length) anchors.push({sectionIndex:s.sectionIndex,sectionName:s.sectionName,info:s.infos[0].info});
+    const blocks=[];
+    for(let i=0;i<anchors.length;i++){
+      const a=anchors[i],end=i+1<anchors.length?anchors[i+1].sectionIndex:secNames.length;
+      blocks.push({index:i,info:a.info,start:a.sectionIndex,end:end-1,sectionNames:secNames.slice(a.sectionIndex,end),sectionSources:null,fragmented:false});
+    }
+    const first=anchors.length?anchors[0].sectionIndex:secNames.length;
+    return {secNames,blocks,preamble:secNames.slice(0,first),memoTotal,globalMeta:{year,semester},ambiguous:false,fragmentMode:false};
+  }
+
+  // PARSER-040: 한 section 안에 docInfo가 여러 개면 각 docInfo 표의 시작점을
+  // 과목 경계로 사용한다. 제목이 이전 문단 내부의 1셀 표로 들어가도 영향을 받지 않는다.
+  const anchors=[];
+  for(const s of secData) for(const a of s.infos)
+    anchors.push({sectionIndex:s.sectionIndex,sectionName:s.sectionName,start:a.start,end:a.end,info:a.info});
+  anchors.sort((a,b)=>a.sectionIndex-b.sectionIndex || a.start-b.start);
+
+  const blocks=[];
+  for(let i=0;i<anchors.length;i++){
+    const a=anchors[i],next=i+1<anchors.length?anchors[i+1]:null,sources=[];
+    const cur=secData[a.sectionIndex];
+
+    if(next && next.sectionIndex===a.sectionIndex){
+      sources.push({name:cur.sectionName,label:"섹션 "+(a.sectionIndex+1)+" · 과목 "+(i+1),xml:cur.raw.slice(a.start,next.start),fragment:true});
+    }else{
+      sources.push({name:cur.sectionName,label:"섹션 "+(a.sectionIndex+1)+" · 과목 "+(i+1),xml:cur.raw.slice(a.start),fragment:true});
+      const stop=next?next.sectionIndex:secData.length;
+      for(let si=a.sectionIndex+1;si<stop;si++){
+        const d=secData[si];
+        sources.push({name:d.sectionName,label:"섹션 "+(si+1),xml:d.raw,fragment:false});
+      }
+    }
+
+    blocks.push({
+      index:i,info:a.info,start:a.sectionIndex,end:next?Math.max(a.sectionIndex,next.sectionIndex-1):secData.length-1,
+      sectionNames:[...new Set(sources.map(x=>x.name))],sectionSources:sources,fragmented:true
+    });
+  }
   const first=anchors.length?anchors[0].sectionIndex:secNames.length;
-  return {secNames,blocks,preamble:secNames.slice(0,first),memoTotal,globalMeta:{year,semester},ambiguous:false};
+  return {secNames,blocks,preamble:secNames.slice(0,first),memoTotal,globalMeta:{year,semester},ambiguous:false,fragmentMode:true};
 }
 
 /* ===== 문서 전체 파싱 ===== */
@@ -1323,7 +1402,10 @@ async function parseDoc(zip, options){
   const opts=options||{};
   const allSecNames=zip.names.filter(n=>/^Contents\/section\d+\.xml$/.test(n)).sort((a,b)=>parseInt(a.match(/(\d+)/)[1])-parseInt(b.match(/(\d+)/)[1]));
   const secNames=(Array.isArray(opts.sectionNames)&&opts.sectionNames.length)?opts.sectionNames:allSecNames;
-  if(!secNames.length) throw new Error("본문 section을 찾지 못했습니다.");
+  const sectionSources=(Array.isArray(opts.sectionSources)&&opts.sectionSources.length)
+    ? opts.sectionSources
+    : secNames.map(n=>({name:n,label:null,xml:null,fragment:false}));
+  if(!sectionSources.length) throw new Error("본문 section을 찾지 못했습니다.");
   const mt=await zip.extract("mimetype");
   if(mt===null) throw new Error("mimetype 없음 — hwpx가 아닙니다.");
   if(mt.trim()!=="application/hwp+zip") throw new Error("hwpx 형식 아님: "+mt.trim().slice(0,30));
@@ -1334,8 +1416,10 @@ async function parseDoc(zip, options){
     rubrics:[], achievementTables:0, achievementLevels:[], semesterLevels:[], counts:{}, parseStatus:{}, warnings:[], unknowns:[], fullText:"" };
 
   const sectionXmlCache=[];
-  for(let si=0; si<secNames.length; si++){
-    const xml=stripMemos(await zip.extract(secNames[si]));
+  for(let si=0; si<sectionSources.length; si++){
+    const spec=sectionSources[si]||{};
+    const rawXml=spec.xml!=null?spec.xml:await zip.extract(spec.name);
+    const xml=stripMemos(rawXml||"");
     sectionXmlCache.push(xml);
     doc.fullText+=[...xml.matchAll(/<hp:t\b[^>]*>([\s\S]*?)<\/hp:t>/g)].map(m=>cleanT(m[1])).join("\n")+"\n";
     // 제목에서 연도·학기 (표 밖 텍스트 포함 전체에서)
@@ -2789,7 +2873,7 @@ function runN4c(doc){
 function runX3(doc){
   const items = [];
   const push = (id, status, title, opt) => items.push(Object.assign({ id, status, title }, opt||{}));
-  const B = "문서 정합성 — 총괄표의 수행평가 영역명과 세부기준표의 영역명은 집합·순서가 일치해야 합니다.";
+  const B = "문서 정합성 — 총괄표와 수행평가 세부기준표의 영역명은 서로 대응해야 하며, 두 표에 영역 만점이 모두 적혀 있으면 값도 같아야 합니다.";
   const S = doc.summary;
   if(!S || (S.performanceTasks||[]).length === 0){
     push("X3", (S && S.performanceTasks) ? ST.NA : ST.UNKNOWN,
@@ -2806,20 +2890,33 @@ function runX3(doc){
     hits.push({ loc:"총괄표 영역 「"+a.summaryName+"」", text:"세부기준표에서 같은 이름의 영역을 찾지 못했습니다" });
   for(const n of (sh.unmatchedRubrics||[]))
     hits.push({ loc:"세부기준표 「"+String(n).slice(0,20)+"」", text:"총괄표에 같은 이름의 영역이 없습니다" });
+
+  // P0.22 보강: 영역 짝이 확정되고 양쪽 만점을 모두 숫자로 읽은 경우에만 직접 대조한다.
+  // 한쪽이 미판독이면 기존 X3 판정을 바꾸지 않아 회귀·거짓 오류를 막는다.
+  let maxChecked=0;
+  for(const a of sh.areas){
+    if(!a.nameMatch || a.rubricIndex==null) continue;
+    const u=(S.performanceTasks||[]).find(x=>x.name===a.summaryName);
+    const r=(doc.rubrics||[])[a.rubricIndex];
+    const sm=u&&u.max&&u.max.score, rm=r&&r.max&&r.max.score;
+    if(!Number.isFinite(sm)||!Number.isFinite(rm)) continue;
+    maxChecked++;
+    if(Math.abs(sm-rm)>1e-6)
+      hits.push({loc:"영역 「"+a.summaryName+"」 · 영역 만점",text:"총괄표 "+sm+"점 ≠ 세부기준표 "+rm+"점"});
+  }
+
   // 순서: 짝지어진 rubricIndex가 총괄표 순서대로 증가하는지
   const seq = sh.areas.filter(a=>a.rubricIndex!=null).map(a=>a.rubricIndex);
   const orderBad = seq.some((v,i)=>i>0 && v < seq[i-1]);
   if(hits.length){
-    /* 영역 집합이 어긋나는 것은 문서 모순 → 필수 오류 */
     if(orderBad) hits.push({ loc:"영역 순서", text:"세부기준표의 영역 순서도 총괄표 순서와 다릅니다" });
-    push("X3", ST.FAIL, "총괄표와 세부기준표의 영역명이 "+hits.length+"건 어긋납니다",
-      { basis:B, hits, fix:"두 표의 영역명을 같은 표기로 맞추세요. (요소 수준 차이는 X1 판정 참조)" });
+    push("X3", ST.FAIL, "총괄표와 세부기준표의 영역명·만점 대응이 "+hits.length+"건 어긋납니다",
+      { basis:B, hits, fix:"두 표의 영역명을 같은 표기로 맞추고, 같은 영역의 만점이 다르면 총괄표와 세부기준표 중 잘못 적힌 값을 수정하세요. (요소 수준 차이는 X1 판정 참조)" });
   } else if(orderBad){
-    /* 같은 영역이 순서만 다른 것은 논리적 모순이 아니다 → 확인 요청 */
     push("X3", ST.REVIEW, "영역은 모두 대응하지만 두 표의 배열 순서가 다릅니다",
       { basis:B, hits:[{ loc:"영역 순서", text:"세부기준표의 영역 순서가 총괄표 순서와 다릅니다" }],
         fix:"읽는 사람이 대조하기 쉽도록 순서를 맞추는 것을 권장합니다. 의도한 배치라면 그대로 둬도 됩니다." });
-  } else push("X3", ST.PASS, "영역명 집합·순서 일치 ("+sh.areas.length+"개 영역)");
+  } else push("X3", ST.PASS, "영역명 집합·순서 일치 ("+sh.areas.length+"개 영역"+(maxChecked?" · 영역 만점 "+maxChecked+"개 대조":"")+")");
   return items;
 }
 
@@ -4302,8 +4399,14 @@ function fmtNum(n){ if(!n) return "—"; if(n.notApplicable) return "·"; const 
 function withoutFileScopedR1_(checks){return Object.assign({},checks,{findings:(checks.findings||[]).filter(x=>x.id!=="R1"),passes:(checks.passes||[]).filter(x=>x.id!=="R1")});}
 function fileMemoItem_(n){return n>0?{id:"R1",status:ST.FAIL,title:"파일 전체에 메모가 "+n+"개 남아 있습니다",basis:BASIS.CLEAN,fix:"한글에서 [검토 ▸ 메모 ▸ 메모 모두 지우기]로 삭제한 뒤 다시 저장하세요."}:{id:"R1",status:ST.PASS,title:"파일 전체 메모 없음"};}
 function statusCount_(checks,v1,sItems,status){const lv={red:ST.FAIL,yellow:ST.REVIEW,unknown:ST.UNKNOWN};return [...(v1.items||[]),...(sItems||[])].filter(x=>x.status===status).length+(checks.findings||[]).filter(x=>lv[x.level]===status).length;}
-async function analyzeCourse_(zip,headerXml,sectionNames,seed,fileName,multiMode){
-  const doc=await parseDoc(zip,{sectionNames,seed});const sections=[];for(const n of sectionNames){const no=parseInt((n.match(/(\d+)/)||[0,0])[1],10)+1;sections.push({label:"섹션 "+no,xml:await zip.extract(n)});}
+async function analyzeCourse_(zip,headerXml,sectionNames,seed,fileName,multiMode,sectionSources){
+  const doc=await parseDoc(zip,{sectionNames,sectionSources,seed});
+  const sections=[];
+  if(Array.isArray(sectionSources)&&sectionSources.length){
+    for(const s of sectionSources) sections.push({label:s.label||"과목 구간",xml:s.xml!=null?s.xml:await zip.extract(s.name)});
+  }else{
+    for(const n of sectionNames){const no=parseInt((n.match(/(\d+)/)||[0,0])[1],10)+1;sections.push({label:"섹션 "+no,xml:await zip.extract(n)});}
+  }
   let checks=runChecks({headerXml,sections,fileName},doc.document);if(multiMode)checks=withoutFileScopedR1_(checks);
   const v1=runV1(doc);v1.items.push(...runN4(doc), ...runN4b(doc), ...runN4c(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX6(doc), ...runN3(doc), ...runN3b(doc), ...runX5(doc), ...runX8(doc), ...runX9(doc), ...runX10(doc), ...runX11(doc), ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc), ...runF9(doc), ...runF23(doc), ...runCurriculumRules(doc));
   const timingBroken=v1.items.some(i=>(i.id==="X8"||i.id==="X9")&&(i.status===ST.FAIL||i.status===ST.REVIEW));v1.items.push(...runX7(doc,timingBroken));
@@ -4330,7 +4433,7 @@ async function handleFiles(fileList){
           card.querySelector('.multi-summary').innerHTML='<table class="gyeoljae"><tbody><tr><th>문서 정보</th><td>'+states.length+'과목 합본</td><th>검사 규칙</th><td>'+esc(V1_VERSION)+'</td></tr><tr><th>종합 판정</th><td class="verdict '+vc+'">'+vl+'</td><th>과목 수</th><td>'+states.length+'개</td></tr></tbody></table><div class="counts"><span class="chip red">필수 오류 '+fail+'개</span>'+(unknown?'<span class="chip gray">검사 미완료 '+unknown+'개</span>':'')+'<span class="chip yellow">확인 필요 '+review+'개</span></div><table class="ext"><tr><th>#</th><th>과목</th><th>상태</th></tr>'+rows+'</table>';
           card.querySelector('.multi-common').innerHTML=fileMemo.status===ST.FAIL?group('red','파일 전체 공통 오류',[fileMemo],'',true):'<div class="grp green"><h2>파일 전체 공통 검사</h2><ul class="hits"><li>R1 · '+esc(fileMemo.title)+'</li></ul></div>';
         };
-        for(let i=0;i<scan.blocks.length;i++){const b=scan.blocks[i],st=await analyzeCourse_(zip,headerXml,b.sectionNames,scan.globalMeta,f.name,true);recalcCourseState_(st);states.push(st);const wrap=document.createElement('details');wrap.className='multi-course';const subj=st.doc.document.subject||b.info.subject||('과목 '+(i+1));wrap.innerHTML='<summary><span>'+(i+1)+'. '+esc(subj)+'</span><span class="mc-meta">검사 중…</span></summary><div class="multi-course-body"><p class="none">펼치면 이 과목의 상세 검사 결과를 표시합니다.</p></div>';list.appendChild(wrap);wraps.push(wrap);const body=wrap.querySelector('.multi-course-body');wrap.addEventListener('toggle',()=>{if(!wrap.open||wrap.dataset.rendered==='1')return;wrap.dataset.rendered='1';drawCourseState_(st,body,(i+1)+'. '+subj,update);});}
+        for(let i=0;i<scan.blocks.length;i++){const b=scan.blocks[i],st=await analyzeCourse_(zip,headerXml,b.sectionNames,scan.globalMeta,f.name,true,b.sectionSources);recalcCourseState_(st);states.push(st);const wrap=document.createElement('details');wrap.className='multi-course';const subj=st.doc.document.subject||b.info.subject||('과목 '+(i+1));wrap.innerHTML='<summary><span>'+(i+1)+'. '+esc(subj)+'</span><span class="mc-meta">검사 중…</span></summary><div class="multi-course-body"><p class="none">펼치면 이 과목의 상세 검사 결과를 표시합니다.</p></div>';list.appendChild(wrap);wraps.push(wrap);const body=wrap.querySelector('.multi-course-body');wrap.addEventListener('toggle',()=>{if(!wrap.open||wrap.dataset.rendered==='1')return;wrap.dataset.rendered='1';drawCourseState_(st,body,(i+1)+'. '+subj,update);});}
         ready=true;update();continue;
       }
       const st=await analyzeCourse_(zip,headerXml,scan.secNames,scan.globalMeta,f.name,false);const draw=()=>{recalcCourseState_(st);renderResult(card,f.name,st.doc,st.checks,st.v1,st.verdict,st.x1,st.sItems,st.sCtx);const sel=card.querySelector('.course-sel');if(sel)sel.addEventListener('change',()=>{st.sCtx.course=sel.value||null;st.sCtx.auto=false;draw();});};draw();
