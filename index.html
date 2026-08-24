@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 제출 전 검사기 V2.3.7</title>
+<title>평가계획 제출 전 검사기 V2.3.8</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -165,7 +165,7 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
    · RULE-N3/N3b : 논술형 30%/20% 기준 + 수행평가 논술형-only 금지
                     학교급·편제에 따른 예외 판정과 공식 업무매뉴얼 근거를 분리
    ============================================================ */
-const RULE_VERSION = "V2.3.7";
+const RULE_VERSION = "V2.3.8";
 const RULE_COUNT = 53;
 const PARSER_VERSION = "P0.22";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
@@ -4394,6 +4394,52 @@ if(typeof DecompressionStream === "undefined"){
 }
 
 function esc(s){ return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+/* ============================================================
+   UNKNOWN 원인 묶기 — 판정 로직은 그대로 두고 표시만 근본 원인별로 정리
+   - raw UNKNOWN 규칙 수/상태는 보존한다.
+   - 여러 규칙이 같은 표 판독 실패에서 연쇄된 경우에만 한 영역으로 묶는다.
+   - 공통 원인을 확정하기 어려운 항목은 개별 항목으로 남긴다.
+   ============================================================ */
+const UNKNOWN_GROUP_DEF_ = {
+  summary:{label:"평가총괄표",title:"평가총괄표를 충분히 읽지 못했습니다",desc:"총괄표의 영역·반영비율·평가 시기 등을 읽지 못해 이 값을 사용하는 관련 검사를 일부 완료하지 못했습니다."},
+  plan:{label:"교수학습계획",title:"교수·학습 운영계획 표를 충분히 읽지 못했습니다",desc:"교수·학습 운영계획의 주차·성취기준·수행평가 표기를 읽지 못해 관련 교차검사를 일부 완료하지 못했습니다."},
+  rubric:{label:"수행평가 세부기준",title:"수행평가 세부기준표의 구조를 충분히 읽지 못했습니다",desc:"세부기준표의 영역·만점·채점 급간·기본점수·결시자 처리 등을 읽지 못해 관련 검사를 일부 완료하지 못했습니다."},
+  achievement:{label:"성취수준·평가기준",title:"성취수준·평가기준 표를 충분히 읽지 못했습니다",desc:"성취수준 또는 평가기준 표의 구조를 읽지 못해 해당 표를 사용하는 검사를 완료하지 못했습니다."},
+  grading:{label:"성취도·성적처리",title:"성취도·성적처리 표를 충분히 읽지 못했습니다",desc:"성취도 평정 또는 성적처리 방식 표를 읽지 못해 과목 유형·평정 방식 관련 검사를 완료하지 못했습니다."},
+  standards:{label:"성취기준 DB",title:"성취기준 DB 대조에 필요한 과목 정보를 확정하지 못했습니다",desc:"문서의 과목명을 DB 과목과 확실하게 연결하지 못해 성취기준 코드 실존·과목 일치·커버리지 검사를 보류했습니다."},
+  meta:{label:"문서 기본정보",title:"학년·학기·교육과정 등 문서 기본정보를 충분히 읽지 못했습니다",desc:"문서 기본정보가 불확실해 학년·학기·교육과정 조건이 필요한 검사를 일부 완료하지 못했습니다."}
+};
+function unknownGroupKey_(it){
+  const id=String(it&&it.id||"");
+  const t=String(it&&it.title||"").replace(/\s+/g," ");
+  // 원인이 명시된 문구를 ID보다 우선한다. 같은 X6/X7도 총괄표 실패와 교수학습계획 실패가 모두 가능하다.
+  if(/평가?총괄표|총괄표|반영비율/.test(t)) return "summary";
+  if(/교수[·ㆍ]?\s*학습|교수학습|교수·학습|교수학습\s*운영|운영\s*계획|주차·성취기준/.test(t)) return "plan";
+  if(/^N6(?:a|c|d|e|f)$/.test(id)) return "rubric";
+  if(/세부기준표|채점\s*(?:기준|급간)|급간\s*점수|기본점수|결시자|미인정\s*결석|영역\s*만점/.test(t)) return "rubric";
+  if(/^F(?:2-22|2-15|3-22|3-15)$/.test(id) || /성취수준|평가기준\s*표/.test(t)) return "achievement";
+  if(id==="F4" || /성취도.*(?:평정|성적처리|과목\s*구분)|평정표/.test(t)) return "grading";
+  if(/^S[234]$/.test(id)) return "standards";
+  if(/학년을\s*판별|학기를\s*판별|교육과정.*판별|문서\s*정보.*읽지/.test(t)) return "meta";
+  return null;
+}
+function buildUnknownGroups_(items){
+  const groups=[], byKey=new Map();
+  for(const it of (items||[])){
+    const root=unknownGroupKey_(it);
+    if(!root){
+      groups.push({key:"single:"+String(it.id||groups.length),label:"개별 확인",title:String(it.title||"판독하지 못한 항목이 있습니다"),desc:"다른 항목과 같은 원인이라고 확정하기 어려워 별도로 표시합니다.",items:[it],single:true});
+      continue;
+    }
+    let g=byKey.get(root);
+    if(!g){const d=UNKNOWN_GROUP_DEF_[root];g={key:root,label:d.label,title:d.title,desc:d.desc,items:[],single:false};byKey.set(root,g);groups.push(g);}
+    g.items.push(it);
+  }
+  return groups;
+}
+function unknownGroupCount_(items){return buildUnknownGroups_(items).length;}
+
 function fmtNum(n){ if(!n) return "—"; if(n.notApplicable) return "·"; const parts=[]; if(n.score!=null)parts.push(n.score+"점"); if(n.ratio!=null)parts.push(n.ratio+"%"); return parts.join(" · ")||"판독 실패"; }
 
 function withoutFileScopedR1_(checks){return Object.assign({},checks,{findings:(checks.findings||[]).filter(x=>x.id!=="R1"),passes:(checks.passes||[]).filter(x=>x.id!=="R1")});}
@@ -4413,7 +4459,8 @@ async function analyzeCourse_(zip,headerXml,sectionNames,seed,fileName,multiMode
   const x1=runX1Shadow(doc);const sCtx={course:(doc.document.curriculum==="2022"?stdCourseMatch(doc.document.subject):null),auto:true};
   return {doc,checks,v1,x1,sCtx,sItems:[],verdict:null,fail:0,unknown:0,review:0};
 }
-function recalcCourseState_(st){st.sItems=runSRules(st.doc,st.sCtx.course);st.verdict=computeVerdict(st.checks,st.v1,st.sItems);st.fail=statusCount_(st.checks,st.v1,st.sItems,ST.FAIL);st.unknown=statusCount_(st.checks,st.v1,st.sItems,ST.UNKNOWN);st.review=statusCount_(st.checks,st.v1,st.sItems,ST.REVIEW);return st;}
+function unknownItemsFromState_(st){const a=[];for(const f of (st.checks.findings||[]))if(f.level==="unknown")a.push(Object.assign({},f,{status:"UNKNOWN"}));for(const it of (st.v1.items||[]))if(it.status===ST.UNKNOWN)a.push(it);for(const it of (st.sItems||[]))if(it.status===ST.UNKNOWN)a.push(it);return a;}
+function recalcCourseState_(st){st.sItems=runSRules(st.doc,st.sCtx.course);st.verdict=computeVerdict(st.checks,st.v1,st.sItems);st.fail=statusCount_(st.checks,st.v1,st.sItems,ST.FAIL);st.unknown=statusCount_(st.checks,st.v1,st.sItems,ST.UNKNOWN);st.unknownGroupCount=unknownGroupCount_(unknownItemsFromState_(st));st.review=statusCount_(st.checks,st.v1,st.sItems,ST.REVIEW);return st;}
 function drawCourseState_(st,card,label,onChange){recalcCourseState_(st);renderResult(card,label,st.doc,st.checks,st.v1,st.verdict,st.x1,st.sItems,st.sCtx);const sel=card.querySelector('.course-sel');if(sel)sel.addEventListener('change',()=>{st.sCtx.course=sel.value||null;st.sCtx.auto=false;drawCourseState_(st,card,label,onChange);});if(onChange)onChange();}
 
 async function handleFiles(fileList){
@@ -4428,9 +4475,9 @@ async function handleFiles(fileList){
       if(scan.blocks.length>1){
         card.innerHTML='<div class="fname">'+esc(f.name)+'</div><div class="multi-summary"><p class="none">합본 문서에서 '+scan.blocks.length+'개 과목을 찾았습니다. 과목별 검사 중…</p></div><div class="multi-common"></div><div class="multi-courses"></div>';
         const list=card.querySelector('.multi-courses'),states=[],wraps=[],fileMemo=fileMemoItem_(scan.memoTotal);let ready=false;
-        const update=()=>{if(!ready)return;const fail=(fileMemo.status===ST.FAIL?1:0)+states.reduce((a,x)=>a+x.fail,0),unknown=states.reduce((a,x)=>a+x.unknown,0),review=states.reduce((a,x)=>a+x.review,0);const rows=states.map((st,i)=>{const cls=st.fail?'mc-red':st.unknown?'mc-gray':st.review?'mc-yellow':'mc-green';const text=st.fail?'필수 오류 '+st.fail:st.unknown?'검사 미완료 '+st.unknown:st.review?'확인 필요 '+st.review:'이상 없음';const sm=wraps[i]&&wraps[i].querySelector('summary');if(sm)sm.innerHTML='<span>'+(i+1)+'. '+esc(st.doc.document.subject||('과목 '+(i+1)))+'</span><span class="mc-meta '+cls+'">'+esc(text)+'</span>';return '<tr><td>'+(i+1)+'</td><td>'+esc(st.doc.document.subject||'과목명 판독 실패')+'</td><td class="'+cls+'">'+esc(text)+'</td></tr>';}).join('');
+        const update=()=>{if(!ready)return;const fail=(fileMemo.status===ST.FAIL?1:0)+states.reduce((a,x)=>a+x.fail,0),unknown=states.reduce((a,x)=>a+x.unknown,0),limited=states.reduce((a,x)=>a+(x.unknownGroupCount||0),0),review=states.reduce((a,x)=>a+x.review,0);const rows=states.map((st,i)=>{const cls=st.fail?'mc-red':st.unknown?'mc-gray':st.review?'mc-yellow':'mc-green';const text=st.fail?'필수 오류 '+st.fail:st.unknown?'검사 범위 제한 '+(st.unknownGroupCount||st.unknown)+'영역':st.review?'확인 필요 '+st.review:'이상 없음';const sm=wraps[i]&&wraps[i].querySelector('summary');if(sm)sm.innerHTML='<span>'+(i+1)+'. '+esc(st.doc.document.subject||('과목 '+(i+1)))+'</span><span class="mc-meta '+cls+'">'+esc(text)+'</span>';return '<tr><td>'+(i+1)+'</td><td>'+esc(st.doc.document.subject||'과목명 판독 실패')+'</td><td class="'+cls+'">'+esc(text)+'</td></tr>';}).join('');
           const vl=fail?'수정 후 제출':unknown?'검사 미완료':review?'확인 후 제출':'검사 통과';const vc=fail?'red':unknown?'gray':review?'yellow':'green';
-          card.querySelector('.multi-summary').innerHTML='<table class="gyeoljae"><tbody><tr><th>문서 정보</th><td>'+states.length+'과목 합본</td><th>검사 규칙</th><td>'+esc(V1_VERSION)+'</td></tr><tr><th>종합 판정</th><td class="verdict '+vc+'">'+vl+'</td><th>과목 수</th><td>'+states.length+'개</td></tr></tbody></table><div class="counts"><span class="chip red">필수 오류 '+fail+'개</span>'+(unknown?'<span class="chip gray">검사 미완료 '+unknown+'개</span>':'')+'<span class="chip yellow">확인 필요 '+review+'개</span></div><table class="ext"><tr><th>#</th><th>과목</th><th>상태</th></tr>'+rows+'</table>';
+          card.querySelector('.multi-summary').innerHTML='<table class="gyeoljae"><tbody><tr><th>문서 정보</th><td>'+states.length+'과목 합본</td><th>검사 규칙</th><td>'+esc(V1_VERSION)+'</td></tr><tr><th>종합 판정</th><td class="verdict '+vc+'">'+vl+'</td><th>과목 수</th><td>'+states.length+'개</td></tr></tbody></table><div class="counts"><span class="chip red">필수 오류 '+fail+'개</span>'+(unknown?'<span class="chip gray">검사 범위 제한 '+limited+'개 영역 · 관련 검사 '+unknown+'개</span>':'')+'<span class="chip yellow">확인 필요 '+review+'개</span></div><table class="ext"><tr><th>#</th><th>과목</th><th>상태</th></tr>'+rows+'</table>';
           card.querySelector('.multi-common').innerHTML=fileMemo.status===ST.FAIL?group('red','파일 전체 공통 오류',[fileMemo],'',true):'<div class="grp green"><h2>파일 전체 공통 검사</h2><ul class="hits"><li>R1 · '+esc(fileMemo.title)+'</li></ul></div>';
         };
         for(let i=0;i<scan.blocks.length;i++){const b=scan.blocks[i],st=await analyzeCourse_(zip,headerXml,b.sectionNames,scan.globalMeta,f.name,true,b.sectionSources);recalcCourseState_(st);states.push(st);const wrap=document.createElement('details');wrap.className='multi-course';const subj=st.doc.document.subject||b.info.subject||('과목 '+(i+1));wrap.innerHTML='<summary><span>'+(i+1)+'. '+esc(subj)+'</span><span class="mc-meta">검사 중…</span></summary><div class="multi-course-body"><p class="none">펼치면 이 과목의 상세 검사 결과를 표시합니다.</p></div>';list.appendChild(wrap);wraps.push(wrap);const body=wrap.querySelector('.multi-course-body');wrap.addEventListener('toggle',()=>{if(!wrap.open||wrap.dataset.rendered==='1')return;wrap.dataset.rendered='1';drawCourseState_(st,body,(i+1)+'. '+subj,update);});}
@@ -4440,6 +4487,25 @@ async function handleFiles(fileList){
     }catch(err){card.innerHTML='<div class="fname">'+esc(f.name)+'</div><div class="err-parse">검사하지 못했습니다: '+esc(err.message)+'</div>';}
   }
   const btn=document.createElement('button');btn.className='reset';btn.textContent='다른 파일 검사하기';btn.addEventListener('click',()=>{resultsEl.innerHTML='';fileInput.value='';window.scrollTo({top:0});});resultsEl.appendChild(btn);
+}
+
+function unknownGroupSection_(items){
+  const gs=buildUnknownGroups_(items);
+  let h='<div class="grp gray"><h2>검사 범위 제한 — '+gs.length+'개 영역에서 관련 검사 '+items.length+'개를 완료하지 못했습니다 (통과 아님)</h2>';
+  for(const g of gs){
+    h+='<details class="item" open><summary><span class="rid">'+esc(g.label)+'</span>'+esc(g.title)+'<span class="cnt">관련 검사 '+g.items.length+'개</span></summary><div class="body">';
+    h+='<p class="howfix">'+esc(g.desc)+'</p>';
+    h+='<details class="extract" style="margin-top:10px"><summary>관련 검사 '+g.items.length+'개 보기 · '+g.items.map(x=>esc(x.id)).join(' · ')+'</summary><div class="ebody">';
+    for(const it of g.items){
+      h+='<div style="padding:8px 0;border-top:1px dashed var(--line-soft)"><b><span class="rid">'+esc(it.id)+'</span> '+esc(it.title)+'</b>';
+      if(it.basis) h+='<div class="basis" style="margin-top:6px"><b>근거</b> · '+esc(it.basis)+'</div>';
+      if(it.hits&&it.hits.length){h+='<ul class="hits">'+it.hits.map(x=>'<li><span class="loc">'+esc(x.loc||'')+'</span><span class="snippet">'+esc(x.text||'')+'</span></li>').join('')+'</ul>';if(it.moreCount)h+='<p class="more">외 '+it.moreCount+'곳 더 있습니다.</p>';}
+      if(it.fix) h+='<p class="howfix">'+esc(it.fix)+'</p>';
+      h+='</div>';
+    }
+    h+='</div></details></div></details>';
+  }
+  return h+'</div>';
 }
 
 function renderResult(card, fname, doc, checks, v1, verdict, x1, sItems, sCtx){
@@ -4453,6 +4519,7 @@ function renderResult(card, fname, doc, checks, v1, verdict, x1, sItems, sCtx){
 
   const by = s => all.filter(x => x.status === s);
   const fails = by("FAIL"), unknowns = by("UNKNOWN"), reviews = by("REVIEW"), passesAll = by("PASS"), nas = by("NOT_APPLICABLE");
+  const unknownGroups = buildUnknownGroups_(unknowns);
 
   const D = doc.document || {};
   const metaBits = [];
@@ -4477,12 +4544,12 @@ function renderResult(card, fname, doc, checks, v1, verdict, x1, sItems, sCtx){
     '</tbody></table>';
   html += '<div class="counts">' +
     '<span class="chip red">필수 오류 ' + fails.length + '개</span>' +
-    (unknowns.length ? '<span class="chip gray">검사 미완료 ' + unknowns.length + '개</span>' : '') +
+    (unknowns.length ? '<span class="chip gray">검사 범위 제한 ' + unknownGroups.length + '개 영역 · 관련 검사 ' + unknowns.length + '개</span>' : '') +
     '<span class="chip yellow">확인 필요 ' + reviews.length + '개</span>' +
     '<span class="chip green">통과 ' + passesAll.length + '건</span></div>';
 
   html += group("red", "필수 오류 — 수정 전에는 제출하면 안 됩니다", fails, "필수 오류가 없습니다.", true);
-  if(unknowns.length) html += group("gray", "검사 미완료 — 값을 읽지 못해 검사하지 못했습니다 (통과 아님)", unknowns, "", true);
+  if(unknowns.length) html += unknownGroupSection_(unknowns);
   html += group("yellow", "확인 필요 — 맞을 수도 있지만 한 번 봐 주세요", reviews, "확인 필요 항목이 없습니다.", true);
   html += '<div class="grp green"><h2>통과한 검사</h2><ul class="hits">' +
     passesAll.map(p => '<li>' + esc(p.id) + ' · ' + esc(p.title) + '</li>').join("") + '</ul></div>';
