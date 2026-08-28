@@ -109,6 +109,22 @@
   .none{font-size:12.5px; color:var(--muted); padding:4px 0;}
   .hint{font-size:12.5px; color:var(--muted); margin-top:10px;}
   footer{margin-top:40px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--muted);}
+
+
+  /* V0.2 담당자용 — 양식 호환성 + 종합표 */
+  .compat-mini{font-size:11.5px;font-weight:800;white-space:nowrap}.compat-mini.normal{color:var(--pass)}.compat-mini.partial{color:var(--warn)}.compat-mini.unsupported{color:var(--seal)}
+  .scope-row{margin:10px 0 12px;padding:9px 12px;border:1px solid var(--line-soft);background:#f8f9fa;border-radius:4px;font-size:12.5px;line-height:1.55;}
+  .scope-row b{font-weight:900}.scope-row .scope-warn{color:var(--warn);font-weight:800}
+  .agg-panel{margin:14px 0 16px;background:#fff;border:1px solid var(--line-soft);border-radius:6px;padding:12px 14px;}
+  .agg-panel>summary{cursor:pointer;font-weight:900;font-size:14px;list-style:none}.agg-panel>summary::-webkit-details-marker{display:none}
+  .agg-desc{font-size:12px;color:var(--muted);margin:7px 0 9px}.agg-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .agg-actions button{font:inherit;font-size:12.5px;font-weight:800;padding:7px 12px;border-radius:4px;cursor:pointer;border:1px solid var(--ink);background:#fff;color:var(--ink)}
+  .agg-table-wrap{overflow:auto;border:1px solid var(--line-soft);border-radius:5px;margin-top:9px}table.agg-table{width:100%;border-collapse:collapse;font-size:12px;min-width:980px}
+  table.agg-table th,table.agg-table td{border-bottom:1px solid var(--line-soft);padding:6px 7px;text-align:left;vertical-align:top;white-space:nowrap}table.agg-table th{background:#F6F7F8;font-weight:800;position:sticky;top:0}
+  .agg-ok{color:var(--pass);font-weight:800}.agg-warn{color:var(--warn);font-weight:800}.agg-bad{color:var(--seal);font-weight:800}
+  .diag-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:8px}.diag-btn{font:inherit;font-size:11.5px;font-weight:800;padding:5px 9px;border-radius:4px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .diag-note{font-size:11px;color:var(--muted)}
+
 </style>
 </head>
 <body>
@@ -117,7 +133,7 @@
     <span class="rulever" id="ruleVer"></span>
     <div class="eyebrow" id="schoolEyebrow"></div>
     <h1>평가계획 일괄 검토</h1>
-    <p class="subtitle">과목별 평가계획서를 여러 개 넣거나 여러 과목을 합친 최종 hwpx 하나를 넣어도 과목별 행으로 자동 정리합니다. 반려 사유는 복사해서 메신저에 그대로 붙여넣고, 진행 관리는 CSV로 하세요.</p>
+    <p class="subtitle">과목별 평가계획서를 여러 개 넣거나 여러 과목을 합친 최종 hwpx 하나를 넣어도 과목별 행으로 자동 정리합니다. 같은 업로드에서 <b>오류 검토와 평가계획 종합표 생성</b>을 함께 처리합니다. 양식 호환성도 과목별로 표시하며, 지원이 어려운 양식은 진단 JSON으로 구조 정보를 저장할 수 있습니다.</p>
   </header>
 
   <p class="navlink">선생님들께 안내할 개별 검사기는 <a href="./">여기</a>입니다 · 학교 기준 설정은 <a href="./profile_generator.html">프로필 생성기</a></p>
@@ -144,7 +160,7 @@
   <div id="board"></div>
 
   <footer>
-    판정 기준은 개별 검사기와 동일합니다(검사 규칙 53종 · 파서 P0.22). 학교별 수치 기준은 프로필을 불러오면 반영됩니다.<br>
+    판정 기준은 개별 검사기와 동일합니다(검사 규칙 53종 · 파서 P0.22). 학교별 수치 기준은 프로필을 불러오면 반영됩니다. 종합표는 같은 P0.22 파싱 결과를 재사용하므로 별도 업로드가 필요하지 않습니다.<br>
     성취기준 DB 대조(S2·S3·S4)는 문서의 과목명이 자동 인식될 때만 수행됩니다. 인식되지 않으면 「검사 미완료」로 남으며, 개별 검사기에서 과목을 직접 선택하면 확인할 수 있습니다.
   </footer>
 </div>
@@ -4397,6 +4413,58 @@ function buildUnknownGroups_(items){
 }
 function unknownGroupCount_(items){return buildUnknownGroups_(items).length;}
 
+
+
+/* ============================================================
+   V0.2 담당자용 기능 — 양식 호환성 / 종합표 / 지원 진단
+   기존 P0.22 parseStatus와 파싱 결과만 재사용하며 규칙 판정은 변경하지 않는다.
+   ============================================================ */
+const CHECKER_FEATURE_VERSION = "V0.2-review";
+const COMPAT_DOMAIN_DEF_ = [
+  {key:"docInfo",label:"문서 기본정보"},{key:"summaryTable",label:"평가총괄표"},{key:"teachingPlan",label:"교수학습계획"},
+  {key:"rubrics",label:"수행평가 세부기준"},{key:"achievement",label:"성취수준·평가기준"},{key:"semesterLevel",label:"학기단위 성취수준"}
+];
+function compatibilityFromDoc_(doc){
+  const ps=(doc&&doc.parseStatus)||{};
+  const achievement=(ps.achievementTables==="PASS"&&ps.achievementContent==="PASS")?"PASS":"UNKNOWN";
+  const raw={docInfo:ps.docInfo||"UNKNOWN",summaryTable:ps.summaryTable||"UNKNOWN",teachingPlan:ps.teachingPlan||"UNKNOWN",rubrics:ps.rubrics||"UNKNOWN",achievement,semesterLevel:ps.semesterLevel||"UNKNOWN"};
+  const domains=COMPAT_DOMAIN_DEF_.map(d=>({key:d.key,label:d.label,status:raw[d.key]}));
+  const pass=domains.filter(d=>d.status==="PASS").length,total=domains.length,core=(raw.docInfo==="PASS"&&raw.summaryTable==="PASS");
+  let level,title;
+  if(core&&pass>=5){level="normal";title="정상 인식";}else if(pass>=2&&(raw.docInfo==="PASS"||raw.summaryTable==="PASS")){level="partial";title="부분 인식";}else{level="unsupported";title="지원 어려움";}
+  return {level,title,pass,total,coverage:Math.round(pass/total*100),domains};
+}
+function profileScopeInfo_(){const named=!!profileSchoolName();return named?{mode:"profile",label:"공통 규칙 + "+schoolName()+" 학교 프로필",note:"학교별 수치·교내 규칙까지 함께 적용 중입니다."}:{mode:"common",label:"공통 규칙만 적용",note:"수행평가 최소비율·기본점수 등 학교마다 다른 기준은 판정하지 않습니다."};}
+function diagnosticSafeText_(s){return String(s||"").replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/ig,"[email]").replace(/(?:01[016789]|0\d{1,2})[- .]?\d{3,4}[- .]?\d{4}/g,"[phone]").replace(/\s+/g," ").trim().slice(0,80);}
+function diagnosticTableSignatures_(sections){const out=[];for(let si=0;si<(sections||[]).length;si++){const s=sections[si]||{},xml=stripMemos(s.xml||"");const tbls=balanced(xml,"tbl");for(let ti=0;ti<tbls.length;ti++){try{const grid=parseGrid(tbls[ti]),kind=classify(grid),first=(grid.rows&&grid.rows[0])||[];const header=first.map(c=>diagnosticSafeText_(c&&c.t)).filter(Boolean).slice(0,12);const cols=(grid.rows||[]).reduce((m,r)=>Math.max(m,(r||[]).length),0);out.push({section:s.label||("section "+(si+1)),table:ti,kind,rows:(grid.rows||[]).length,cols,header});}catch(e){out.push({section:s.label||("section "+(si+1)),table:ti,kind:"parse-error",error:String(e.message||e).slice(0,160)});}}}return out;}
+function aggUnitRatio_(u){const r=unitRatio(u);return r&&r.value!=null?r.value:null;}
+function aggSumRatios_(arr){let sum=0,any=false,missing=false;for(const u of (arr||[])){const v=aggUnitRatio_(u);if(v==null)missing=true;else{sum+=v;any=true;}}return any&&!missing?Math.round(sum*100)/100:null;}
+function aggHeaderRatio_(x){return x&&x.ratio!=null?x.ratio:null;}
+function aggMethod_(doc){const gs=doc.gradeSelect||{};if(Array.isArray(gs.method)&&gs.method.length===1)return gs.method[0];if(Array.isArray(gs.method)&&gs.method.length>1)return gs.method.join("·");return "";}
+function aggNumText_(v){return v==null?"":String(Math.round(v*100)/100);}
+function aggTime_(u){return String(u&&u.time&&u.time.raw||"").replace(/\s+/g," ").trim();}
+function aggEssay_(u){return u&&u.essay&&u.essay.ratio!=null?u.essay.ratio:null;}
+function aggregateOneDoc_(doc,sourceName){
+  const D=doc.document||{},S=doc.summary||{exams:[],performanceTasks:[],ratios:{}},exams=S.exams||[],perfs=S.performanceTasks||[];
+  const exam=aggHeaderRatio_(S.ratios&&S.ratios.exam),examR=exam!=null?exam:(exams.length?aggSumRatios_(exams):0),perf=aggHeaderRatio_(S.ratios&&S.ratios.perf),perfR=perf!=null?perf:(perfs.length?aggSumRatios_(perfs):0);
+  let essay=S.essayTotal&&S.essayTotal.ratio!=null?S.essayTotal.ratio:null;if(essay==null){let es=0,seen=false,miss=false;for(const u of [...exams,...perfs]){if(u&&u.essay&&u.essay.ratio!=null){es+=u.essay.ratio;seen=true;}else if(u&&u.essay&&u.essay.notApplicable){}else if(u&&u.essay&&u.essay.raw){miss=true;}}if(seen&&!miss)essay=Math.round(es*100)/100;}
+  const total=(examR!=null&&perfR!=null)?Math.round((examR+perfR)*100)/100:null,detail=[];
+  for(const u of exams)detail.push({grade:D.grade||"",subject:D.subject||"",kind:"정기시험",name:u.name||"",ratio:aggUnitRatio_(u),essay:aggEssay_(u),time:aggTime_(u),source:sourceName});
+  for(const u of perfs)detail.push({grade:D.grade||"",subject:D.subject||"",kind:"수행평가",name:u.name||"",ratio:aggUnitRatio_(u),essay:aggEssay_(u),time:aggTime_(u),source:sourceName});
+  const perfNames=perfs.map(u=>{const r=aggUnitRatio_(u);return (u.name||"영역명 없음")+(r!=null?" "+aggNumText_(r)+"%":"");}).join(" / "),issues=[];
+  if(!D.subject)issues.push("과목명 판독 실패");if(!D.grade)issues.push("학년 판독 실패");if(exams.length+perfs.length===0)issues.push("평가총괄표 판독 실패");if(examR==null)issues.push("정기시험 비율 확인 필요");if(perfR==null)issues.push("수행평가 비율 확인 필요");if(total!=null&&Math.abs(total-100)>0.01)issues.push("반영비율 합계 "+total+"%");
+  return {course:{year:D.year||"",semester:D.semester||"",grade:D.grade||"",subject:D.subject||"",examRatio:examR,perfRatio:perfR,essayRatio:essay,totalRatio:total,method:aggMethod_(doc),perfAreas:perfNames,status:issues.length?"확인 필요":"정상",source:sourceName},details:detail,issues:[...new Set(issues)]};
+}
+function csvCell_(v){const s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function saveBlob_(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
+function xEsc_(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function colName_(n){let s='';for(;n>0;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;}
+function sheetXml_(rows){let body='';for(let r=0;r<rows.length;r++){body+='<row r="'+(r+1)+'">';for(let c=0;c<rows[r].length;c++){const v=rows[r][c],ref=colName_(c+1)+(r+1),style=r===0?' s="1"':'';if(typeof v==='number'&&Number.isFinite(v))body+='<c r="'+ref+'"'+style+'><v>'+v+'</v></c>';else body+='<c r="'+ref+'" t="inlineStr"'+style+'><is><t xml:space="preserve">'+xEsc_(v)+'</t></is></c>';}body+='</row>';}return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+body+'</sheetData></worksheet>';}
+function crc32_(bytes){if(!crc32_.t){const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}crc32_.t=t;}let c=0xFFFFFFFF;for(const b of bytes)c=crc32_.t[(c^b)&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function u16_(v){const a=new Uint8Array(2);new DataView(a.buffer).setUint16(0,v,true);return a;}function u32_(v){const a=new Uint8Array(4);new DataView(a.buffer).setUint32(0,v>>>0,true);return a;}function catBytes_(arr){const n=arr.reduce((a,x)=>a+x.length,0),o=new Uint8Array(n);let p=0;for(const x of arr){o.set(x,p);p+=x.length;}return o;}
+function zipStore_(files){const te=new TextEncoder(),locals=[],centrals=[];let off=0;for(const f of files){const name=te.encode(f.name),data=typeof f.data==='string'?te.encode(f.data):f.data,crc=crc32_(data),flag=0x0800;const local=catBytes_([u32_(0x04034b50),u16_(20),u16_(flag),u16_(0),u16_(0),u16_(0),u32_(crc),u32_(data.length),u32_(data.length),u16_(name.length),u16_(0),name,data]);locals.push(local);const cen=catBytes_([u32_(0x02014b50),u16_(20),u16_(20),u16_(flag),u16_(0),u16_(0),u16_(0),u32_(crc),u32_(data.length),u32_(data.length),u16_(name.length),u16_(0),u16_(0),u16_(0),u16_(0),u32_(0),u32_(off),name]);centrals.push(cen);off+=local.length;}const central=catBytes_(centrals),localAll=catBytes_(locals);const end=catBytes_([u32_(0x06054b50),u16_(0),u16_(0),u16_(files.length),u16_(files.length),u32_(central.length),u32_(localAll.length),u16_(0)]);return catBytes_([localAll,central,end]);}
+function xlsxBlob_(sheets){const files=[];let ov='<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';files.push({name:'_rels/.rels',data:'<?xml version="1.0" encoding="UTF-8"?>'+ov});let wb='<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>',rels='<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',ct='<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';sheets.forEach((s,i)=>{wb+='<sheet name="'+xEsc_(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';rels+='<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';ct+='<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:sheetXml_(s.rows)});});rels+='<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';wb+='</sheets></workbook>';ct+='</Types>';files.push({name:'[Content_Types].xml',data:ct},{name:'xl/workbook.xml',data:'<?xml version="1.0" encoding="UTF-8"?>'+wb},{name:'xl/_rels/workbook.xml.rels',data:'<?xml version="1.0" encoding="UTF-8"?>'+rels},{name:'xl/styles.xml',data:'<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf xfId="0"/><xf xfId="0" fontId="1" applyFont="1"/></cellXfs></styleSheet>'});return new Blob([zipStore_(files)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});}
+
 function fmtNum(n){ if(!n) return "—"; if(n.notApplicable) return "·"; const parts=[]; if(n.score!=null)parts.push(n.score+"점"); if(n.ratio!=null)parts.push(n.ratio+"%"); return parts.join(" · ")||"판독 실패"; }
 
 const drop = document.getElementById("drop");
@@ -4522,7 +4590,7 @@ function withoutFileScopedR1_(checks){return Object.assign({},checks,{findings:(
 function toRowItem_(it,status){return {id:it.id,title:it.title,status,basis:it.basis||"",hits:Array.isArray(it.hits)?it.hits:[],moreCount:it.moreCount||0,fix:it.fix||""};}
 async function inspectBlock_(file,zip,headerXml,sectionNames,seed,hash,multiMode,partIndex,sectionSources){
   const row={name:file.name,subject:null,grade:null,semester:null,teacher:null,verdict:null,cls:"gray",fail:0,review:0,unknown:0,items:[],error:null,hash,
-             multiPart:!!multiMode,partIndex:partIndex==null?null:partIndex,isFileCommon:false};
+             multiPart:!!multiMode,partIndex:partIndex==null?null:partIndex,isFileCommon:false,compat:null,agg:null,tableSignatures:[],parseStatus:{},tableCounts:{},parserUnknowns:[],parserWarnings:[]};
   try{
     const doc=await parseDoc(zip,{sectionNames,sectionSources,seed});
     const sections=[];
@@ -4537,6 +4605,7 @@ async function inspectBlock_(file,zip,headerXml,sectionNames,seed,hash,multiMode
     const course=doc.document.curriculum==="2022"?stdCourseMatch(doc.document.subject):null,sItems=runSRules(doc,course),verdict=computeVerdict(checks,v1,sItems);const lvMap={red:"FAIL",yellow:"REVIEW",unknown:"UNKNOWN",na:"NOT_APPLICABLE"},all=[];
     for(const f of checks.findings)all.push(toRowItem_(f,lvMap[f.level]||"REVIEW"));for(const it of v1.items)all.push(toRowItem_(it,it.status));for(const it of (sItems||[]))all.push(toRowItem_(it,it.status));
     row.subject=doc.document.subject;row.grade=doc.document.grade;row.semester=doc.document.semester;row.teacher=doc.document.teacher;row.verdict=verdict.label;row.cls=verdict.cls;row.items=all;row.fail=all.filter(x=>x.status==="FAIL").length;row.review=all.filter(x=>x.status==="REVIEW").length;row.unknown=all.filter(x=>x.status==="UNKNOWN").length;row.unknownGroupCount=unknownGroupCount_(all.filter(x=>x.status==="UNKNOWN"));row.courseAuto=course;
+    row.compat=compatibilityFromDoc_(doc);row.agg=aggregateOneDoc_(doc,file.name);row.tableSignatures=diagnosticTableSignatures_(sections);row.parseStatus=doc.parseStatus||{};row.tableCounts=doc.counts||{};row.parserUnknowns=(doc.unknowns||[]).slice(0,60).map(diagnosticSafeText_);row.parserWarnings=(doc.warnings||[]).slice(0,60).map(diagnosticSafeText_);
   }catch(err){row.error=err.message;row.verdict="검사 실패";row.cls="gray";}
   return row;
 }
@@ -4603,6 +4672,10 @@ function render(){
     '<span class="chip yellow">확인 권장 ' + cReview + '과목</span>' +
     '<span class="chip green">이상 없음 ' + cOk + '과목</span>' +
     (cErr ? '<span class="chip red">검사 실패 ' + cErr + '과목</span>' : '') + '</div>';
+  const compatRows=courseRows.filter(r=>!r.error&&r.compat),compatNormal=compatRows.filter(r=>r.compat.level==="normal").length,compatPartial=compatRows.filter(r=>r.compat.level==="partial").length,compatUnsupported=compatRows.filter(r=>r.compat.level==="unsupported").length,scope=profileScopeInfo_();
+  h += '<div class="scope-row"><b>적용 기준</b> · '+esc(scope.label)+' <span class="'+(scope.mode==='common'?'scope-warn':'')+'">— '+esc(scope.note)+'</span><br><b>양식 호환성</b> · 정상 '+compatNormal+'과목'+(compatPartial?' · 부분 '+compatPartial+'과목':'')+(compatUnsupported?' · 지원 어려움 '+compatUnsupported+'과목':'')+'</div>';
+  h += renderAggregatePanel_(courseRows);
+
 
   h += '<div class="btnrow">' +
     '<button class="act" id="btnCsv">전체 CSV 내려받기</button>' +
@@ -4612,7 +4685,7 @@ function render(){
 
   h += '<table class="board"><thead><tr>' +
     '<th style="width:26px"></th><th>과목</th><th style="width:52px">학년</th><th style="width:88px">담당 교사</th>' +
-    '<th style="width:104px">판정</th><th style="width:58px">필수<br>오류</th><th style="width:58px">확인<br>필요</th>' +
+    '<th style="width:86px">양식</th><th style="width:104px">판정</th><th style="width:58px">필수<br>오류</th><th style="width:58px">확인<br>필요</th>' +
     '<th style="width:64px">제한<br>영역</th><th style="width:78px">사유</th></tr></thead><tbody>';
 
   rows.forEach((r, i) => {
@@ -4623,13 +4696,14 @@ function render(){
         '<span class="fn">' + esc(r.name) + '</span></td>' +
       '<td>' + (r.grade ? r.grade + "학년" : "—") + '</td>' +
       '<td>' + esc(r.teacher || "—") + '</td>' +
+      '<td>'+(r.compat?'<span class="compat-mini '+r.compat.level+'">'+esc(r.compat.title)+' '+r.compat.pass+'/'+r.compat.total+'</span>':'—')+'</td>' +
       '<td class="verdict ' + r.cls + '">' + esc(r.verdict || "—") + '</td>' +
       '<td class="num ' + (r.fail ? "bad" : "") + '">' + (r.error ? "—" : r.fail) + '</td>' +
       '<td class="num">' + (r.error ? "—" : r.review) + '</td>' +
       '<td class="num ' + (r.unknown ? "warn" : "") + '" title="' + (r.unknown ? esc('관련 검사 '+r.unknown+'개') : '') + '">' + (r.error ? "—" : (r.unknown ? (r.unknownGroupCount||unknownGroupCount_(r.items.filter(x=>x.status==="UNKNOWN"))) : 0)) + '</td>' +
       '<td>' + copyBtn(r, i) + '</td></tr>';
     // 상세 행
-    h += '<tr class="d"><td></td><td colspan="8"><details><summary>지적 내용 보기</summary><div class="dbody">';
+    h += '<tr class="d"><td></td><td colspan="9"><details><summary>지적 내용 보기</summary><div class="dbody">';
     if(r.error){
       h += '<div class="err-parse">검사하지 못했습니다: ' + esc(r.error) + '</div>';
     }else{
@@ -4666,6 +4740,7 @@ function render(){
       if(r.courseAuto) h += '<p class="note">성취기준 DB 대조 과목: ' + esc(r.courseAuto) + ' (문서의 과목명으로 자동 인식)</p>';
       else if(r.subject) h += '<p class="note">「' + esc(r.subject) + '」은 성취기준 DB에서 자동 인식되지 않아 S2·S3·S4가 「검사 미완료」로 남습니다. 개별 검사기에서 과목을 직접 고르면 확인할 수 있습니다.</p>';
     }
+    if(!r.isFileCommon) h += '<div class="diag-actions"><button class="diag-btn" data-diag="'+i+'">지원 요청용 진단 JSON</button><span class="diag-note">같은 원본 파일의 양식 구조·판독 실패 정보만 저장</span></div>';
     h += '</div></details></td></tr>';
   });
   h += '</tbody></table>';
@@ -4680,7 +4755,35 @@ function render(){
   });
   for(const b of boardEl.querySelectorAll("[data-copy]"))
     b.addEventListener("click", e => { e.stopPropagation(); copy(reasonText(rows[+b.dataset.copy])); });
+  for(const b of boardEl.querySelectorAll("[data-diag]"))
+    b.addEventListener("click", e => { e.stopPropagation(); downloadDiagnosticForRow_(rows[+b.dataset.diag], rows); });
+  const ac=document.getElementById("btnAggCsv"),ax=document.getElementById("btnAggXlsx");
+  if(ac)ac.addEventListener("click",()=>downloadAggregateCsv_(courseRows));
+  if(ax)ax.addEventListener("click",()=>downloadAggregateXlsx_(courseRows));
 }
+
+
+
+function aggregateStateFromRows_(rows){
+  const courses=[],details=[],issues=[];let seq=0;
+  for(const r of (rows||[])){
+    if(r.isFileCommon||r.error||!r.agg)continue;const c=Object.assign({seq:++seq},r.agg.course,{compat:r.compat});courses.push(c);details.push(...(r.agg.details||[]));for(const issue of (r.agg.issues||[]))issues.push({grade:c.grade,subject:c.subject,issue,source:c.source});if(r.compat&&r.compat.level!=="normal")issues.push({grade:c.grade,subject:c.subject,issue:"양식 "+r.compat.title+" (핵심 "+r.compat.pass+"/"+r.compat.total+" 영역 판독)",source:c.source});
+  }
+  return {courses,details,issues};
+}
+function renderAggregatePanel_(rows){
+  const A=aggregateStateFromRows_(rows),C=A.courses,I=A.issues;if(!C.length)return '';
+  const ok=C.filter(x=>x.status==="정상"&&(!x.compat||x.compat.level==="normal")).length;
+  let h='<details class="agg-panel" open><summary>📊 평가계획 종합표 · '+C.length+'과목</summary><div class="agg-desc">현재 일괄 검토에 넣은 파일을 다시 업로드하지 않고 같은 P0.22 파싱 결과로 만듭니다. 「확인 필요」는 원문 대조가 필요한 값입니다.</div><div class="agg-actions"><button id="btnAggXlsx">종합표 Excel(.xlsx)</button><button id="btnAggCsv">종합표 CSV</button></div>';
+  h+='<div class="agg-table-wrap"><table class="agg-table"><thead><tr><th>#</th><th>학년</th><th>과목</th><th>정기시험</th><th>수행평가</th><th>논술형</th><th>합계</th><th>분할방식</th><th>수행평가 영역</th><th>양식</th><th>상태</th></tr></thead><tbody>';
+  for(const r of C){const cls=r.status==="정상"?'agg-ok':'agg-warn';h+='<tr><td>'+r.seq+'</td><td>'+esc(r.grade)+'</td><td>'+esc(r.subject||'판독 실패')+'</td><td>'+esc(aggNumText_(r.examRatio))+(r.examRatio!=null?'%':'')+'</td><td>'+esc(aggNumText_(r.perfRatio))+(r.perfRatio!=null?'%':'')+'</td><td>'+esc(aggNumText_(r.essayRatio))+(r.essayRatio!=null?'%':'')+'</td><td>'+esc(aggNumText_(r.totalRatio))+(r.totalRatio!=null?'%':'')+'</td><td>'+esc(r.method)+'</td><td>'+esc(r.perfAreas)+'</td><td>'+(r.compat?esc(r.compat.title)+' '+r.compat.pass+'/'+r.compat.total:'—')+'</td><td class="'+cls+'">'+esc(r.status)+'</td></tr>';}
+  h+='</tbody></table></div>'+(I.length?'<p class="agg-desc">확인 필요 '+I.length+'건은 Excel의 「확인 필요」 시트에 함께 저장됩니다.</p>':'<p class="agg-desc agg-ok">확인 필요 항목이 없습니다.</p>')+'</details>';return h;
+}
+function aggregateCsvTextFromRows_(rows){const A=aggregateStateFromRows_(rows),H=['학년도','학기','학년','과목명','정기시험 비율','수행평가 비율','논술형 비율','합계','분할방식','수행평가 영역','양식 호환성','상태','원본 파일'],body=A.courses.map(r=>[r.year,r.semester,r.grade,r.subject,r.examRatio,r.perfRatio,r.essayRatio,r.totalRatio,r.method,r.perfAreas,r.compat?r.compat.title+' '+r.compat.pass+'/'+r.compat.total:'',r.status,r.source]);return '\ufeff'+[H,...body].map(a=>a.map(csvCell_).join(',')).join('\r\n');}
+function downloadAggregateCsv_(rows){saveBlob_(new Blob([aggregateCsvTextFromRows_(rows)],{type:'text/csv;charset=utf-8'}),'평가계획_종합표.csv');}
+function downloadAggregateXlsx_(rows){const A=aggregateStateFromRows_(rows),c=[['학년도','학기','학년','과목명','정기시험 비율','수행평가 비율','논술형 비율','합계','분할방식','수행평가 영역','양식 호환성','상태','원본 파일'],...A.courses.map(r=>[r.year,r.semester,r.grade,r.subject,r.examRatio??'',r.perfRatio??'',r.essayRatio??'',r.totalRatio??'',r.method,r.perfAreas,r.compat?r.compat.title+' '+r.compat.pass+'/'+r.compat.total:'',r.status,r.source])],d=[['학년','과목','구분','영역·시험명','반영비율','논술형비율','평가시기','원본 파일'],...A.details.map(r=>[r.grade,r.subject,r.kind,r.name,r.ratio??'',r.essay??'',r.time,r.source])],i=[['학년','과목','확인 내용','원본 파일'],...A.issues.map(r=>[r.grade,r.subject,r.issue,r.source])];saveBlob_(xlsxBlob_([{name:'과목별 종합',rows:c},{name:'평가영역 상세',rows:d},{name:'확인 필요',rows:i}]),'평가계획_종합표.xlsx');}
+function diagnosticPayloadForFile_(row,rows){const same=(rows||[]).filter(x=>x.name===row.name&&!x.isFileCommon),scope=profileScopeInfo_();return {schema:'bokjeong-checker-format-diagnostic-v1',generatedAt:new Date().toISOString(),checker:{ruleVersion:RULE_VERSION,ruleCount:RULE_COUNT,parserVersion:PARSER_VERSION,featureVersion:CHECKER_FEATURE_VERSION},privacy:'문서 전체 본문, 교사명, 학급 정보는 포함하지 않습니다. 표의 첫 행(구조 식별용)과 파서 상태만 저장합니다.',source:{name:row.name},appliedScope:{mode:scope.mode,schoolProfileLoaded:!!profileSchoolName(),schoolLevel:(PROFILE.school&&PROFILE.school.level)||null},courses:same.map((r,i)=>({index:i+1,document:{grade:r.grade||null,semester:r.semester||null,subject:diagnosticSafeText_(r.subject)},compatibility:r.compat||null,parseStatus:r.parseStatus||{},tableCounts:r.tableCounts||{},tableSignatures:r.tableSignatures||[],unknownGroups:buildUnknownGroups_((r.items||[]).filter(x=>x.status==='UNKNOWN')).map(g=>({key:g.key,label:g.label,ruleIds:g.items.map(x=>x.id)})),parserUnknowns:r.parserUnknowns||[],parserWarnings:r.parserWarnings||[],error:r.error||null}))};}
+function downloadDiagnosticForRow_(row,rows){const payload=diagnosticPayloadForFile_(row,rows),name=String(row.name||'평가계획').replace(/\.hwpx$/i,'').replace(/[\\/:*?"<>|]/g,'_')+'_양식진단.json';saveBlob_(new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'}),name);}
 
 /** 행별 복사 버튼 — 복사할 내용이 있는 행에만 둔다 */
 function copyBtn(r, i){
