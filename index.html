@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획 제출 전 검사기 V2.3.8</title>
+<title>평가계획 제출 전 검사기 V2.3.11</title>
 <style>
   :root{
     --paper:#FAFAF7; --ink:#1A1D21; --line:#8C99A6; --line-soft:#D5DBE1;
@@ -124,7 +124,7 @@
     <span class="rulever" id="ruleVer"></span>
     <div class="eyebrow" id="schoolEyebrow"></div>
     <h1>평가계획 제출 전 검사기</h1>
-    <p class="subtitle">작성 방식은 그대로 두세요. 과목별 파일은 물론 여러 과목을 합친 최종 hwpx도 자동으로 과목별 분리하여 검사합니다. 반영비율 합계, 총괄표·세부기준표·교수학습계획의 대응, 성취기준 코드, 지우지 않은 안내문·메모까지 확인해 드립니다. 수행평가 비율·기본점수 같은 <b>학교별 기준은 학교 프로필을 불러오면</b> 함께 검사합니다. 검사 결과에는 먼저 <b>현재 P0.22 파서가 이 문서 양식을 어느 범위까지 읽었는지</b> 표시하며, 지원이 어려운 양식은 결과를 그대로 신뢰하지 않도록 안내합니다.</p>
+    <p class="subtitle">작성 방식은 그대로 두세요. 과목별 파일은 물론 여러 과목을 합친 최종 hwpx도 자동으로 과목별 분리하여 검사합니다. 반영비율 합계, 총괄표·세부기준표·교수학습계획의 대응, 성취기준 코드, 지우지 않은 안내문·메모까지 확인해 드립니다. 수행평가 비율·기본점수 같은 <b>학교별 기준은 학교 프로필을 불러오면</b> 함께 검사합니다. 검사 결과에는 먼저 <b>현재 P0.22-S2 파서가 이 문서 양식을 어느 범위까지 읽었는지</b> 표시하며, 지원이 어려운 양식은 결과를 그대로 신뢰하지 않도록 안내합니다.</p>
   </header>
 
   <div id="profileBar" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid var(--line-soft); border-radius:4px; padding:8px 12px; margin-bottom:14px; font-size:12.5px;">
@@ -179,10 +179,14 @@ const STD_DATA = {"meta":{"source":"DECK6/korean-secondary-learning-map v0.4.0-c
    · PARSER-039 : 2015 과목구분·성취도·등급 직접기입 표 인식
    · RULE-N3/N3b : 논술형 30%/20% 기준 + 수행평가 논술형-only 금지
                     학교급·편제에 따른 예외 판정과 공식 업무매뉴얼 근거를 분리
+   · PARSER-046 : 성취수준 단계 정책 단일화 — 예술·체육·과학탐구실험 A~C / 일반과목 A~E
+                  F11·F3이 공통 정책을 사용하여 3단계 과목의 D·E 거짓 누락 및 5단계 오기재 통과를 방지
+   · PARSER-047 : X1 평가요소 목록마커 정규화 확대 — 가./가,/가)/가． 및 번호 뒤 무공백 허용
+   · PARSER-048 : F12 루브릭 구조 신호 보존 — 항목 개수 충족형과 요소별 합산형을 구분
    ============================================================ */
-const RULE_VERSION = "V2.3.8";
-const RULE_COUNT = 53;
-const PARSER_VERSION = "P0.22";
+const RULE_VERSION = "V2.3.11";
+const RULE_COUNT = 59;
+const PARSER_VERSION = "P0.22-S3";
 const LIMITS = { fileMB: 30, entries: 300, entryMB: 60 };
 
 /* ============================================================
@@ -336,7 +340,7 @@ const CFG = {
 
 // B1 범교과 공식 명칭 — 길이 내림차순 (extractPlan prefix 매칭용)
 const CROSS_THEMES=["환경·지속가능발전교육","안전·건강교육","진로연계수업","민주시민교육",
-  "경제금융교육","다문화교육","인성교육","인권교육","통일교육","독도교육","성교육"];
+  "경제금융교육","다문화교육","인성교육","인권교육","통일교육","독도교육","성교육","디지털기반수업"];
 
 // 통합 성취기준 코드 파서 — Y3(형식)과 Y7(약칭)이 동일 해석 사용
 // 지원: [12한지03-02](부착형), [10한사1-01-01]·[10한사1-01](하이픈형), [12융과01-01-00](평가준거 3段)
@@ -969,7 +973,7 @@ function escRe_(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
 
 ;
-const P_VER = "P0.22";  // P0.21 전체 유지 + 040(한 section 내부 다과목 분리·부분 XML 소스 지원)
+const P_VER = "P0.22-S3";  // P0.22-S2 + PARSER-047(X1 목록마커) + 048(F12 루브릭 구조신호)
 /* ===== ZIP (V0.9와 동일) ===== */
 /* readZip·stripMemos·cleanT는 공통 유틸(기존 검사기 정의)을 사용 — TECH-001 */
 /* ===== XML 유틸 ===== */
@@ -1090,6 +1094,34 @@ function extractCombinedScores(grid){
   }
   const scores=[...new Set(vals.map(v=>Math.round(v*1000)/1000))].sort((a,b)=>b-a);
   return { present:true, scores, source:{row:rr,col:label.c} };
+}
+
+
+/* PARSER-048: F12용 루브릭 채점 구조 신호.
+   - 항목 개수 충족형: '6개 항목을 충족하는 경우'처럼 개수별 총점을 정하는 방식
+   - 요소별 합산형: 둘 이상의 평가요소에 각각 급간/배점이 있거나 합산점수표가 존재하는 방식 */
+function rubricScoringSignals_(grid, elements, scoreCriteria, combinedScores){
+  const flat=(grid&&grid.all||[]).map(c=>String(c&&c.t||"")).join(" ").normalize("NFKC");
+  const zeroM=flat.match(/(?:만족|충족)하는\s*(?:평가\s*)?항목이\s*없는\s*경우/);
+  const countMatches=[...flat.matchAll(/\d+\s*개\s*(?:평가\s*)?항목(?:을|를)?\s*(?:충족|만족)하는\s*경우/g)];
+  const scoredElements=(elements||[]).filter(e=>
+    Number.isFinite(Number(e&&e.maxScore)) || ((e&&e.criteria)||[]).some(c=>Number.isFinite(Number(c&&c.score)))
+  ).length;
+  const namedGroups=new Set();
+  for(const c of (scoreCriteria||[])){
+    const label=String(c&&c.label||"");
+    const pp=label.indexOf(" · ");
+    if(pp>0) namedGroups.add(label.slice(0,pp).trim());
+  }
+  const combined=combinedScores||{present:false,scores:[]};
+  const additive=!!combined.present || scoredElements>=2 || namedGroups.size>=2;
+  return {
+    zeroItemPhrase:zeroM?zeroM[0]:null,
+    countBasedCriterionCount:countMatches.length,
+    countBased:countMatches.length>=2,
+    additive,
+    additiveEvidence:combined.present?"합산점수표":(scoredElements>=2?"요소별 배점 "+scoredElements+"개":(namedGroups.size>=2?"요소별 급간 "+namedGroups.size+"개":""))
+  };
 }
 
 /* ===== 표 의미 식별 ===== */
@@ -1223,12 +1255,12 @@ function extractSummary(grid, src){
 
 /* ===== 교수학습 계획 추출 ===== */
 // 평가요소 다항목 분리: 줄바꿈 → 글머리·번호 → 가운뎃점·세미콜론 → 쉼표(전 조각이 '하기'류일 때만)
-const EL_MARKER_HEAD=/^\s*(?:[①-⑳]|[-•▪·]\s|[가나다라마바사아자차카타파하]\.|\d+\))/;
+const EL_MARKER_HEAD=/^\s*(?:[①-⑳]|[-•▪·⋅∙◦‧]\s*|[가나다라마바사아자차카타파하]\s*[.,，．、)）]|\d+\))/;
 // 셀 안 워드랩 병합: 줄이 항목 종결('~기')이 아니고, 다음 줄이 새 항목 마커가 아니면 이어붙인다.
 // 병합 조건: (a) 역량 태그 괄호행 '(문제해결력)' (b) 연결어미·조사로 끝남 (c) 다음 줄이 '~기'로 끝나는 완결부
 // 오판 방향: 병합 과잉은 거짓 통과(허용), 병합 부족은 거짓 오류(불허) — 명세 F1 취지
 function mergeWrappedLines(lines){
-  const stripHead=t=>t.replace(/^\s*[가나다라마바사아자차카타파하]\.\s*/,"").trim();
+  const stripHead=t=>t.replace(/^\s*[가나다라마바사아자차카타파하]\s*[.,，．、)）]\s*/,"").trim();
   const endsGi=t=>/기[\s.·,;:)\]]*$/.test(t.trim());
   const parenTag=t=>/^\([^()]{1,15}\)$/.test(stripHead(t));
   const connEnd=t=>/(?:[와과의및에를을은는]|으로|하여|하고|며|적|,)\s*$/.test(t.trim());
@@ -1251,7 +1283,8 @@ function splitElements(text){
   items=explode(items,/\n+/);
   items=mergeWrappedLines(items.filter(t=>t.trim()));
   items=items.flatMap(t=>{
-    const parts=t.split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])|(?=(?:^|\s)[-•▪]\s)|(?=(?:^|\s)[가나다라마바사아자차카타파하]\.\s)|(?=(?:^|\s)\d\)\s)/);
+    // PARSER-047: 목록 마커는 내용이 아니다. 가./가,/가)/가． 및 마커 뒤 무공백도 동일 처리한다.
+    const parts=t.split(/(?=[①②③④⑤⑥⑦⑧⑨⑩])|(?=(?:^|\s)[-•▪·⋅∙◦‧]\s*)|(?=(?:^|\s)[가나다라마바사아자차카타파하]\s*[.,，．、)）]\s*)|(?=(?:^|\s)\d\)\s*)/);
     return parts.length>1?parts:[t];
   });
   items=explode(items,/\s*[;；]\s*|\s+·\s+/);
@@ -1273,7 +1306,7 @@ function splitElements(text){
     if(parts.length>1 && parts.every(pp=>/하기\s*$/.test(pp.trim()))) return parts;
     return [t];
   });
-  return items.map(t=>t.replace(/^[①-⑩\-•▪\s]+|^[가나다라마바사아자차카타파하]\.\s*|^\d\)\s*/g,"").trim()).filter(t=>t.length>1);
+  return items.map(t=>t.trim().replace(/^[①-⑩\-•▪·⋅∙◦‧\s]+|^[가나다라마바사아자차카타파하]\s*[.,，．、)）]\s*|^\d\)\s*/g,"").trim()).filter(t=>t.length>1);
 }
 function coveringCell(grid,row,col){
   return grid.all.find(cell=>cell.r!=null&&cell.c!=null&&cell.r<=row&&row<cell.r+cell.rs&&cell.c<=col&&col<cell.c+cell.cs)||null;
@@ -1412,6 +1445,50 @@ async function detectCourseBlocks_(zip){
   return {secNames,blocks,preamble:secNames.slice(0,first),memoTotal,globalMeta:{year,semester},ambiguous:false,fragmentMode:true};
 }
 
+
+/* ===== PATCH V2.3.11: 수행평가 평가방법 체크 상태 추출 ===== */
+const RUBRIC_METHOD_LABELS = new Set([
+  "논술","논술형","실험‧실습","실험·실습","구술‧발표","구술·발표","포트폴리오",
+  "토의‧토론","토의·토론","기타","프로젝트","교사 관찰 및 기록","자기평가","동료평가"
+]);
+function paraCheckedMap_(headerXml){
+  const map=new Map();
+  const re=/<hh:paraPr\b([^>]*)>/g; let m;
+  while((m=re.exec(String(headerXml||"")))!==null){
+    const attrs=m[1];
+    const idm=attrs.match(/\bid="([^"]+)"/), ckm=attrs.match(/\bchecked="([01])"/);
+    if(idm&&ckm) map.set(idm[1],ckm[1]==="1");
+  }
+  return map;
+}
+function extractRubricEvalMethods_(tblXml, paraChecked){
+  const out=[]; const seen=new Set();
+  const re=/<hp:p\b([^>]*)>([\s\S]*?)<\/hp:p>/g; let m;
+  while((m=re.exec(String(tblXml||"")))!==null){
+    const pidm=m[1].match(/\bparaPrIDRef="([^"]+)"/);
+    const rawTexts=[...m[2].matchAll(/<hp:t\b[^>]*>([\s\S]*?)<\/hp:t>/g)]
+      .map(x=>cleanT(x[1])).join("").replace(/\s+/g," ").trim();
+
+    // 체크박스가 글자 자체로 저장된 HWPX도 지원
+    const glyphChecked=/^[☑☒✓✔]\s*/.test(rawTexts);
+    const glyphUnchecked=/^[☐□]\s*/.test(rawTexts);
+    const label=rawTexts.replace(/^[☑☒✓✔☐□]\s*/,"").trim();
+    if(!RUBRIC_METHOD_LABELS.has(label)) continue;
+
+    const key=label+"#"+(pidm?pidm[1]:"");
+    if(seen.has(key)) continue;
+    seen.add(key);
+
+    let checked=null;
+    if(glyphChecked) checked=true;
+    else if(glyphUnchecked) checked=false;
+    else if(pidm&&paraChecked.has(pidm[1])) checked=paraChecked.get(pidm[1]);
+
+    out.push({label,checked,paraPrIDRef:pidm?pidm[1]:null});
+  }
+  return out;
+}
+
 /* ===== 문서 전체 파싱 ===== */
 async function parseDoc(zip, options){
   const opts=options||{};
@@ -1424,11 +1501,13 @@ async function parseDoc(zip, options){
   const mt=await zip.extract("mimetype");
   if(mt===null) throw new Error("mimetype 없음 — hwpx가 아닙니다.");
   if(mt.trim()!=="application/hwp+zip") throw new Error("hwpx 형식 아님: "+mt.trim().slice(0,30));
+  const paraChecked=paraCheckedMap_(await zip.extract("Contents/header.xml"));
 
   const seed=opts.seed||{};
   const doc={ document:{year:seed.year||null,semester:seed.semester||null,grade:null,subject:null,curriculum:null,teacher:null,classes:null},
     tables:[], summary:null, teachingPlan:{weeks:0,codes:[],tables:0,detail:[],evaluationColumns:0},
-    rubrics:[], achievementTables:0, achievementLevels:[], semesterLevels:[], counts:{}, parseStatus:{}, warnings:[], unknowns:[], fullText:"" };
+    rubrics:[], achievementTables:0, achievementLevels:[], achievementCodeTables:[], tableCodeIndex:[],
+    semesterLevels:[], counts:{}, parseStatus:{}, warnings:[], unknowns:[], fullText:"" };
 
   const sectionXmlCache=[];
   for(let si=0; si<sectionSources.length; si++){
@@ -1447,6 +1526,14 @@ async function parseDoc(zip, options){
     for(let ti=0; ti<tbls.length; ti++){
       const grid=parseGrid(tbls[ti]);
       const kind=classify(grid);
+      // P0.22-S2: 2015 성취기준표가 여러 물리 표로 분할되는 경우를 위해 표별 코드 색인 보존
+      const tableCodesAll=[];
+      for(const cell of grid.all){
+        for(const c of extractAchievementCodes_(cell.t)){
+          if(!tableCodesAll.includes(c)) tableCodesAll.push(c);
+        }
+      }
+      doc.tableCodeIndex.push({section:si,table:ti,kind,codes:tableCodesAll});
       doc.tables.push({section:si, index:ti, kind, rows:grid.rows.length});
       doc.counts[kind]=(doc.counts[kind]||0)+1;
       const src={section:si, table:ti};
@@ -1702,10 +1789,22 @@ else if(kind==="rubric22"){
             if(longAbsenceScore==null) longAbsenceScore=grab(/장기\s*미인정\s*결석자?\s*[:：]?\s*[\[［]?\s*(\d+(?:\.\d+)?)\s*[\]］]?\s*점/);
           }
         }
+        const evalMethods=extractRubricEvalMethods_(tbls[ti],paraChecked);
+        const achievementLevelLabelCounts={A:0,B:0,C:0,D:0,E:0};
+        for(const c of grid.all){
+          const lv=String(c.t||"").trim();
+          if(Object.prototype.hasOwnProperty.call(achievementLevelLabelCounts,lv)) achievementLevelLabelCounts[lv]++;
+        }
+        const achievementLevelBlocks3=Math.min(achievementLevelLabelCounts.A,achievementLevelLabelCounts.B,achievementLevelLabelCounts.C);
+        const achievementLevelBlocks5=Math.min(achievementLevelLabelCounts.A,achievementLevelLabelCounts.B,achievementLevelLabelCounts.C,achievementLevelLabelCounts.D,achievementLevelLabelCounts.E);
+        const achievementLevelBlocks=achievementLevelBlocks5;  // 하위 호환 필드(5단계 의미)
+        const combinedScores=extractCombinedScores(grid);
+        const scoringSignals=rubricScoringSignals_(grid,elements,scoreCriteria,combinedScores);
         doc.rubrics.push({type:"22", name,
           max: maxCell? {...parseNums(maxCell.t,"score"), source:{...src,row:maxCell.r,col:maxCell.c}} : {raw:null,unknown:true},
-          achievementCodes, codeRanges, evalElements, elements, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore,
-          combinedScores:extractCombinedScores(grid), source:src});
+          achievementCodes, codeRanges, evalElements, evalMethods, achievementLevelBlocks, achievementLevelBlocks3, achievementLevelBlocks5, achievementLevelLabelCounts,
+          elements, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore, scoringSignals,
+          combinedScores, source:src});
         if(!maxCell) doc.unknowns.push(`세부기준표 '${name}'의 영역 만점을 읽지 못함`);
       }
       else if(kind==="rubric15"){
@@ -1946,17 +2045,34 @@ else if(kind==="rubric22"){
           }
           const combinedMax15=(combinedSubAreas15.length>1 && combinedSubAreas15.every(a=>Number.isFinite(a.maxScore)))
             ? combinedSubAreas15.reduce((a,x)=>a+x.maxScore,0) : null;
+          const evalMethods=extractRubricEvalMethods_(tbls[ti],paraChecked);
+          const achievementLevelLabelCounts={A:0,B:0,C:0,D:0,E:0};
+          for(const c of grid.all){
+            const lv=String(c.t||"").trim();
+            if(Object.prototype.hasOwnProperty.call(achievementLevelLabelCounts,lv)) achievementLevelLabelCounts[lv]++;
+          }
+          const achievementLevelBlocks3=Math.min(achievementLevelLabelCounts.A,achievementLevelLabelCounts.B,achievementLevelLabelCounts.C);
+          const achievementLevelBlocks5=Math.min(achievementLevelLabelCounts.A,achievementLevelLabelCounts.B,achievementLevelLabelCounts.C,achievementLevelLabelCounts.D,achievementLevelLabelCounts.E);
+          const achievementLevelBlocks=achievementLevelBlocks5;
+          const combinedScores=extractCombinedScores(grid);
+          const scoringSignals=rubricScoringSignals_(grid,elements,scoreCriteria,combinedScores);
           doc.rubrics.push({type:"15",
             name: rawName.replace(/\(\s*\d+(?:\.\d+)?\s*[점%]?\s*\)\s*$/,"").trim(), rawName,
             max: combinedMax15!=null ? {raw:combinedSubAreas15.map(a=>a.name+" "+a.maxScore+"점").join(" + "), score:combinedMax15, ratio:null, sourceKind:"combinedSubAreas"}
               : (mm? {raw:mm[0], score:+mm[1], ratio:null} : {raw:rawName, score:null, ratio:null, unknown:true}),
             time: timeCell?timeCell.t:null,
-            elements, achievementCodes, codeRanges, scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore,
-            subAreas:combinedSubAreas15, combinedScores:extractCombinedScores(grid), source:{...src, row:areaCell.r, col:areaCell.c}});
+            elements, achievementCodes, codeRanges, evalMethods, achievementLevelBlocks, achievementLevelBlocks3, achievementLevelBlocks5, achievementLevelLabelCounts,
+            scoreCriteria, basicScore, voluntaryNonSubmissionScore, longAbsenceScore, scoringSignals,
+            subAreas:combinedSubAreas15, combinedScores, source:{...src, row:areaCell.r, col:areaCell.c}});
         }
       }
       else if(kind==="achv22"||kind==="achv15"){
         doc.achievementTables++;
+        const tableCodes=[];
+        for(const cell of grid.all){
+          for(const c of extractAchievementCodes_(cell.t)) if(!tableCodes.includes(c)) tableCodes.push(c);
+        }
+        doc.achievementCodeTables.push({kind,section:si,table:ti,codes:tableCodes});
         const codeCells=grid.all.filter(c=>extractAchievementCodes_(c.t).length>0);
         const LV22=["A","B","C","D","E"], LV15=["상","중","하"];
         const entries=new Map(); // code → entry
@@ -2492,6 +2608,29 @@ function curriculumLookup(grade, subject){
   }
   return { inPool, expect };
 }
+/* PARSER-046 / RULE-F11·F3 공통: 2022 개정 과목의 기대 성취수준 단계를 한 곳에서 결정한다.
+   중요: 규칙별로 A~E를 직접 하드코딩하지 않는다. 내장 편제에 없는 과목은 문서의 평정표 체크를 보조 근거로 사용하고,
+   그것도 확정할 수 없으면 억지로 5단계로 추정하지 않고 UNKNOWN으로 둔다. */
+function achievementScalePolicy_(doc){
+  const D=(doc&&doc.document)||{};
+  if(D.curriculum!=="2022") return {known:false, labels:[], steps:null, scale:null, reason:"2022 개정 과목 아님"};
+  const {expect}=curriculumLookup(Number(D.grade), D.subject);
+  if(expect&&expect.scale){
+    if(expect.scale==="3단계예체" || expect.scale==="3단계과탐")
+      return {known:true, labels:["A","B","C"], steps:3, scale:expect.scale, reason:expect.label||expect.scale};
+    if(expect.scale==="5단계공통" || expect.scale==="5단계선택")
+      return {known:true, labels:["A","B","C","D","E"], steps:5, scale:expect.scale, reason:expect.label||expect.scale};
+  }
+  const scales=((doc&&doc.gradeSelect&&doc.gradeSelect.scales)||[]).map(x=>x&&x.scale).filter(Boolean);
+  const uniq=[...new Set(scales)];
+  if(uniq.length===1){
+    const sc=uniq[0];
+    if(sc==="3단계예체" || sc==="3단계과탐") return {known:true, labels:["A","B","C"], steps:3, scale:sc, reason:"문서의 성취도 평정표 체크"};
+    if(sc==="5단계공통" || sc==="5단계선택") return {known:true, labels:["A","B","C","D","E"], steps:5, scale:sc, reason:"문서의 성취도 평정표 체크"};
+  }
+  return {known:false, labels:[], steps:null, scale:null, reason:"과목별 성취도 단계 판정 불가"};
+}
+
 /* ===== 성취도·분할방식 선택 추출 (2022: checkBtn 양식 개체 / 2015: 괄호 기입) ===== */
 function extractGradeSelect(sectionXmls){
   const gs = { found:false, checks:[], method:[], scales:[], c2015:null };
@@ -3766,6 +3905,330 @@ function runF9(doc){
   return items;
 }
 
+
+/* ============================================================
+   PATCH V2.3.11 — 2026-2학기 실증 반영
+   X1 STRICT / X2 양방향 / F10 / F11 / X5a / X5b / X7b
+   ============================================================ */
+
+function runX1Strict(doc){
+  const items=[]; const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const S=doc.summary, perf=S?(S.performanceTasks||[]):[];
+  const B="2026-2학기 교육청 검토의견 반영 — 평가총괄표와 수행평가 세부기준표의 평가요소는 줄이거나 삭제하지 않고 같은 내용으로 작성해야 합니다.";
+  const strictNorm=s=>String(s||"").normalize("NFKC")
+    .replace(/\(\s*\d+(?:\.\d+)?\s*점\s*\)\s*$/g,"")
+    // PARSER-047: 가./가,/가)/가． 등 목록번호는 내용 비교에서 제외한다.
+    .replace(/^[가나다라마바사아자차카타파하]\s*[.,，．、)）]\s*/g,"")
+    .replace(/^[•▪·ㆍ⋅∙◦‧\-\s]+/g,"")
+    .replace(/[•▪·ㆍ⋅∙◦‧\s.,;:()\[\]{}<>「」『』'"“”‘’\-–—]/g,"").trim();
+  const cleanList=arr=>(arr||[]).map(x=>String(x||"").replace(/\s+/g," ").trim()).filter(x=>{
+    if(!x) return false;
+    return !/^(?:평가\s*유의|유의\s*사항|합산\s*점수|총점|소계|합계|채점\s*기준|배점|기본\s*점수|백지|미응시|미제출|장기\s*미인정)/.test(x);
+  });
+
+  if(!S){push("X1",ST.UNKNOWN,"평가요소 교차검증 — 총괄표를 읽지 못해 검사하지 못했습니다",{basis:B});return items;}
+  if(!perf.length){push("X1",ST.NA,"평가요소 교차검증 — 수행평가 영역 없음",{basis:B});return items;}
+  if(!(doc.rubrics||[]).length){push("X1",ST.UNKNOWN,"평가요소 교차검증 — 세부기준표를 읽지 못해 검사하지 못했습니다",{basis:B});return items;}
+
+  const sh=runX1Shadow(doc), hits=[]; let checked=0;
+  for(let i=0;i<perf.length;i++){
+    const u=perf[i], a=sh.areas[i];
+    if(!a||a.rubricIndex==null){
+      hits.push({loc:"영역 「"+String(u.name||"").slice(0,22)+"」",text:"세부기준표에서 같은 영역을 찾지 못했습니다"});
+      continue;
+    }
+    const sItems=cleanList(u.elements&&u.elements.items||[]);
+    const r=doc.rubrics[a.rubricIndex];
+    const candidates=[];
+    if(r.evalElements&&r.evalElements.length)candidates.push(cleanList(r.evalElements));
+    if(r.elements&&r.elements.length)candidates.push(cleanList(r.elements.map(e=>e.name)));
+    if(!sItems.length||!candidates.length)continue;
+    checked++;
+
+    const diff=arr=>{
+      const sm=new Map(),rm=new Map();
+      for(const x of sItems){const n=strictNorm(x);if(n&&!sm.has(n))sm.set(n,x);}
+      for(const x of arr){const n=strictNorm(x);if(n&&!rm.has(n))rm.set(n,x);}
+      const out=[];
+      for(const [n,x] of sm)if(!rm.has(n))out.push({loc:"영역 「"+u.name+"」 · 총괄표에만",text:x});
+      for(const [n,x] of rm)if(!sm.has(n))out.push({loc:"영역 「"+u.name+"」 · 세부기준표에만",text:x});
+      return out;
+    };
+    const best=candidates.map(diff).sort((a,b)=>a.length-b.length)[0]||[];
+    hits.push(...best);
+  }
+  if(hits.length)push("X1",ST.FAIL,"총괄표와 세부기준표의 평가요소가 완전히 일치하지 않습니다 ("+hits.length+"건)",
+    {basis:B,hits:hits.slice(0,12),moreCount:Math.max(0,hits.length-12),
+     fix:"두 표의 평가요소를 같은 문구로 맞추세요. 공백·문장부호·글머리 기호 차이는 허용하지만, 단어를 줄이거나 빼거나 다른 표현으로 바꾸면 안 됩니다."});
+  else if(checked===0)push("X1",ST.UNKNOWN,"평가요소를 양쪽에서 읽지 못해 완전일치 여부를 검사하지 못했습니다",{basis:B});
+  else push("X1",ST.PASS,"평가요소 완전일치 — 총괄표·세부기준표 대응 확인 ("+checked+"개 영역)");
+  return items;
+}
+
+function runX2Strict(doc){
+  const items=[]; const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const S=doc.summary, perf=S?(S.performanceTasks||[]):[];
+  const B="2026-2학기 교육청 검토의견 반영 — 총괄표와 해당 수행평가 세부기준표의 성취기준 코드는 서로 같은 범위를 가리켜야 합니다.";
+  if(!S){push("X2",ST.UNKNOWN,"성취기준 교차검증 — 총괄표를 읽지 못해 검사하지 못했습니다",{basis:B});return items;}
+  if(!perf.length){push("X2",ST.NA,"성취기준 교차검증 — 수행평가 영역 없음",{basis:B});return items;}
+  if(!(doc.rubrics||[]).length){push("X2",ST.UNKNOWN,"성취기준 교차검증 — 세부기준표를 읽지 못해 검사하지 못했습니다",{basis:B});return items;}
+
+  const sh=runX1Shadow(doc);
+  const rangeOf=s=>[...String(s||"").matchAll(/\[(\d{2}[^\[\]\s]{1,12})\]\s*[~～]\s*\[(\d{2}[^\[\]\s]{1,12})\]/g)].map(m=>({from:m[1],to:m[2]}));
+  const docCodes=new Set(),docRanges=[];
+  for(const r of (doc.rubrics||[])){
+    for(const c of (r.achievementCodes||[]))docCodes.add(normStdCode(c));
+    for(const g of (r.codeRanges||[]))docRanges.push(g);
+  }
+  for(const e of (doc.achievementLevels||[]))if(e.achievementCode)docCodes.add(normStdCode(e.achievementCode));
+
+  const nearest15=r=>{
+    if(!r||!r.source||r.source.section==null||r.source.table==null)return[];
+    const sec=r.source.section,rt=r.source.table;
+    const idx=new Map((doc.tableCodeIndex||[]).filter(x=>x.section===sec).map(x=>[x.table,x]));
+    const out=new Set();let t=rt-1,found=false;
+    while(t>=0){
+      const ent=idx.get(t);
+      if(!ent||!(ent.codes||[]).length)break;
+      found=true;
+      for(const c of ent.codes){const nc=normStdCode(c);if(nc)out.add(nc);}
+      t--;
+    }
+    return found?[...out]:[];
+  };
+
+  const hits=[];let checked=0,unreadable=0,docLevel=0;
+  for(let i=0;i<perf.length;i++){
+    const u=perf[i],a=sh.areas[i];
+    if(!a||a.rubricIndex==null)continue;
+    const sRaw=u.standards&&u.standards.raw;
+    const sCodes=extractAchievementCodes_(sRaw).map(normStdCode),sSet=new Set(sCodes),sRanges=rangeOf(sRaw);
+    if(!sCodes.length){unreadable++;continue;}
+    checked++;
+    const r=doc.rubrics[a.rubricIndex];
+    const rArr=(r.achievementCodes||[]).map(normStdCode),rRanges=r.codeRanges||[];
+    const inferred15=((doc.document||{}).curriculum==="2015"&&rArr.length===0)?nearest15(r):[];
+    const areaCodes=rArr.length?rArr:inferred15;
+    if(areaCodes.length){
+      const rSet=new Set(areaCodes);
+      for(const c of sCodes)if(!rSet.has(c)&&!_codeRangeCover(c,rRanges))
+        hits.push({loc:"영역 「"+u.name+"」 · 총괄표에만",text:c+" — 세부기준표에 없습니다"});
+      for(const c of areaCodes)if(!sSet.has(c)&&!_codeRangeCover(c,sRanges))
+        hits.push({loc:"영역 「"+u.name+"」 · 세부기준표에만",text:c+" — 총괄표에 없습니다"});
+    }else{
+      docLevel++;
+      for(const c of sCodes)if(!docCodes.has(c)&&!_codeRangeCover(c,docRanges))
+        hits.push({loc:"영역 「"+u.name+"」",text:"총괄표의 "+c+" 코드가 문서의 성취기준·성취수준 어디에도 없습니다"});
+    }
+  }
+  if(hits.length)push("X2",ST.FAIL,"총괄표와 세부기준표의 성취기준 코드가 서로 다릅니다 ("+hits.length+"건)",
+    {basis:B,hits:hits.slice(0,12),moreCount:Math.max(0,hits.length-12),
+     fix:"해당 수행평가 영역의 총괄표와 세부기준표에서 성취기준 코드를 서로 동일하게 맞추세요. 세부기준표에만 추가된 코드도 확인하세요."});
+  else if(checked===0)push("X2",ST.UNKNOWN,"성취기준 교차검증 — 총괄표의 성취기준 코드를 읽지 못해 검사하지 못했습니다",{basis:B});
+  else push("X2",ST.PASS,"성취기준 교차검증 — 총괄표·세부기준표 코드 대응 확인"+(docLevel?" (과목 전체 성취수준표 대조 "+docLevel+"개 영역 포함)":"")+(unreadable?" · 판독 실패 "+unreadable+"개 영역 제외":""));
+  return items;
+}
+
+function runX5a(doc){
+  const items=[];const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const B="2026-2학기 교육청 검토의견 반영 — 평가총괄표의 수행평가 유형(논술형/비논술형)과 '논술형 평가 반영비율' 행은 같은 영역에서 서로 일치해야 합니다.";
+  const S=doc.summary;
+  if(!S){push("X5a",ST.UNKNOWN,"총괄표를 읽지 못해 평가유형과 논술형 반영비율을 대조하지 못했습니다",{basis:B});return items;}
+  const hits=[];let checked=0;
+  for(const u of (S.performanceTasks||[])){
+    const m=u.method;if(!m||m.unknown||m.raw==null)continue;
+    const raw=String(m.raw||"").trim(),isEssay=/논술형|서술형/.test(raw);
+    const ratio=u.essay&&u.essay.ratio!=null?Number(u.essay.ratio):null,ratioMarked=ratio!=null&&ratio>EPS;
+    checked++;
+    if(isEssay&&!ratioMarked)hits.push({loc:"평가총괄표 · 「"+String(u.name||"").slice(0,22)+"」",text:"평가유형은 「"+raw+"」인데 논술형 평가 반영비율은 "+(u.essay&&u.essay.raw?"「"+u.essay.raw+"」":"비어 있음")});
+    if(!isEssay&&ratioMarked)hits.push({loc:"평가총괄표 · 「"+String(u.name||"").slice(0,22)+"」",text:"평가유형은 「"+raw+"」인데 논술형 평가 반영비율에 "+ratio+"%가 입력되어 있습니다"});
+  }
+  if(hits.length)push("X5a",ST.FAIL,"수행평가 유형과 논술형 평가 반영비율 위치가 서로 다른 영역이 "+hits.length+"건 있습니다",{basis:B,hits,fix:"논술형으로 표시한 수행평가 영역에만 해당 영역의 논술형 반영비율을 입력하고, 비논술형 영역은 'ㆍ'로 맞추세요."});
+  else if(checked===0)push("X5a",ST.UNKNOWN,"수행평가 유형 행을 읽지 못해 논술형 반영비율 위치를 대조하지 못했습니다",{basis:B});
+  else push("X5a",ST.PASS,"수행평가 유형 ↔ 논술형 평가 반영비율 위치 일치 ("+checked+"개 영역)");
+  return items;
+}
+
+function runX5b(doc){
+  const items=[];const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const B="2026-2학기 교육청 검토의견 반영 — 평가총괄표의 수행평가 유형과 세부기준표의 '평가방법' 체크는 서로 일치해야 합니다.";
+  if((doc.document||{}).curriculum==="2015"||Number((doc.document||{}).grade)===3){
+    push("X5b",ST.NA,"논술형 평가방법 체크 대조 — 3학년(2015 개정) 양식은 세부기준표에 평가방법 체크란이 없어 적용하지 않습니다",{basis:B});
+    return items;
+  }
+  const S=doc.summary;
+  if(!S){push("X5b",ST.UNKNOWN,"총괄표를 읽지 못해 세부기준표 평가방법과 대조하지 못했습니다",{basis:B});return items;}
+  if(!(doc.rubrics||[]).length){push("X5b",ST.UNKNOWN,"세부기준표를 읽지 못해 평가방법 체크를 대조하지 못했습니다",{basis:B});return items;}
+  const sh=runX1Shadow(doc),hits=[];let checked=0,unknown=0;
+  for(let i=0;i<(S.performanceTasks||[]).length;i++){
+    const u=S.performanceTasks[i],a=sh.areas[i];
+    if(!a||a.rubricIndex==null)continue;
+    const r=doc.rubrics[a.rubricIndex];
+    if(!u.method||u.method.unknown||u.method.raw==null){unknown++;continue;}
+    const methods=r.evalMethods||[];
+    if(!methods.length||methods.every(x=>x.checked==null)){unknown++;continue;}
+    const summaryEssay=/논술형|서술형/.test(String(u.method.raw||""));
+    const rubricEssay=methods.some(x=>/^(논술|논술형)$/.test(x.label)&&x.checked===true);
+    checked++;
+    if(summaryEssay!==rubricEssay){
+      const checkedLabels=methods.filter(x=>x.checked===true).map(x=>x.label);
+      hits.push({loc:"수행평가 「"+String(u.name||"").slice(0,22)+"」",text:"총괄표 유형 「"+String(u.method.raw||"")+"」 / 세부기준표 체크 「"+(checkedLabels.join("·")||"없음")+"」"});
+    }
+  }
+  if(hits.length)push("X5b",ST.FAIL,"총괄표와 세부기준표의 논술형 평가방법 체크가 서로 다른 영역이 "+hits.length+"건 있습니다",{basis:B,hits,fix:"총괄표에서 논술형인 영역만 세부기준표의 '논술'에 체크하고, 비논술형 영역은 실제 평가방법에 체크하세요."});
+  else if(checked===0)push("X5b",ST.UNKNOWN,"세부기준표 평가방법 체크 상태를 읽지 못해 대조하지 못했습니다"+(unknown?" ("+unknown+"개 영역)":""),{basis:B});
+  else push("X5b",ST.PASS,"총괄표 ↔ 세부기준표 논술형 평가방법 체크 일치 ("+checked+"개 영역"+(unknown?" · "+unknown+"개 미판독":"")+")");
+  return items;
+}
+
+function runF10(doc){
+  const items=[];const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const B="2026-2학기 교육청 검토의견 반영 — 성취기준은 중략·임의 축약 없이 해당되는 성취기준의 내용을 작성해야 합니다. 현재 내장 DB에는 공식 원문이 없어 명백한 축약 표지만 탐지합니다.";
+  const hits=[],seen=new Set();let hardRange=false;
+  const add=(loc,text,hard=false)=>{const k=loc+"|"+text;if(!seen.has(k)){seen.add(k);hits.push({loc,text:String(text).slice(0,100)});}if(hard)hardRange=true;};
+  const test=(loc,raw)=>{
+    const t=String(raw||"").normalize("NFKC");if(!t)return;
+    if(/(?:\(\s*)?중\s*략(?:\s*\))?|\.\.\.|…/.test(t))add(loc,"중략·말줄임 표기가 있습니다: "+t.replace(/\s+/g," ").slice(0,80));
+    if(/\[\s*\d{2}[^\[\]]{1,16}\]\s*[~～]\s*\[\s*\d{2}[^\[\]]{1,16}\]/.test(t))add(loc,"성취기준을 코드 범위로 축약해 적은 표기가 있습니다: "+t.replace(/\s+/g," ").slice(0,80),true);
+  };
+  const S=doc.summary;
+  if(S)for(const u of [...(S.exams||[]),...(S.performanceTasks||[])])test("평가총괄표 · "+String(u.name||"").slice(0,18),u.standards&&u.standards.raw);
+  for(const e of (doc.achievementLevels||[]))test("성취기준별 성취수준표 · "+String(e.achievementCode||"코드 미판독"),(e.achievementCode||"")+" "+(e.achievementText||""));
+  for(const r of (doc.rubrics||[]))for(const rg of (r.codeRanges||[])){
+    if(!rg||!rg.from||!rg.to)continue;
+    add("세부기준표 「"+String(r.name||"영역명 미판독").slice(0,22)+"」","성취기준을 코드 범위로 축약해 적었습니다: ["+rg.from+"]~["+rg.to+"]",true);
+  }
+  if(hits.length)push("F10",hardRange?ST.FAIL:ST.REVIEW,"성취기준을 중략·범위 표기로 축약한 것으로 보이는 곳이 "+hits.length+"건 있습니다",
+    {basis:B,hits:hits.slice(0,10),moreCount:Math.max(0,hits.length-10),fix:"교육과정 원문을 확인해 해당 성취기준의 코드와 내용을 중략 없이 모두 작성하세요. 코드 범위([A]~[B])는 개별 성취기준으로 풀어 쓰세요."});
+  else push("F10",ST.PASS,"성취기준의 명백한 중략·범위 축약 표기 없음");
+  return items;
+}
+
+function runF11(doc){
+  const items=[];const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const D=doc.document||{};
+  if(D.curriculum!=="2022"){
+    push("F11",ST.NA,"수행평가 성취기준별 성취수준 완결성 — 2022 개정 과목에만 적용됩니다");
+    return items;
+  }
+  const pol=achievementScalePolicy_(doc);
+  if(!pol.known){
+    push("F11",ST.UNKNOWN,"과목의 성취도 단계(3단계/5단계)를 확정하지 못해 수행평가 성취수준 완결성을 검사하지 못했습니다",
+      {basis:"2026-2학기 교육청 검토의견 반영 — 수행평가 세부기준표의 성취수준은 해당 과목의 성취도 단계와 일치해야 합니다."});
+    return items;
+  }
+  const labels=pol.labels,levelText=labels[0]+"~"+labels[labels.length-1];
+  const B="2026-2학기 교육청 검토의견 반영 — 「"+(D.subject||"해당 과목")+"」은 "+pol.reason+"이므로 수행평가 세부기준표의 성취수준 "+levelText+"가 빠짐없이 제시되어야 합니다. 여러 성취기준을 하나의 통합 "+levelText+" 진술로 구성한 양식도 정상으로 인정합니다.";
+  const rubrics=doc.rubrics||[];
+  if(!rubrics.length){push("F11",ST.UNKNOWN,"세부기준표를 읽지 못해 성취기준별 성취수준 완결성을 검사하지 못했습니다",{basis:B});return items;}
+  const hits=[];let checked=0,unread=0;
+  for(const r of rubrics){
+    const n=(r.achievementCodes||[]).length;if(!n)continue;checked++;
+    const c=r.achievementLevelLabelCounts||null;if(!c){unread++;continue;}
+    const vals=labels.map(x=>Number(c[x]||0));
+    const missing=labels.filter((x,i)=>vals[i]===0);
+    const balanced=vals.length>0&&vals.every(v=>v===vals[0]);
+    const forbidden=(pol.steps===3?["D","E"]:[]).filter(x=>Number(c[x]||0)>0);
+    const loc="세부기준표 「"+String(r.name||"").slice(0,22)+"」";
+    if(missing.length)hits.push({loc,text:"성취기준 "+n+"개 / "+levelText+" 성취수준 라벨 누락: "+missing.join("·")+" ("+levelText+" 개수 "+vals.join("/")+")"});
+    else if(!balanced)hits.push({loc,text:levelText+" 성취수준 행 개수가 서로 다릅니다 ("+levelText+" "+vals.join("/")+")"});
+    else if(forbidden.length)hits.push({loc,text:"3단계 과목인데 사용하지 않는 성취수준 "+forbidden.join("·")+"가 포함되어 있습니다"});
+  }
+  if(hits.length)push("F11",ST.FAIL,"수행평가 세부기준표에서 "+levelText+" 성취수준 구성이 불완전한 영역이 "+hits.length+"개 있습니다",
+    {basis:B,hits,fix:"해당 평가영역의 성취수준 "+labels.join("·")+"를 빠짐없이 작성하세요. 여러 성취기준을 하나의 통합 "+levelText+" 진술로 작성한 경우는 정상입니다."});
+  else if(checked===0)push("F11",ST.UNKNOWN,"세부기준표의 성취기준을 읽지 못해 성취수준 완결성을 검사하지 못했습니다",{basis:B});
+  else if(unread===checked)push("F11",ST.UNKNOWN,"세부기준표의 성취수준 라벨을 읽지 못해 완결성을 검사하지 못했습니다",{basis:B});
+  else push("F11",ST.PASS,"수행평가 성취수준 "+levelText+" 완결성 확인 — 통합 성취수준 묶음 허용 ("+(checked-unread)+"개 영역"+(unread?" · "+unread+"개 미판독":"")+")",{basis:B});
+  return items;
+}
+
+
+function runF12(doc){
+  const items=[]; const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  if(!schoolRulesActive()){
+    push("F12",ST.NA,"루브릭 기본점수 문구 — 학교 내부 작성 규칙이므로 이 프로필에는 적용하지 않습니다");
+    return items;
+  }
+  const B=schoolName()+" 루브릭 작성 기준 — 항목 수에 따라 총점을 정하는 체크리스트형에서는 '만족/충족하는 항목이 없는 경우'를 0개 충족 급간으로 사용할 수 있습니다. 반면 평가요소별 점수를 합산하는 루브릭에서는 최저 보장 점수를 '기본점수'로 명확히 작성합니다.";
+  const rubrics=doc.rubrics||[];
+  if(!rubrics.length){
+    push("F12",ST.UNKNOWN,"세부기준표를 읽지 못해 기본점수 문구의 루브릭 구조를 판정하지 못했습니다",{basis:B});
+    return items;
+  }
+  const bad=[], uncertain=[]; let phraseAreas=0, allowed=0;
+  for(const r of rubrics){
+    const sig=r.scoringSignals||{};
+    if(!sig.zeroItemPhrase) continue;
+    phraseAreas++;
+    const loc="세부기준표 「"+String(r.name||"").slice(0,24)+"」";
+    if(sig.countBased){ allowed++; continue; }
+    if(sig.additive){
+      bad.push({loc,text:"「"+sig.zeroItemPhrase+"」 — "+(sig.additiveEvidence||"요소별 점수 합산형")+"이므로 「기본점수」로 작성"});
+    }else{
+      uncertain.push({loc,text:"「"+sig.zeroItemPhrase+"」 — '~개 항목을 충족하는 경우' 급간을 2개 이상 확인하지 못했습니다"});
+    }
+  }
+  if(bad.length){
+    push("F12",ST.FAIL,"요소별 점수 합산형 루브릭에 '만족/충족하는 항목이 없는 경우'가 "+bad.length+"곳 있습니다",
+      {basis:B,hits:bad.slice(0,10),moreCount:Math.max(0,bad.length-10),
+       fix:"요소별 점수를 더해 최종 점수를 산출하는 루브릭에서는 해당 최저점 행을 '기본점수'로 수정하세요. '~개 항목을 충족하는 경우'처럼 항목 개수로 총점을 정하는 체크리스트형은 수정하지 않습니다."});
+  }else if(uncertain.length){
+    push("F12",ST.REVIEW,"'만족/충족하는 항목이 없는 경우' 문구의 채점 구조를 확인해야 하는 영역이 "+uncertain.length+"개 있습니다",
+      {basis:B,hits:uncertain.slice(0,10),moreCount:Math.max(0,uncertain.length-10),
+       fix:"이 영역이 'N개 항목 충족 → 점수' 방식이면 그대로 두고, 평가요소별 점수를 합산하는 방식이면 해당 행을 '기본점수'로 수정하세요."});
+  }else if(phraseAreas>0){
+    push("F12",ST.PASS,"'만족/충족하는 항목이 없는 경우' 문구가 모두 항목 개수 충족형 루브릭에 사용되었습니다 ("+allowed+"개 영역)",{basis:B});
+  }else{
+    push("F12",ST.PASS,"루브릭 구조와 기본점수 문구 충돌 없음",{basis:B});
+  }
+  return items;
+}
+
+function parseTimeEndV239_(raw,sem){
+  const pts=parseMonthWeekPoints_(raw);
+  if(!pts.length)return null;
+  const p=pts[pts.length-1];
+  return {month:p[0],week:p[1],key:semesterWeekKey_(p,sem)};
+}
+function runX7b(doc,timingBroken){
+  const items=[];const push=(id,status,title,opt)=>items.push(Object.assign({id,status,title},opt||{}));
+  const B="2026-2학기 교육청 검토의견 기반 확인 항목 — 평가에 사용한 성취기준이 수행평가 종료 뒤 다시 배치된 경우 선행학습 여부를 확인합니다. 후속 재학습·심화가 정상일 수 있어 제출 차단하지 않습니다.";
+  const S=doc.summary,sem=(doc.document||{}).semester;
+  if(!S||!(S.performanceTasks||[]).length){push("X7b",S?ST.NA:ST.UNKNOWN,S?"수행평가 영역이 없어 평가 이후 성취기준 배치 검사는 적용되지 않습니다":"총괄표를 읽지 못해 평가 이후 성취기준 배치를 검사하지 못했습니다",{basis:B});return items;}
+  const occ=new Map();
+  for(const d of (doc.teachingPlan&&doc.teachingPlan.detail||[])){
+    if(d.month==null||d.week==null)continue;
+    const key=semesterWeekKey_([d.month,d.week],sem);
+    for(const c of (d.achievementCodes||[])){
+      const nc=normStdCode(c);if(!occ.has(nc))occ.set(nc,[]);
+      occ.get(nc).push({key,label:d.month+"월 "+d.week+"주"});
+    }
+  }
+  if(!occ.size){push("X7b",ST.UNKNOWN,"교수학습 계획의 주차·성취기준을 읽지 못해 검사하지 못했습니다",{basis:B});return items;}
+  const cutoff=new Map(),unresolved=new Set();
+  for(const u of (S.performanceTasks||[])){
+    const codes=extractAchievementCodes_(u.standards&&u.standards.raw).map(normStdCode),end=parseTimeEndV239_(u.time&&u.time.raw,sem);
+    for(const c of new Set(codes)){
+      if(!end){unresolved.add(c);continue;}
+      const cur=cutoff.get(c);
+      if(!cur||end.key>cur.key)cutoff.set(c,{...end,areas:[String(u.name||"")]});
+      else if(end.key===cur.key)cur.areas.push(String(u.name||""));
+    }
+  }
+  const hits=[];let checked=0,skipped=0;
+  for(const [c,end] of cutoff){
+    if(unresolved.has(c)){skipped++;continue;}
+    const later=(occ.get(c)||[]).filter(x=>x.key>end.key).sort((a,b)=>a.key-b.key);
+    checked++;
+    if(later.length)hits.push({loc:"성취기준 ["+c+"] (마지막 수행평가 종료 "+end.month+"월 "+end.week+"주)",text:"평가 이후 교수학습계획에 "+later.map(x=>x.label).join(", ")+" 배치"});
+  }
+  if(hits.length)push("X7b",ST.REVIEW,"수행평가 종료 이후에 같은 성취기준이 다시 배치된 항목이 "+hits.length+"건 있습니다 — 선행학습 여부를 확인하세요",
+    {basis:B+(timingBroken?"\n\n⚠ 평가시기 자체 오류(X8·X9)가 함께 있으면 시기를 먼저 수정한 뒤 다시 검사하세요.":""),hits:hits.slice(0,10),moreCount:Math.max(0,hits.length-10),fix:"평가 전 이미 수업된 뒤 후속 재학습·심화로 다시 등장한 것인지 확인하세요. 실제 선행평가라면 교수학습 주차 또는 평가시기를 조정하세요."});
+  else if(checked===0)push("X7b",ST.UNKNOWN,"수행평가 시기 또는 성취기준을 읽지 못해 검사하지 못했습니다"+(skipped?" (안전 제외 "+skipped+"개 코드)":""),{basis:B});
+  else push("X7b",ST.PASS,"마지막 수행평가 종료 이후 동일 성취기준 재배치 없음 ("+checked+"건 대조"+(skipped?" · 시기 미판독으로 "+skipped+"개 코드 제외":"")+")");
+  return items;
+}
+
 /* ---------- X7. 선행학습 방지 · F2/F3. 성취수준 표 ---------- */
 function parseTimeStart(raw){
   // "4월 4주~4월 5주" / "6월 5주 ～ 7월 1주" / "4월4주" / "4월 4주~5주" → 시작 (월,주)
@@ -3838,26 +4301,36 @@ function runF23(doc){
       hasAchv ? "성취기준별 성취수준 표 확인 ("+doc.achievementLevels.length+"건)"
               : "성취기준별 성취수준 표를 찾지 못했습니다", hasAchv? null : { basis:B22, fix:"양식의 성취기준별 성취수준 표를 작성하세요." });
     push("F2-15", ST.NA, "성취기준별 평가기준(2015) — 1·2학년에는 적용되지 않습니다");
-    /* F3-22 */
+    /* F3-22 — PARSER-046: F11과 동일한 성취도 단계 정책 사용 */
     const sem = doc.semesterLevels || [];
+    const pol = achievementScalePolicy_(doc);
     const { expect } = curriculumLookup(doc.document.grade, doc.document.subject);
-    const need = expect && (expect.scale==="3단계과탐" || expect.scale==="3단계예체") ? 3 : 5;
-    if(sem.length === 0){
+    if(!pol.known){
+      push("F3-22", ST.UNKNOWN, "과목의 성취도 단계(3단계/5단계)를 확정하지 못해 학기 단위 성취수준을 검사하지 못했습니다", { basis:B3 });
+    } else if(sem.length === 0){
       if(expect && expect.scale === "3단계예체")
         push("F3-22", ST.REVIEW, "학기 단위 성취수준 표가 없습니다 — 예술·체육 과목은 작성 대상에서 제외일 수 있으니 확인하세요", { basis:B3 });
       else
-        push("F3-22", ST.FAIL, "학기 단위 성취수준 표를 찾지 못했습니다", { basis:B3, fix:"학기 단위 성취수준(단계별 진술)을 작성하세요." });
-    } else if(sem.length < need){
-      push("F3-22", ST.FAIL, "학기 단위 성취수준이 "+sem.length+"단계만 있습니다 — "+need+"단계가 필요합니다",
-        { basis:B3, hits: sem.map(x=>({ loc:"학기 단위 성취수준", text:"단계 "+x.level+" 확인" })) });
+        push("F3-22", ST.FAIL, "학기 단위 성취수준 표를 찾지 못했습니다", { basis:B3, fix:"양식의 학기 단위 성취수준(단계별 진술)을 작성하세요." });
     } else {
-      const shorts = sem.filter(x=>x.short);
-      if(shorts.length)
-        push("F3-22", ST.REVIEW, "학기 단위 성취수준 중 진술이 지나치게 짧은 단계가 "+shorts.length+"개 있습니다",
-          { basis:B3, hits: shorts.map(x=>({ loc:"단계 "+x.level, text:(x.statement||"").slice(0,40) })),
-            fix:"해당 단계의 성취수준 진술을 구체적으로 보완하세요. (진술의 질은 AI 검토 단계에서 추가 확인됩니다)" });
-      else
-        push("F3-22", ST.PASS, "학기 단위 성취수준 "+sem.length+"단계 확인");
+      const counts={A:0,B:0,C:0,D:0,E:0};
+      for(const x of sem)if(Object.prototype.hasOwnProperty.call(counts,String(x.level||"").trim()))counts[String(x.level||"").trim()]++;
+      const missing=pol.labels.filter(x=>counts[x]===0);
+      const forbidden=(pol.steps===3?["D","E"]:[]).filter(x=>counts[x]>0);
+      if(missing.length||forbidden.length){
+        const parts=[];
+        if(missing.length)parts.push("누락 "+missing.join("·"));
+        if(forbidden.length)parts.push("3단계 과목에 불필요한 "+forbidden.join("·")+" 존재");
+        push("F3-22",ST.FAIL,"학기 단위 성취수준 단계 구성이 과목 기준과 다릅니다 — "+parts.join(" / "),
+          {basis:B3,hits:sem.map(x=>({loc:"학기 단위 성취수준",text:"단계 "+x.level+" 확인"})),fix:"과목의 성취도 단계("+pol.reason+")에 맞게 "+pol.labels.join("·")+" 단계만 작성하세요."});
+      } else {
+        const shorts=sem.filter(x=>pol.labels.includes(String(x.level||"").trim())&&x.short);
+        if(shorts.length)
+          push("F3-22",ST.REVIEW,"학기 단위 성취수준 중 진술이 지나치게 짧은 단계가 "+shorts.length+"개 있습니다",
+            {basis:B3,hits:shorts.map(x=>({loc:"단계 "+x.level,text:(x.statement||"").slice(0,40)})),fix:"해당 단계의 성취수준 진술을 구체적으로 보완하세요. (진술의 질은 AI 검토 단계에서 추가 확인됩니다)"});
+        else
+          push("F3-22",ST.PASS,"학기 단위 성취수준 "+pol.labels.join("·")+" 단계 확인 ("+pol.reason+")");
+      }
     }
   } else if(cur === "2015"){
     push("F2-22", ST.NA, "성취기준별 성취수준(2022) — 3학년에는 적용되지 않습니다");
@@ -3873,7 +4346,6 @@ function runF23(doc){
   return items;
 }
 
-/* ---------- N5·N6·N8. 급간·기본점수·수행 상한 번들 ---------- */
 function _critGroups(r){
   // scoreCriteria → 요소 그룹(라벨 " · " 접두, 없으면 통합) — 제외행 필터
   const EXCL = /기본\s*점수|백지|미응시|미제출|본인\s*의사|장기|결석|감점|총점|소계|합계/;
@@ -4587,8 +5059,17 @@ async function analyzeCourse_(zip,headerXml,sectionNames,seed,fileName,multiMode
     for(const n of sectionNames){const no=parseInt((n.match(/(\d+)/)||[0,0])[1],10)+1;sections.push({label:"섹션 "+no,xml:await zip.extract(n)});}
   }
   let checks=runChecks({headerXml,sections,fileName},doc.document);if(multiMode)checks=withoutFileScopedR1_(checks);
-  const v1=runV1(doc);v1.items.push(...runN4(doc), ...runN4b(doc), ...runN4c(doc), ...runNumericBundle(doc), ...runX3(doc), ...runX4(doc), ...runX6(doc), ...runN3(doc), ...runN3b(doc), ...runX5(doc), ...runX8(doc), ...runX9(doc), ...runX10(doc), ...runX11(doc), ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc), ...runF9(doc), ...runF23(doc), ...runCurriculumRules(doc));
-  const timingBroken=v1.items.some(i=>(i.id==="X8"||i.id==="X9")&&(i.status===ST.FAIL||i.status===ST.REVIEW));v1.items.push(...runX7(doc,timingBroken));
+  const v1=runV1(doc);
+  // V2.3.11: 기존 X1/X2는 최신 STRICT/양방향 규칙으로 교체
+  v1.items=v1.items.filter(i=>i.id!=="X1"&&i.id!=="X2");
+  v1.items.push(...runX1Strict(doc),...runX2Strict(doc),
+    ...runN4(doc), ...runN4b(doc), ...runN4c(doc), ...runNumericBundle(doc),
+    ...runX3(doc), ...runX4(doc), ...runX6(doc), ...runN3(doc), ...runN3b(doc),
+    ...runX5(doc), ...runX5a(doc), ...runX5b(doc), ...runF10(doc), ...runF11(doc), ...runF12(doc),
+    ...runX8(doc), ...runX9(doc), ...runX10(doc), ...runX11(doc),
+    ...runF5(doc), ...runF6(doc), ...runF7(doc), ...runF8(doc), ...runF9(doc), ...runF23(doc), ...runCurriculumRules(doc));
+  const timingBroken=v1.items.some(i=>(i.id==="X8"||i.id==="X9")&&(i.status===ST.FAIL||i.status===ST.REVIEW));
+  v1.items.push(...runX7(doc,timingBroken),...runX7b(doc,timingBroken));
   const x1=runX1Shadow(doc);const sCtx={course:(doc.document.curriculum==="2022"?stdCourseMatch(doc.document.subject):null),auto:true};
   const compat=compatibilityFromDoc_(doc),tableSignatures=diagnosticTableSignatures_(sections);
   return {doc,checks,v1,x1,sCtx,compat,tableSignatures,sItems:[],verdict:null,fail:0,unknown:0,review:0};
