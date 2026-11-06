@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-kXCydclTJFbDtjtKnu49IRZbfxBG+CDzo0dZf0PQIik='; style-src 'sha256-R39OC8JrTpH94RA7yHvr6YMZMWsSpvvEJvFuaCb/sQc='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-Wg7KsdWkclkQb/lBy//Pk6K+pEs7e+DxEKvbLREuN6w='; style-src 'sha256-0skGvJB9HjqwObKt3zqfTq1AdenIeLahrua7UNlkKXE='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.18</title>
+<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.19</title>
 <style>:root{font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;background:#f6f7f8;color:#1d2b38;line-height:1.55;font-size:14px}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1130px;margin:0 auto;padding:30px 20px 65px}.banner{background:#fff;border-top:4px solid #263d53;padding:22px 25px;border-bottom:1px solid #d8e0e8}.eyebrow{font-size:11px;letter-spacing:.16em;color:#536d84;font-weight:800}.banner h1{font-size:25px;margin:7px 0}.version{font-size:12px;vertical-align:middle;color:#5c7285;border:1px solid #cbd6dd;padding:3px 8px;border-radius:12px}.banner p{color:#526579;margin:6px 0 12px}.security{background:#eaf5f1;border-left:3px solid #2b7d65;padding:12px 15px;font-size:13px;color:#215c49}.nav{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 20px}.nav span{font-size:12px;border-radius:30px;padding:6px 13px;background:#e9edf1;color:#465b70;font-weight:700}.panel{background:#fff;border:1px solid #d9e0e7;border-radius:10px;margin:18px 0;padding:20px 24px;box-shadow:0 2px 10px #263a4e07}.heading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:8px}.heading h2{font-size:18px;margin:0}.chip{font-size:11px;color:#31546c;background:#eaf1f6;padding:4px 8px;border-radius:20px;white-space:nowrap}.lead{color:#47596d;margin:8px 0 15px;font-size:13px}.minor{font-size:12px;color:#637689}.columns,.fields{display:grid;gap:14px}.columns,.fields.two{grid-template-columns:repeat(2,minmax(0,1fr))}.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}.fields{margin-bottom:12px}label{display:block;font-weight:750;font-size:12px;margin:8px 0 5px;color:#35485e}input:not([type=checkbox]),select,textarea{width:100%;max-width:100%;border:1px solid #cbd6e0;border-radius:6px;padding:9px 10px;background:#fff;font:inherit;color:inherit}input[type=file]{background:#f9fbfc;border-style:dashed}textarea{resize:vertical;min-height:55px}button{cursor:pointer;border:1px solid #294b69;background:#294b69;color:white;border-radius:6px;padding:9px 13px;font:inherit;font-weight:750;font-size:13px}button:disabled{cursor:default;opacity:.45}button.secondary{color:#274d66;background:#e9f1f6;border-color:#d5e3ec}button.plain{background:white;color:#466079;border-color:#ccdae4}button.danger{background:#fff0ed;color:#a5342f;border-color:#efc4bd}.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.narrow{margin:0}.message{padding:12px 14px;border-left:3px solid #d3a44c;background:#fffaf0;color:#66552f;white-space:pre-wrap;font-size:12px;overflow-wrap:anywhere}.message.ok{background:#edf9f3;color:#1d6650;border-color:#2d8767}.message.error{background:#fff1ee;color:#9b312b;border-color:#c64c40}.metrics{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.stat{background:#f0f4f7;padding:10px 15px;min-width:118px;border-radius:8px;font-size:12px;color:#4f657a}.stat strong{display:block;font-size:22px;color:#29445f}.tableWrap{overflow:auto;max-height:430px;border:1px solid #e1e7ee;border-radius:6px;margin-top:10px}table{width:100%;border-collapse:collapse;min-width:680px;font-size:12px}thead{position:sticky;top:0;background:#edf2f6}td,th{padding:9px 10px;border-bottom:1px solid #e6edf2;text-align:left;vertical-align:top}th{white-space:nowrap;color:#41566b}td{overflow-wrap:anywhere}.empty{text-align:center;padding:26px;color:#8391a1}.ruleForm{border-top:1px solid #e7edf2;margin-top:14px;padding-top:12px}.check{display:flex;align-items:flex-start;gap:9px;font-weight:500;background:#f5f7fa;border-radius:6px;padding:10px;color:#354d60}.check input{flex:none;margin-top:2px}.mini{padding:5px 8px;font-size:12px}.details{margin-top:16px;padding:10px 15px;border:1px solid #dce5ec;border-radius:6px}.details summary{cursor:pointer;font-weight:750}.detail-line{border-bottom:1px solid #edf1f4;padding:7px 0}.state-pass{color:#17744f;font-weight:750}.state-outside{color:#b12e27;font-weight:800}.state-review{color:#946316;font-weight:750}footer{color:#627488;border-top:1px solid #d8e1e8;margin-top:25px;padding-top:18px;font-size:11px;line-height:1.8}@media(max-width:750px){.wrap{padding:10px}.banner{padding:17px}.panel{padding:15px}.columns,.fields.two,.fields.three{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}.banner h1{font-size:22px}.nav{gap:5px}.nav span{font-size:10px;padding:5px 7px}}
 .candidateBox{margin:12px 0 15px;background:#f7fbff;border:1px solid #cbdfea;border-radius:9px;padding:14px 15px}.candidateHead{display:flex;gap:10px;justify-content:space-between;align-items:center}.candidateNumbers{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.candidateNumbers span{background:#e4f0f8;padding:4px 8px;border-radius:5px;color:#254d6d;font-size:12px;font-weight:750}.candidateBox .details{margin-top:9px}.candidateBox button{margin-top:2px}
 .reviewStation{margin:17px 0;padding:16px;border:1px solid #cbdce8;background:#f8fbfd;border-radius:10px}
@@ -25,13 +25,33 @@
 .manualDetails{border:1px solid #d8e3eb;border-radius:8px;padding:12px 14px;margin:16px 0}
 .manualDetails>summary{font-weight:800;font-size:14px;color:#2a506b;cursor:pointer}
 .inlineHint{font-size:12px;color:#52748d;margin:5px 0}
+
+.inspectionPanel{margin:16px 0;border:2px solid #607f99;background:#fff;border-radius:10px;padding:15px}
+.inspectionPanel[hidden]{display:none}
+.inspectionPanel h4{margin:3px 0 7px;font-size:16px}
+.inspectionColumns{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.95fr);gap:12px}
+.inspectionSide{min-width:0;border:1px solid #d6e1e9;border-radius:7px;padding:11px;background:#fafdff}
+.sourceGrid{max-height:460px;overflow:auto;border:1px solid #dbe3e9;background:white;border-radius:5px}
+.sourceGrid table{min-width:520px;font-size:11px}
+.sourceGrid td,.sourceGrid th{padding:5px 7px;white-space:pre-wrap;max-width:270px;min-width:60px}
+.sourceGrid .evidenceHit td{background:#eaf5ed;border-bottom-color:#bedbcc}
+.sourceGrid .sourceNum{position:sticky;left:0;min-width:45px!important;width:45px!important;background:#f1f4f8;font-size:10px;color:#60788a}
+.inspectionPoints{font-size:13px;line-height:1.7;color:#234b66;white-space:pre-wrap}
+.inspectionWarnings{background:#fff4ea;border-left:3px solid #c88a36;padding:9px;font-size:12px;white-space:pre-wrap}
+.inspectionMessage{font-size:12px;margin:8px 0;color:#5b6775}
+.inspectionActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.inspectionActions .check{flex:1;min-width:200px}
+.reviewTable tr.selectedReview{background:#eef7fb}
+.reviewTable tr.priorityReview{background:#fffaf1}
+.reviewTable .pointLine{max-width:310px}
+@media(max-width:850px){.inspectionColumns{grid-template-columns:1fr}}
  </style>
 </head>
 <body>
 <main class="wrap">
 <header class="banner">
   <div class="eyebrow">GTMC · PERFORMANCE SCORE AUDIT</div>
-  <h1>수행평가 점수 검사기 <span class="version">v0.18</span></h1>
+  <h1>수행평가 점수 검사기 <span class="version">v0.19</span></h1>
   <p>평가계획서의 점수 기준과 나이스 일람표를 대조합니다. Python 설치 없이 Chrome · Edge에서 작동합니다.</p>
   <div class="security"><strong>학생 파일은 PC 밖으로 전송되지 않습니다.</strong> 서버·클라우드 AI·분석 추적 없음 · 로컬 규칙 기반 추출 · 임시 메모리 처리 · 언제든 초기화</div>
 </header>
@@ -57,15 +77,29 @@
 
   <div class="reviewStation" id="reviewStation">
     <div class="reviewHeader"><h3>학교 전체 급간 후보 · 일괄 검토</h3><span class="chip" id="reviewStats">계획서를 먼저 불러오세요</span></div>
-    <p class="minor">점수는 브라우저에서 자동 제안합니다. <strong>입력할 필요 없이</strong> 원문을 확인한 영역만 체크하고 승인하세요. 급간 후보가 불완전한 영역은 개별 수정으로 이동합니다.</p>
+    <p class="minor">먼저 <strong>원문/급간 비교</strong>를 열어 채점표 텍스트와 후보 숫자·예외점수를 대조하세요. 복잡한 26개 등 자동 판독 보류 영역은 별도 수정·검토가 필요합니다. 검토 없이 한꺼번에 승인할 수 없도록 제한합니다.</p>
     <div class="reviewToolbar">
       <input id="reviewSearch" type="search" placeholder="학년·과목·영역 검색" aria-label="급간 후보 검색">
-      <select id="reviewFilter" aria-label="급간 검토 상태"><option value="all">전체 영역</option><option value="ready" selected>자동 제안·미승인</option><option value="manual">추가 검토 필요</option><option value="approved">승인 완료</option></select>
+      <select id="reviewGrade" aria-label="학년"><option value="0">전체 학년</option><option value="1">1학년</option><option value="2">2학년</option><option value="3">3학년</option></select>
+      <select id="reviewFilter" aria-label="급간 검토 상태"><option value="all" selected>전체 영역 · 보류 우선</option><option value="ready">자동 제안·미승인</option><option value="manual">추가 검토 필요</option><option value="approved">승인 완료</option></select>
       <button id="batchApprove" disabled>원문 대조한 0개 영역 승인</button>
-      <button id="clearReviewSelection" type="button" class="plain">선택 해제</button>
+      <button id="clearReviewSelection" type="button" class="plain">검토 완료 표시 해제</button>
+      <button id="exportReview" type="button" class="secondary" disabled>영역별 검토 대장 CSV</button>
     </div>
-    <p class="reviewCaution">선택은 <strong>평가계획서 원문의 점수·기본점수·미응시·장기결석 규정을 직접 대조한 뒤에만</strong> 해주세요. 자동 제안은 승인이나 정답이 아니며, 의심되는 표는 승인하지 마세요.</p>
-    <div class="reviewTable"><table><thead><tr><th>원문 대조</th><th>학년·교과 / 영역</th><th>가능한 일반점수 · 특례점수 후보</th><th>상태 / 원문 위치</th><th>수정</th></tr></thead><tbody id="reviewTableBody"></tbody></table></div>
+    <p class="reviewCaution"><strong>원문 대조 필수.</strong> 아래 비교 화면은 HWPX의 행·셀 텍스트를 재구성한 것으로, 한글 원본의 병합 셀·서식·각주를 그대로 재현한 것이 아닙니다. 최종 확인은 반드시 실제 한글 파일을 보고 하세요. 후보 미생성·원문 충돌 영역은 일괄 승인 대상에서 제외됩니다.</p>
+    <div class="reviewTable"><table><thead><tr><th>검토 상태</th><th>학년·교과 / 영역</th><th>가능한 일반점수 · 특례점수 후보</th><th>상태 / 원문 위치</th><th>원문 비교·수정</th></tr></thead><tbody id="reviewTableBody"></tbody></table></div>
+    <section id="sourceInspector" class="inspectionPanel" hidden aria-labelledby="inspectorTitle">
+      <div class="reviewHeader"><h4 id="inspectorTitle">채점표 원문 ↔ 급간 후보 비교</h4><button class="plain mini" type="button" id="closeInspector">비교 창 닫기</button></div>
+      <p class="inspectionMessage" id="inspectorMeta"></p>
+      <div class="inspectionColumns">
+        <div class="inspectionSide"><strong>HWPX 채점표 셀 텍스트</strong><p class="minor">행 번호는 해당 표 안의 순서입니다. 원문 표의 병합·레이아웃과 다를 수 있습니다.</p><div id="inspectorSource" class="sourceGrid"></div></div>
+        <div class="inspectionSide"><strong>추출·계산된 허용점수 후보</strong><p class="inspectionPoints" id="inspectorPoints"></p><div id="inspectorWarnings" class="inspectionWarnings"></div>
+          <div class="inspectionActions"><label class="check"><input id="inspectorConfirm" type="checkbox"> <span>실제 한글 원본에서 평가영역·만점·일반점수 전체·기본점수·백지·장기결석 규정을 직접 확인했습니다.</span></label><button type="button" id="markReviewed" disabled>이 영역 대조 완료</button></div>
+          <div class="actions"><button type="button" id="inspectorEdit" class="secondary">원문을 보면서 급간 수정</button></div>
+          <p class="inspectionMessage" id="inspectorState"></p>
+        </div>
+      </div>
+    </section>
     <p id="reviewStatus" class="message" role="status">학기 초 평가계획서를 불러오면 급간 후보가 자동 표시됩니다.</p>
   </div>
   <div class="candidateBox" id="candidateBox" hidden>
@@ -73,7 +107,7 @@
       <p id="candidateSummary" class="minor"></p>
       <div class="candidateNumbers" id="candidateNumbers"></div>
       <details class="details"><summary>원문 근거 · 계산 방식 · 주의사항 확인</summary><div id="candidateEvidence" class="minor candidateEvidence"></div></details>
-      <div class="actions"><button type="button" id="applyCandidate" class="secondary">자동 추출값으로 입력칸 다시 채우기</button><span class="minor">정확하게 읽힌 후보만 복사 · 승인 전 교사 확인 필수</span></div>
+      <div class="actions"><button type="button" id="applyCandidate" class="secondary">점수 후보를 수정칸에 가져오기</button><span class="minor">보류 후보도 초안으로 복사 가능 · 원문 대조 후에만 수동 승인</span></div>
     </div>
   <details id="manualRuleDetail" class="manualDetails">
     <summary>개별 영역의 급간 상세 검토·수정 (자동 제안이 없거나 잘못 읽힌 경우)</summary>
@@ -667,6 +701,25 @@ function identifyArea(table){
   }}
   return null;
 }
+function sourceSnapshot(rows){
+  // A compact local text reconstruction: preserve all scoring rows and their source row numbers.
+  // Introductory competence text is omitted, so it is NOT a screenshot or pixel-faithful HWPX table.
+  const head=rows.findIndex(r=>/채점\s*기준|채점기준|수행\s*수준/.test(r.join(' '))&&/배\s*점/.test(r.join(' ')));
+  const measure=rows.findIndex(r=>r.length>=3&&/^(남|기록)/.test(clean(r[0]))&&r.some(c=>/배\s*점/.test(c)));
+  const start=head>=0?head:measure>=0?measure:Math.max(0,rows.length-78);
+  const end=Math.min(rows.length,start+130);
+  const selected=[0,...Array.from({length:end-start},(_,i)=>start+i)];
+  let clipped=false;const seen=new Set();const items=[];
+  for(const idx of selected){if(seen.has(idx))continue;seen.add(idx);const original=rows[idx]||[];
+    const cells=original.slice(0,18).map(value=>{const s=clean(value);if(s.length>650)clipped=true;return s.slice(0,650);});
+    if(original.length>18)clipped=true;
+    items.push({row:idx+1,cells});
+  }
+  return {rows:items,original_row_count:rows.length,scoring_start_row:start+1,
+    // If the scoring area extends beyond the excerpt, never permit batch approval from it.
+    incomplete:end<rows.length||clipped,
+    note:'한글 표를 재현한 이미지가 아닌 셀 텍스트 재구성입니다. 실제 원문과 반드시 대조하세요.'};
+}
 async function extractHwpxFile(file){
   if(!/\.hwpx$/i.test(file.name))throw Error('HWPX 파일만 지원합니다. (HWP는 미지원)');
   if(!file.size||file.size>16*1024*1024)throw Error('HWPX 파일은 16MB 이하만 사용할 수 있습니다.');
@@ -709,7 +762,8 @@ async function extractHwpxFile(file){
       });
       const candidate=window.GTMC_SUGGEST.infer(rubricRows,x.max);
       const tableGrade=(rubricRows[0]&&rubricRows[0][0]==='학년'&&rubricRows[1]&&/^[123]$/.test(String(rubricRows[1][0]||'').trim()))?Number(rubricRows[1][0]):null;
-      found.push({...x,subject_at_table:sectionSubject,declared_grade_at_table:tableGrade,table_index_zero_based:i,candidate});
+      found.push({...x,subject_at_table:sectionSubject,declared_grade_at_table:tableGrade,table_index_zero_based:i,candidate,
+        source_table:sourceSnapshot(rubricRows)});
     }
     data.push({section:sec,meta,found});
   }
@@ -736,7 +790,8 @@ async function extractHwpxFile(file){
         x.candidate.state='REVIEW_REQUIRED';
       }
       areas.push({grade,subject:scopedSubject,area:x.area,max:x.max,recognition:x.recognition,
-        source:{section:sec.section,table_index_zero_based:x.table_index_zero_based},candidate:x.candidate,state:'REVIEW_REQUIRED'});
+        source:{section:sec.section,table_index_zero_based:x.table_index_zero_based,file_name:file.name.slice(0,140)},
+        source_table:x.source_table,candidate:x.candidate,state:'REVIEW_REQUIRED'});
     }
   }
   if(!areas.length)throw Error('인식 가능한 수행평가 세부 채점표가 없습니다. 지원하는 HWPX 양식인지 확인해 주세요.');
@@ -755,7 +810,7 @@ window.GTMC_PLAN={extractHwpxFile};
 const {extractHwpxFile}=window.GTMC_PLAN;
 const {normalize,scoreKey,validateApproval,parseXlsxBytes,compareSheets,escapeCSVCell}=window.GTMC_ENGINE;
 const $=id=>document.getElementById(id);
-const state={plan:[],meta:null,approved:new Map(),result:null,timer:null,reviewChecked:new Set()};
+const state={plan:[],meta:null,approved:new Map(),result:null,timer:null,reviewChecked:new Set(),inspecting:null};
 const fmt=v=>Number.isFinite(Number(v))?Number(v).toLocaleString('ko-KR'):String(v??'');
 const idOf=(year,term,grade,subject,area)=>[Number(year),Number(term),Number(grade),normalize(subject),normalize(area)].join(':');
 const idForArea=x=>idOf(state.meta?.academic_year,state.meta?.semester,x.grade,x.subject,x.area);
@@ -791,17 +846,24 @@ function validCandidate(candidate,max){
     normal_points:acceptable?points.sort((a,b)=>b-a):[],components:validComponents?comps.map(g=>({name:String(g.name).slice(0,100),points:g.points.map(Number)})):[],
     exception_points:ex,warnings,evidence,method:'로컬 규칙 기반 자동 추출',safe_to_prefill:acceptable&&candidate.safe_to_prefill===true&&candidate.state==='CANDIDATE'&&warnings.length===0&&validComponents};
 }
+function validSourceTable(src){
+  if(!src||!Array.isArray(src.rows)||src.rows.length<1||src.rows.length>135)return null;
+  const rows=src.rows.map(r=>({row:Number(r.row),cells:Array.isArray(r.cells)?r.cells.slice(0,18).map(v=>String(v??'').slice(0,650)):[]}));
+  if(rows.some(r=>!Number.isInteger(r.row)||r.row<1||r.row>5000||!r.cells.length))return null;
+  return {rows,original_row_count:Number(src.original_row_count)||rows.length,scoring_start_row:Number(src.scoring_start_row)||1,
+    incomplete:src.incomplete!==false,note:'한글 표의 행·셀 텍스트 재구성. 실제 원본과 비교해야 합니다.'};
+}
 function validatePlanObject(doc){
   if(!doc||!Number.isInteger(Number(doc.academic_year))||Number(doc.academic_year)<2000||Number(doc.academic_year)>2100||![1,2].includes(Number(doc.semester))||!Array.isArray(doc.areas)||!doc.areas.length||doc.areas.length>2500)
     throw Error('학년도·학기·평가영역 JSON 구조를 확인해 주세요.');
-  const clean=doc.areas.map(r=>({grade:Number(r.grade),subject:String(r.subject??'').trim().slice(0,100),area:String(r.area??'').trim().slice(0,140),max:Number(r.max),source:r.source||null,candidate:validCandidate(r.candidate,Number(r.max)),state:'REVIEW_REQUIRED'}));
+  const clean=doc.areas.map(r=>({grade:Number(r.grade),subject:String(r.subject??'').trim().slice(0,100),area:String(r.area??'').trim().slice(0,140),max:Number(r.max),source:r.source||null,source_table:validSourceTable(r.source_table),candidate:validCandidate(r.candidate,Number(r.max)),state:'REVIEW_REQUIRED'}));
   if(clean.some(x=>![1,2,3].includes(x.grade)||!x.subject||!x.area||!(x.max>0)||x.max>1000))throw Error('학년·과목·영역·만점 중 누락되거나 유효하지 않은 값이 있습니다.');
   const seen=new Set();for(const x of clean){const k=[x.grade,normalize(x.subject),normalize(x.area)].join(':');if(seen.has(k))throw Error(`중복된 평가영역이 있습니다: ${x.subject} / ${x.area}`);seen.add(k);}
   return {meta:{academic_year:Number(doc.academic_year),semester:Number(doc.semester),school_name:String(doc.school_name||'학교명 미확인').slice(0,60)},areas:clean};
 }
 function setPlan(doc,notice){
   const {meta,areas}=validatePlanObject(doc);clearScore('계획서 변경으로 학생 검사 결과를 초기화했습니다.',true);
-  state.meta=meta;state.plan=areas;state.approved.clear();state.reviewChecked.clear();renderCandidate(null);refreshApproved();renderPlan();renderSelect();
+  state.meta=meta;state.plan=areas;state.approved.clear();state.reviewChecked.clear();state.inspecting=null;$('sourceInspector').hidden=true;renderCandidate(null);refreshApproved();renderPlan();renderSelect();
   $('exportPlan').disabled=false;
   status('planStatus',notice||`${meta.school_name} · ${meta.academic_year}학년도 ${meta.semester}학기 · ${areas.length}개 영역 후보\n전부 교사 승인 전이므로 자동 검증에 사용하지 않습니다.`,'ok');
   $('year').value=meta.academic_year;$('term').value=meta.semester;
@@ -820,8 +882,8 @@ $('readPlan').addEventListener('click',async()=>{
       `${root.school_name} · ${root.academic_year}학년도 ${root.semester}학기 · ${areas.length}개 평가영역 후보\n${notes}\n미지원 양식은 영역이 누락될 수 있습니다. 원문과 전체 개수를 꼭 대조하세요. 모든 후보는 미승인입니다.`);
   }catch(err){status('planStatus','계획서 분석 중단: '+err.message,'error');}finally{$('hwpx').value='';$('readPlan').disabled=false;}
 });
-$('planJson').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{fileGuard(f,'.json',3*1024*1024);setPlan(JSON.parse(await f.text()));}catch(err){status('planStatus','계획서 JSON 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}});
-$('exportPlan').addEventListener('click',()=>{if(!state.meta||!state.plan.length)return;jsonDownload({version:'0.16',...state.meta,areas:state.plan},`GTMC_${state.meta.academic_year}_${state.meta.semester}학기_평가영역_미승인후보.json`);});
+$('planJson').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{fileGuard(f,'.json',18*1024*1024);setPlan(JSON.parse(await f.text()));}catch(err){status('planStatus','계획서 JSON 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}});
+$('exportPlan').addEventListener('click',()=>{if(!state.meta||!state.plan.length)return;jsonDownload({version:'0.19',...state.meta,areas:state.plan},`GTMC_${state.meta.academic_year}_${state.meta.semester}학기_평가영역_미승인후보.json`);});
 function renderPlan(){
   const areas=state.plan,table=$('planTable'),boxes=$('planMetrics');clearElement(table);clearElement(boxes);
   $('planMetrics').hidden=!areas.length;$('planTableWrap').hidden=!areas.length;
@@ -844,7 +906,7 @@ function candidateApproval(area){
   if(!c?.safe_to_prefill||!Array.isArray(c.normal_points)||!c.normal_points.length)throw Error('검증 가능한 급간 자동 제안이 없습니다.');
   const ex=c.exception_points||{};
   const source=`HWPX ${area.source?.section||'위치 미확인'} · 표 ${(Number(area.source?.table_index_zero_based)||0)+1}`;
-  const raw={version:'0.16',course:{grade:area.grade,subject:area.subject,semester:state.meta.semester,academic_year:state.meta.academic_year},
+  const raw={version:'0.19',course:{grade:area.grade,subject:area.subject,semester:state.meta.semester,academic_year:state.meta.academic_year},
     area:{name:area.area,max_score:area.max},
     scoring:{kind:c.kind,normal_points:c.normal_points.map(Number),
       components:c.components.map(g=>({name:String(g.name),points:g.points.map(Number)})),
@@ -860,46 +922,53 @@ function reviewPreview(area){
   const special=[ex.base!=null?`기본 ${ex.base}`:null,ex.blank!=null?`백지 ${ex.blank}`:null,ex.long_unexcused_absence!=null?`장기결석 ${ex.long_unexcused_absence}`:null].filter(Boolean).join(' · ');
   return {points:shown||'급간 자동 판독 불가',special:special||'특별점수: 자동 확인되지 않음'};
 }
+function reviewPriority(a){
+ const w=(a.candidate?.warnings||[]).join(' ');
+ if(/영역만점|원문 총점|학년 .*불일치|최고점.*만점|최고점 합계/.test(w))return {type:'원문·만점 충돌',rank:0};
+ if(/합산|요소별|평가 요소|머리글/.test(w))return {type:'요소 조합 검토',rank:1};
+ if(/특례|기본점수|장기|미응시/.test(w))return {type:'특례점수 확인',rank:2};
+ if(w)return {type:'판독 불명확',rank:3};
+ return {type:'점수 후보 있음',rank:4};
+}
 function renderReviewCount(){
   const valid=[...state.reviewChecked].filter(i=>{const a=state.plan[i];if(!a||state.approved.has(idForArea(a)))return false;try{candidateApproval(a);return true;}catch{return false;}});
   $('batchApprove').disabled=!valid.length;
   $('batchApprove').textContent=`원문 대조한 ${valid.length}개 영역 승인`;
   const ready=state.plan.filter(a=>{try{candidateApproval(a);return true;}catch{return false;}}).length;
-  $('reviewStats').textContent=`전체 ${state.plan.length}개 · 승인 가능 제안 ${ready}개 · 추가 검토 ${state.plan.length-ready}개 · 승인 ${state.approved.size}개`;
+  $('reviewStats').textContent=`전체 ${state.plan.length}개 · 자동 후보 ${ready}개 · 검토 보류 ${state.plan.length-ready}개 · 원문 대조 표시 ${valid.length}개 · 승인 ${state.approved.size}개`;
+  $('exportReview').disabled=!state.plan.length;
 }
 function renderReviewTable(){
   const tbody=$('reviewTableBody');clearElement(tbody);
   if(!state.plan.length){const row=addRow(tbody,['','계획서 등록 전','','','']);row.children[1].className='minor';renderReviewCount();return;}
-  const search=normalize($('reviewSearch').value),filter=$('reviewFilter').value;
+  const search=normalize($('reviewSearch').value),filter=$('reviewFilter').value,grade=Number($('reviewGrade').value);
   const frame=document.createDocumentFragment();let displayed=0;
-  for(let i=0;i<state.plan.length;i++){
-    const a=state.plan[i],key=idForArea(a),approved=state.approved.has(key);
+  const ordered=state.plan.map((a,i)=>({a,i})).sort((x,y)=>{
+    const xs=state.approved.has(idForArea(x.a))?2:x.a.candidate?.safe_to_prefill?1:0;
+    const ys=state.approved.has(idForArea(y.a))?2:y.a.candidate?.safe_to_prefill?1:0;
+    return xs-ys||reviewPriority(x.a).rank-reviewPriority(y.a).rank||x.a.grade-y.a.grade||x.i-y.i;
+  });
+  for(const {a,i} of ordered){
+    const key=idForArea(a),approved=state.approved.has(key);
     let usable=true,reason='';try{candidateApproval(a);}catch(err){usable=false;reason=err.message;}
+    if(grade&&a.grade!==grade)continue;
     if(search&&!normalize(`${a.grade}학년 ${a.subject} ${a.area}`).includes(search))continue;
     if(filter==='ready'&&(approved||!usable))continue;
     if(filter==='manual'&&(approved||usable))continue;
     if(filter==='approved'&&!approved)continue;
     displayed++;
     const row=document.createElement('tr'),sel=document.createElement('td'),desc=document.createElement('td'),points=document.createElement('td'),source=document.createElement('td'),action=document.createElement('td');
-    if(usable&&!approved){const input=document.createElement('input');input.type='checkbox';input.dataset.reviewIndex=String(i);input.checked=state.reviewChecked.has(i);
-      input.setAttribute('aria-label',`${a.grade}학년 ${a.subject} ${a.area}: 평가계획 원문 대조 완료 시 선택`);sel.append(input);
-    }else sel.textContent=approved?'✓':'—';
+    if(state.inspecting===i)row.className='selectedReview';else if(!usable)row.className='priorityReview';
+    sel.textContent=approved?'승인됨':state.reviewChecked.has(i)?'대조 완료':'미확인';
     const title=document.createElement('strong');title.textContent=`${a.grade}학년 · ${a.subject}`;desc.append(title,document.createElement('br'),document.createTextNode(`${a.area} · ${a.max}점`));
     const view=reviewPreview(a);points.className='pointLine';points.textContent=view.points;
     const small=document.createElement('div');small.className='minor';small.textContent=view.special;points.append(small);
-    const label=document.createElement('div');label.className='reviewStatus '+(approved?'state-pass':usable?'state-review':'state-outside');label.textContent=approved?'원문 대조 후 승인됨':usable?'자동 제안 · 미승인':'추가 검토';source.append(label);
+    const label=document.createElement('div');label.className='reviewStatus '+(approved?'state-pass':usable?'state-review':'state-outside');
+    label.textContent=approved?'교사 승인':usable?'자동 후보 · 미승인':'검토 보류 · '+reviewPriority(a).type;source.append(label);
     const origin=document.createElement('div');origin.className='minor';origin.textContent=`${a.source?.section||'위치 미확인'} · 표 ${(Number(a.source?.table_index_zero_based)||0)+1}`;source.append(origin);
-    const c=a.candidate;
-    const detail=document.createElement('details'),summary=document.createElement('summary');summary.textContent='점수 근거 / 주의사항';detail.append(summary);
-    const ev=document.createElement('div');ev.className='reviewEvidence';
-    const notes=[`원문 추출: ${a.source?.section||''}, 표 ${(Number(a.source?.table_index_zero_based)||0)+1}`,
-      `허용점수 후보 전체: ${(c?.normal_points||[]).join(', ')||'없음'}`,
-      `기본·특례 점수: ${view.special}`,
-      ...(c?.components||[]).slice(0,15).map(g=>`평가요소 ${g.name}: ${(g.points||[]).join(', ')}`),
-      ...(c?.warnings||[]).slice(0,15).map(w=>'경고: '+w),...(reason?['상태: '+reason]:[]),
-      '주의: 이 근거는 HWPX 텍스트 추출 결과이며, 실제 원문 전체 및 별도 특례 규정과 반드시 비교해야 합니다.'];
-    ev.textContent=notes.join('\n');detail.append(ev);source.append(detail);
-    const button=document.createElement('button');button.type='button';button.className='secondary mini';button.textContent=approved?'다시 검토':'상세 확인·수정';button.dataset.editIndex=String(i);action.append(button);
+    if(!usable){const note=document.createElement('div');note.className='minor';note.textContent=(a.candidate?.warnings||[]).slice(0,2).join(' / ')||reason;source.append(note);}
+    const button=document.createElement('button');button.type='button';button.className='secondary mini';button.textContent='원문/급간 비교';button.dataset.inspectIndex=String(i);action.append(button);
+    const edit=document.createElement('button');edit.type='button';edit.className='plain mini';edit.textContent='급간 수정';edit.dataset.editIndex=String(i);action.append(edit);
     row.append(sel,desc,points,source,action);frame.append(row);
   }
   if(!displayed){const row=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.className='empty';td.textContent='선택한 조건에 해당하는 영역이 없습니다.';row.append(td);frame.append(row);}
@@ -907,22 +976,68 @@ function renderReviewTable(){
 }
 $('reviewSearch').addEventListener('input',renderReviewTable);
 $('reviewFilter').addEventListener('change',renderReviewTable);
-$('reviewTableBody').addEventListener('change',event=>{
-  const input=event.target.closest('input[data-review-index]');if(!input)return;
-  const i=Number(input.dataset.reviewIndex),area=state.plan[i];if(!area)return;
-  if(input.checked){try{candidateApproval(area);state.reviewChecked.add(i);}catch(err){input.checked=false;status('reviewStatus','선택 불가: '+err.message,'error');}}
-  else state.reviewChecked.delete(i);
-  renderReviewCount();
-});
+$('reviewGrade').addEventListener('change',renderReviewTable);
 function selectReviewArea(i,openDetail=false){
   if(!state.plan[i])return;
   $('areaFilter').value='';renderSelect();$('areaSelect').value=String(i);$('areaSelect').dispatchEvent(new Event('change'));
   if(openDetail){$('manualRuleDetail').open=true;$('manualRuleDetail').scrollIntoView({behavior:'smooth',block:'start'});}
 }
-$('reviewTableBody').addEventListener('click',e=>{const btn=e.target.closest('button[data-edit-index]');if(btn)selectReviewArea(Number(btn.dataset.editIndex),true);});
+$('reviewTableBody').addEventListener('click',e=>{
+ const inspect=e.target.closest('button[data-inspect-index]');if(inspect){openInspector(Number(inspect.dataset.inspectIndex));return;}
+ const edit=e.target.closest('button[data-edit-index]');if(edit)selectReviewArea(Number(edit.dataset.editIndex),true);
+});
+function openInspector(index){
+ const a=state.plan[index];if(!a)return;
+ state.inspecting=index;$('sourceInspector').hidden=false;
+ $('inspectorTitle').textContent=`${a.grade}학년 · ${a.subject} / ${a.area}`;
+ $('inspectorMeta').textContent=`영역 만점 ${a.max}점 · 원문 ${a.source?.file_name||'이전 JSON에서 불러옴'} · ${a.source?.section||'위치 없음'} · 표 ${(Number(a.source?.table_index_zero_based)||0)+1}`;
+ const target=$('inspectorSource');clearElement(target);
+ const src=a.source_table;
+ if(!src){const p=document.createElement('p');p.className='message error';p.textContent='원문 채점표 셀 텍스트가 포함되지 않았습니다. 평가계획서 HWPX를 v0.19에서 다시 불러오세요. 현재 자료로는 일괄 승인할 수 없습니다.';target.append(p);}
+ else{
+   const table=document.createElement('table'),tbody=document.createElement('tbody'),hits=new Set((a.candidate?.evidence||[]).map(v=>v.row));
+   for(const data of src.rows){const tr=document.createElement('tr');if(hits.has(data.row))tr.className='evidenceHit';
+     const first=document.createElement('td');first.className='sourceNum';first.textContent=String(data.row);tr.append(first);
+     for(const value of data.cells){const td=document.createElement('td');td.textContent=value;tr.append(td);}tbody.append(tr);
+   }
+   table.append(tbody);target.append(table);
+   if(src.incomplete){const w=document.createElement('p');w.className='message error';w.textContent='표 일부가 생략되거나 채점 행 범위를 확정하지 못했습니다. 실제 HWPX 원문 전체를 대조하고 개별 수동 승인만 사용하세요.';target.append(w);}
+ }
+ const c=a.candidate||{},ex=c.exception_points||{},p=(c.normal_points||[]).join(', ')||'허용점수 자동 판독 실패';
+ const comp=(c.components||[]).map(g=>`${g.name}: ${(g.points||[]).join(', ')}`).join('\n');
+ $('inspectorPoints').textContent=`일반 허용점수 (${(c.normal_points||[]).length}개)\n${p}\n\n기본점수 ${ex.base??'미확인'} · 백지/자발적 미응시 ${ex.blank??'미확인'} · 장기 미인정 결석 ${ex.long_unexcused_absence??'미확인'}\n\n${comp||'요소별 조합 정보 없음'}\n\n추출 방식: ${c.method||'불명확'}`;
+ $('inspectorWarnings').textContent=(c.warnings||[]).length?'판독 경고\n• '+c.warnings.join('\n• '):'자동 추출 경고 없음. 실제 한글 원문과 대조해야 합니다.';
+ const eligible=!!c.safe_to_prefill&&!!src&&!src.incomplete&&!state.approved.has(idForArea(a));
+ $('inspectorConfirm').checked=state.reviewChecked.has(index);$('inspectorConfirm').disabled=!eligible;
+ $('markReviewed').disabled=!eligible||!$('inspectorConfirm').checked;
+ $('markReviewed').textContent=state.reviewChecked.has(index)?'검토 완료 표시 취소':'이 영역 대조 완료';
+ $('inspectorState').textContent=state.approved.has(idForArea(a))?'이미 승인된 규칙입니다.':!eligible?'자동 승인 보류: 원문 불일치·추출 불확실 또는 원문 텍스트 불충분. 직접 수정·승인하세요.':'실제 원본까지 확인한 경우에만 대조 완료 표시를 해주세요.';
+ renderReviewTable();$('sourceInspector').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('inspectorConfirm').addEventListener('change',()=>{
+ $('markReviewed').disabled=!$('inspectorConfirm').checked || state.inspecting===null || $('inspectorConfirm').disabled;
+});
+$('markReviewed').addEventListener('click',()=>{
+ const i=state.inspecting,a=state.plan[i];if(!a||$('inspectorConfirm').disabled)return;
+ if(state.reviewChecked.has(i)){state.reviewChecked.delete(i);$('inspectorConfirm').checked=false;}
+ else{if(!$('inspectorConfirm').checked)return;state.reviewChecked.add(i);}
+ $('markReviewed').textContent=state.reviewChecked.has(i)?'검토 완료 표시 취소':'이 영역 대조 완료';
+ $('markReviewed').disabled=!$('inspectorConfirm').checked;
+ $('inspectorState').textContent=state.reviewChecked.has(i)?'이 영역을 대조 완료로 표시했습니다. 실제 급간 검사에는 아직 등록되지 않았습니다. 상단의 일괄 승인 버튼을 누르세요.':'검토 완료 표시를 취소했습니다.';
+ renderReviewTable();
+});
+$('closeInspector').addEventListener('click',()=>{$('sourceInspector').hidden=true;state.inspecting=null;renderReviewTable();});
+$('inspectorEdit').addEventListener('click',()=>{if(state.inspecting!==null)selectReviewArea(state.inspecting,true);});
+$('exportReview').addEventListener('click',()=>{
+ if(!state.plan.length)return;
+ const cols=['학년','교과','평가영역','만점','자동 후보 상태','우선 검토 범주','일반 허용점수 후보','기본점수','백지/자발적 미응시','장기 미인정 결석','검토 사유','교사 승인 여부','원문 표 위치'];
+ const rows=state.plan.map(a=>{const x=a.candidate||{},e=x.exception_points||{},p=reviewPriority(a);return [a.grade,a.subject,a.area,a.max,x.safe_to_prefill?'후보 생성':'검토 보류',p.type,(x.normal_points||[]).join(' / '),e.base??'',e.blank??'',e.long_unexcused_absence??'',(x.warnings||[]).join(' | '),state.approved.has(idForArea(a))?'승인됨':'미승인',`${a.source?.section||''} 표 ${(Number(a.source?.table_index_zero_based)||0)+1}`];});
+ const csv='\uFEFF'+[cols,...rows].map(r=>r.map(escapeCSVCell).join(',')).join('\r\n');
+ download(new Blob([csv],{type:'text/csv;charset=utf-8'}),`GTMC_${state.meta?.academic_year||''}_영역별_급간검토_학생정보없음.csv`);
+});
 $('clearReviewSelection').addEventListener('click',()=>{state.reviewChecked.clear();renderReviewTable();status('reviewStatus','원문 확인 선택을 모두 해제했습니다.');});
 $('batchApprove').addEventListener('click',()=>{
-  const list=[...state.reviewChecked].filter(i=>state.plan[i]&&!state.approved.has(idForArea(state.plan[i])));
+  const list=[...state.reviewChecked].filter(i=>{const a=state.plan[i];return a&&!state.approved.has(idForArea(a))&&a.source_table&&!a.source_table.incomplete;});
   if(!list.length)return;
   const prepared=[];try{for(const i of list){const raw=candidateApproval(state.plan[i]);prepared.push({key:validateApproval(raw).key,raw});}}
   catch(err){status('reviewStatus','승인 중단: '+err.message,'error');return;}
@@ -945,7 +1060,7 @@ function renderCandidate(r){
   if(!r)return;
   const ok=!!c?.safe_to_prefill;
   $('candidateStatus').textContent=ok?'급간 자동 추출 · 교사 확인 전':'추가 검토 필요';
-  $('applyCandidate').disabled=!ok;
+  $('applyCandidate').disabled=!(c?.normal_points?.length>=2);
   const total=Array.isArray(c?.normal_points)?c.normal_points.length:0;
   const kind=c?.kind==='component_sum'?'요소별 합산':c?.kind==='direct_ladder'?'직접 급간':'미분류';
   $('candidateSummary').textContent=`${kind} · ${total}개 허용점수 후보 · ${c?.components?.length||0}개 평가요소. `+(ok?'원문 확인 후 입력칸에 가져올 수 있습니다.':'자동 추출이 불완전하거나 확실한 근거가 없습니다. 수동 확인이 필요합니다.');
@@ -957,10 +1072,10 @@ function renderCandidate(r){
   for(const w of (c?.warnings||[]))lines.push('주의: '+w);
   for(const ev of (c?.evidence||[]).slice(0,24))lines.push(`표 ${ev.row}행 · ${ev.label||'배점'} : ${(ev.points||[]).join(', ')}점`);
   evidence.textContent=lines.join('\n');
-  if(ok)currentCandidate=c;
+  if(c?.normal_points?.length>=2)currentCandidate=c;
 }
 $('applyCandidate').addEventListener('click',()=>{
-  if(!currentCandidate?.safe_to_prefill)return;
+  if(!(currentCandidate?.normal_points?.length>=2))return;
   $('normal').value=currentCandidate.normal_points.join(', ');
   $('kind').value=currentCandidate.kind;
   $('components').value=(currentCandidate.components||[]).map(x=>`${x.name}: ${x.points.join(',')}`).join('\n');
@@ -968,7 +1083,7 @@ $('applyCandidate').addEventListener('click',()=>{
   $('verified').checked=false;
   const selection=$('areaSelect').value;const area=state.plan[Number(selection)];
   $('reason').value=area?`HWPX ${area.source?.section||''} · 표 ${(Number(area.source?.table_index_zero_based)||0)+1} · 급간 원문 확인 필요`:'';
-  status('ruleStatus','급간 후보를 입력했습니다. AI 판단이 아니라 원문 표의 숫자를 규칙으로 읽은 값입니다. 교사가 반드시 원본과 대조하고 승인해야 합니다.');
+  status('ruleStatus',currentCandidate.safe_to_prefill?'급간 후보를 가져왔습니다. 원본과 대조하고 승인하세요.':'검토 보류 후보를 수정용 초안으로만 가져왔습니다. 누락·오독된 점수를 원문을 보고 반드시 고친 뒤 승인하세요.');
 });
 
 $('areaSelect').addEventListener('change',()=>{
@@ -980,7 +1095,7 @@ $('areaSelect').addEventListener('change',()=>{
   $('base').value=existing?.scoring?.exception_points?.base??'';$('blank').value=existing?.scoring?.exception_points?.blank??'';
   $('longAbsent').value=existing?.scoring?.exception_points?.long_unexcused_absence??'';
   $('reason').value='';$('verified').checked=false;
-  if(!existing && currentCandidate?.safe_to_prefill){
+  if(!existing && currentCandidate?.normal_points?.length>=2){
     $('applyCandidate').click();
     status('ruleStatus',`「${r.subject} / ${r.area}」 자동 제안값을 입력했습니다. 원문과 특례 규정을 확인한 뒤에만 승인하세요.`);
   }else status('ruleStatus',`「${r.subject} / ${r.area}」 선택. 원문을 보고 허용점수 전체와 특별점수를 확인하세요.`);
@@ -1003,7 +1118,7 @@ function currentRule(){
     if(!match)throw Error('계획서와 연결되지 않은 영역입니다. 다른 학년·과목의 규칙을 사용하지 않습니다.');
     if(Math.abs(match.max-max)>0.000001)throw Error(`계획서 영역 만점은 ${match.max}점입니다. 일치하지 않아 승인할 수 없습니다.`);
   }
-  const raw={version:'0.16',course:{grade,subject,semester:term,academic_year:year},area:{name:area,max_score:max},
+  const raw={version:'0.19',course:{grade,subject,semester:term,academic_year:year},area:{name:area,max_score:max},
     scoring:{kind:$('kind').value,normal_points:normal,components,
       exception_points:{base:maybeNum('base'),blank:maybeNum('blank'),long_unexcused_absence:maybeNum('longAbsent')}},
     source:{input_type:'teacher-reviewed',locator:$('reason').value.trim().slice(0,300)},
@@ -1033,7 +1148,7 @@ $('ruleFiles').addEventListener('change',async e=>{
     state.approved=temp;clearScore('승인 규칙 변경으로 이전 점수 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus',`${added}개 승인 규칙을 가져왔습니다. 승인 표기는 출처와 원문을 다시 확인해 주세요.`,'ok');
   }catch(err){status('ruleStatus','승인 규칙 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}
 });
-$('saveApproved').addEventListener('click',()=>{if(!state.approved.size)return;jsonDownload({version:'0.16',rules:[...state.approved.values()]},'GTMC_교사승인_점수규칙.json');});
+$('saveApproved').addEventListener('click',()=>{if(!state.approved.size)return;jsonDownload({version:'0.19',rules:[...state.approved.values()]},'GTMC_교사승인_점수규칙.json');});
 $('clearApproved').addEventListener('click',()=>{state.approved.clear();state.reviewChecked.clear();clearScore('승인 규칙 및 학생 검사 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus','승인된 규칙을 브라우저 메모리에서 모두 해제했습니다.');});
 $('runAudit').addEventListener('click',async()=>{
   const files=[...$('scoreFiles').files];$('runAudit').disabled=true;clearScore('새 검사를 시작해 이전 학생 데이터를 초기화했습니다.',true);
