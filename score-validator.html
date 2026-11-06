@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-/q416Z9AbOGcT73amTIx60g4XZcYmKIej7ZIbgdRFH8='; style-src 'sha256-R39OC8JrTpH94RA7yHvr6YMZMWsSpvvEJvFuaCb/sQc='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-/PXNHBNj0yEnCCjAJB/+UgGJdvmfyRKsYl4JtcztM+s='; style-src 'sha256-R39OC8JrTpH94RA7yHvr6YMZMWsSpvvEJvFuaCb/sQc='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.15</title>
+<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.16</title>
 <style>:root{font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;background:#f6f7f8;color:#1d2b38;line-height:1.55;font-size:14px}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1130px;margin:0 auto;padding:30px 20px 65px}.banner{background:#fff;border-top:4px solid #263d53;padding:22px 25px;border-bottom:1px solid #d8e0e8}.eyebrow{font-size:11px;letter-spacing:.16em;color:#536d84;font-weight:800}.banner h1{font-size:25px;margin:7px 0}.version{font-size:12px;vertical-align:middle;color:#5c7285;border:1px solid #cbd6dd;padding:3px 8px;border-radius:12px}.banner p{color:#526579;margin:6px 0 12px}.security{background:#eaf5f1;border-left:3px solid #2b7d65;padding:12px 15px;font-size:13px;color:#215c49}.nav{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 20px}.nav span{font-size:12px;border-radius:30px;padding:6px 13px;background:#e9edf1;color:#465b70;font-weight:700}.panel{background:#fff;border:1px solid #d9e0e7;border-radius:10px;margin:18px 0;padding:20px 24px;box-shadow:0 2px 10px #263a4e07}.heading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:8px}.heading h2{font-size:18px;margin:0}.chip{font-size:11px;color:#31546c;background:#eaf1f6;padding:4px 8px;border-radius:20px;white-space:nowrap}.lead{color:#47596d;margin:8px 0 15px;font-size:13px}.minor{font-size:12px;color:#637689}.columns,.fields{display:grid;gap:14px}.columns,.fields.two{grid-template-columns:repeat(2,minmax(0,1fr))}.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}.fields{margin-bottom:12px}label{display:block;font-weight:750;font-size:12px;margin:8px 0 5px;color:#35485e}input:not([type=checkbox]),select,textarea{width:100%;max-width:100%;border:1px solid #cbd6e0;border-radius:6px;padding:9px 10px;background:#fff;font:inherit;color:inherit}input[type=file]{background:#f9fbfc;border-style:dashed}textarea{resize:vertical;min-height:55px}button{cursor:pointer;border:1px solid #294b69;background:#294b69;color:white;border-radius:6px;padding:9px 13px;font:inherit;font-weight:750;font-size:13px}button:disabled{cursor:default;opacity:.45}button.secondary{color:#274d66;background:#e9f1f6;border-color:#d5e3ec}button.plain{background:white;color:#466079;border-color:#ccdae4}button.danger{background:#fff0ed;color:#a5342f;border-color:#efc4bd}.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.narrow{margin:0}.message{padding:12px 14px;border-left:3px solid #d3a44c;background:#fffaf0;color:#66552f;white-space:pre-wrap;font-size:12px;overflow-wrap:anywhere}.message.ok{background:#edf9f3;color:#1d6650;border-color:#2d8767}.message.error{background:#fff1ee;color:#9b312b;border-color:#c64c40}.metrics{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.stat{background:#f0f4f7;padding:10px 15px;min-width:118px;border-radius:8px;font-size:12px;color:#4f657a}.stat strong{display:block;font-size:22px;color:#29445f}.tableWrap{overflow:auto;max-height:430px;border:1px solid #e1e7ee;border-radius:6px;margin-top:10px}table{width:100%;border-collapse:collapse;min-width:680px;font-size:12px}thead{position:sticky;top:0;background:#edf2f6}td,th{padding:9px 10px;border-bottom:1px solid #e6edf2;text-align:left;vertical-align:top}th{white-space:nowrap;color:#41566b}td{overflow-wrap:anywhere}.empty{text-align:center;padding:26px;color:#8391a1}.ruleForm{border-top:1px solid #e7edf2;margin-top:14px;padding-top:12px}.check{display:flex;align-items:flex-start;gap:9px;font-weight:500;background:#f5f7fa;border-radius:6px;padding:10px;color:#354d60}.check input{flex:none;margin-top:2px}.mini{padding:5px 8px;font-size:12px}.details{margin-top:16px;padding:10px 15px;border:1px solid #dce5ec;border-radius:6px}.details summary{cursor:pointer;font-weight:750}.detail-line{border-bottom:1px solid #edf1f4;padding:7px 0}.state-pass{color:#17744f;font-weight:750}.state-outside{color:#b12e27;font-weight:800}.state-review{color:#946316;font-weight:750}footer{color:#627488;border-top:1px solid #d8e1e8;margin-top:25px;padding-top:18px;font-size:11px;line-height:1.8}@media(max-width:750px){.wrap{padding:10px}.banner{padding:17px}.panel{padding:15px}.columns,.fields.two,.fields.three{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}.banner h1{font-size:22px}.nav{gap:5px}.nav span{font-size:10px;padding:5px 7px}}
 .candidateBox{margin:12px 0 15px;background:#f7fbff;border:1px solid #cbdfea;border-radius:9px;padding:14px 15px}.candidateHead{display:flex;gap:10px;justify-content:space-between;align-items:center}.candidateNumbers{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.candidateNumbers span{background:#e4f0f8;padding:4px 8px;border-radius:5px;color:#254d6d;font-size:12px;font-weight:750}.candidateBox .details{margin-top:9px}.candidateBox button{margin-top:2px}
 .reviewStation{margin:17px 0;padding:16px;border:1px solid #cbdce8;background:#f8fbfd;border-radius:10px}
@@ -31,7 +31,7 @@
 <main class="wrap">
 <header class="banner">
   <div class="eyebrow">GTMC · PERFORMANCE SCORE AUDIT</div>
-  <h1>수행평가 점수 검사기 <span class="version">v0.15</span></h1>
+  <h1>수행평가 점수 검사기 <span class="version">v0.16</span></h1>
   <p>평가계획서의 점수 기준과 나이스 일람표를 대조합니다. Python 설치 없이 Chrome · Edge에서 작동합니다.</p>
   <div class="security"><strong>학생 파일은 PC 밖으로 전송되지 않습니다.</strong> 서버·클라우드 AI·분석 추적 없음 · 로컬 규칙 기반 추출 · 임시 메모리 처리 · 언제든 초기화</div>
 </header>
@@ -94,7 +94,7 @@
 </section>
 <section class="panel" aria-labelledby="neisTitle">
   <div class="heading"><h2 id="neisTitle">③ 나이스 점수 일괄 검사</h2><span class="chip">학생정보 로컬 처리</span></div>
-  <p class="lead">승인된 급간만 대조합니다. 나이스 <strong>강의실별 일람표</strong>(한 학급의 모든 영역)와 <strong>교과목별 전체학급 일람표</strong>(한 영역의 전체 학급)를 모두 지원합니다. 여러 XLSX를 함께 선택할 수 있습니다. <code>.xls</code> 형식은 지원하지 않으며, Excel에서 XLSX로 저장해 주세요. 전체학급 표의 빈칸은 학생 부재와 점수 누락을 구별할 수 없어 자동 오류로 단정하지 않습니다.</p>
+  <p class="lead">승인된 급간만 대조합니다. <strong>교과교사:</strong> 강의실별 일람표(담당 수업의 모든 영역). <strong>평가담당자:</strong> 학급별 일람표(한 반의 여러 교과·영역). 교과목별 전체학급 일람표(한 영역의 여러 반)도 지원합니다. 세 서식을 섞어 여러 XLSX를 한 번에 선택할 수 있습니다. <code>.xls</code> 형식은 지원하지 않으며, Excel에서 XLSX로 저장해 주세요. 학급별·전체학급 표의 빈칸은 미수강·학생 부재·점수 누락을 구별할 수 없어 오류로 단정하지 않습니다. 숫자 0이 입력되었다면 0점인지 특례인지 원문과 대조합니다.</p>
   <label for="scoreFiles">나이스 XLSX 파일 (최대 80개 · 총 100MB 이하)</label><input id="scoreFiles" type="file" multiple accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
   <div class="actions"><button id="runAudit">학생 점수 검사</button><button class="danger" id="wipe">학생 데이터 지금 초기화</button><span class="minor">15분간 조작이 없으면 검사 결과를 자동으로 비웁니다.</span></div>
   <p id="scoreStatus" class="message" role="status">검사를 실행해도 학생 성적·학생 이름·엑셀 원본은 업로드되지 않습니다.</p>
@@ -172,11 +172,43 @@ function gradeAndSubject(rows) {
 }
 function neisSheetType(rows){
   const heads=rows.slice(0,10).map(r=>(r||[]).map(v=>String(v??'')).join(' '));
+  if(heads.some(v=>/수행평가\s*학급별\s*일람표/.test(v)))return 'school_class_all_subjects';
   if(heads.some(v=>/수행평가\s*교과목별\s*일람표/.test(v)))return 'area_across_classes';
   if(heads.some(v=>/수행평가\s*강의실별\s*일람표/.test(v)))return 'class_all_areas';
   if(rows.some(r=>Array.isArray(r)&&r.some(v=>normalize(v)==='반번호')&&r.some(v=>normalize(v)==='성명')))return 'class_all_areas';
   if(rows.some(r=>Array.isArray(r)&&normalize(r[0])==='반번호'&&r.slice(1).some(v=>/^\d+\s*반?$/.test(String(v??'').trim()))))return 'area_across_classes';
   return 'unknown';
+}
+// The NEIS "학급별 일람표" is a paginated, horizontal multi-subject report.
+// Its student identifier column C may be a long NEIS code; never parse or persist it.
+// Only the locally visible class/seat and name columns are needed for warnings.
+function classWideMeta(rows){
+  const text=rows.slice(0,12).flatMap(r=>r||[]).map(v=>String(v??'')).join(' ');
+  const year=text.match(/(20\d{2})\s*학년도/),sem=text.match(/([12])\s*학기/);
+  const grade=text.match(/([1-3])\s*학년/),cls=text.match(/([1-9]\d?)\s*반/);
+  return {year:year?Number(year[1]):null,semester:sem?Number(sem[1]):null,
+    grade:grade?Number(grade[1]):null,className:cls?String(Number(cls[1])):'',subject:''};
+}
+function classWideBlocks(rows){
+  const headers=[];
+  for(let i=0;i<rows.length-3;i++){
+    const r=rows[i]||[];
+    if(normalize(r[1])!=='번호'||normalize(r[3])!=='성명')continue;
+    const areaRow=rows[i+2]||[],maxRow=rows[i+3]||[];
+    const columns=[];let subject='';
+    for(let c=4;c<Math.min(201,Math.max(r.length,areaRow.length,maxRow.length));c++){
+      const s=String(r[c]??'').trim();
+      if(s && !/^\d+$/.test(s))subject=s.replace(/\(\s*\d+(?:\.\d+)?\s*\)\s*$/,'').trim();
+      const area=String(areaRow[c]??'').trim(),txt=String(maxRow[c]??'');
+      const m=txt.match(/만\s*점\s*[:：]?\s*(\d+(?:\.\d+)?)/);
+      if(subject && area && m && Number(m[1])>0){
+        columns.push({index:c,subject,area,max:Number(m[1])});
+      }
+    }
+    if(columns.length)headers.push({header:i,firstStudent:i+4,columns});
+  }
+  for(let i=0;i<headers.length;i++)headers[i].end=i+1<headers.length?headers[i+1].header:rows.length;
+  return headers;
 }
 function areaSheetInfo(rows){
   const header=rows.slice(0,10).map(r=>(r||[]).map(v=>String(v??'')).join(' ')).join(' ');
@@ -190,7 +222,7 @@ function compareSheets(sheetObjects, approvalObjects) {
   for(const raw of approvalObjects){const rule=validateApproval(raw);if(verified.has(rule.key))throw Error('같은 학년·과목·영역에 중복된 승인 규칙이 있습니다.');verified.set(rule.key,rule);}
   if(!verified.size)throw Error('원문 대조가 끝난 승인 규칙을 최소 1개 등록하세요.');
   const results=[],warnings=[],totalChecks=[];const students=new Set();const seenPoints=new Map();
-  let sheetCount=0, areaSheetCount=0, classroomSheetCount=0, duplicateCount=0, conflictCount=0;
+  let sheetCount=0, areaSheetCount=0, classroomSheetCount=0, classWideSheetCount=0, classWideAreaCount=0, classWideBlankCount=0, duplicateCount=0, conflictCount=0;
   const scoreStatus=(raw,rule)=>{
     const score=toScore(raw);
     if(!rule)return {status:'UNVERIFIED',reason:'이 학년·과목·평가영역의 승인 규칙 없음'};
@@ -214,8 +246,49 @@ function compareSheets(sheetObjects, approvalObjects) {
     students.add([data.year,data.grade,data.className,data.seat].join(':'));
   };
   for(const sheet of sheetObjects){
-    const rows=sheet.rows||[],meta=gradeAndSubject(rows),sheetLabel=sheet.name||'sheet',type=neisSheetType(rows);
-    if(type==='unknown'){warnings.push(`${sheetLabel}: 나이스 수행평가 두 가지 지원 서식(강의실별/교과목별)이 아님 — 검사 제외`);continue;}
+    const rows=sheet.rows||[],sheetLabel=sheet.name||'sheet',type=neisSheetType(rows);
+    if(type==='unknown'){warnings.push(`${sheetLabel}: 지원하는 나이스 수행평가 서식(강의실별/학급별/교과목별)이 아님 — 검사 제외`);continue;}
+    if(type==='school_class_all_subjects'){
+      const meta=classWideMeta(rows),blocks=classWideBlocks(rows);
+      if(!meta.year||!meta.semester||!meta.grade||!meta.className){warnings.push(`${sheetLabel}: 학급별 표의 학년도·학기·학년·반을 찾지 못함 — 검사 제외`);continue;}
+      if(!blocks.length){warnings.push(`${sheetLabel}: 학급별 표의 교과·영역·만점 3행 머리글을 찾지 못함 — 검사 제외`);continue;}
+      sheetCount++;classWideSheetCount++;
+      let checked=0,blank=0,nonNumeric=0;
+      const areaHeaderSet=new Set();
+      for(const block of blocks){
+        const columns=[];
+        for(const col of block.columns){
+          const key=[meta.year,meta.semester,meta.grade,normalize(col.subject),normalize(col.area)].join(':');
+          const possible=verified.get(key),rule=possible&&Math.abs(possible.max-col.max)<1e-6?possible:null;
+          if(possible&&!rule)warnings.push(`${sheetLabel}: ${col.subject} / ${col.area}의 나이스 만점 ${col.max}점과 승인 규칙 만점 ${possible.max}점 불일치 — 판정 보류`);
+          areaHeaderSet.add(key);
+          columns.push({...col,rule});
+        }
+        for(let ri=block.firstStudent;ri<block.end;ri++){
+          const row=rows[ri]||[];
+          const seat=Number(row[1]);
+          // B: 1~100번, D: 성명. C: 내부 식별번호이므로 읽거나 사용하지 않음.
+          if(!Number.isInteger(seat)||seat<1||seat>100||!String(row[3]??'').trim())continue;
+          const name=String(row[3]).trim().slice(0,60);
+          for(const col of columns){
+            const raw=row[col.index];
+            // Blank cells are commonly unselected subjects; never infer a missing grade.
+            if(raw===null||raw===undefined||String(raw).trim()===''){blank++;continue;}
+            if(toScore(raw)===null)nonNumeric++;
+            addPoint({sheet:sheetLabel,row:ri+1,year:meta.year,semester:meta.semester,
+              grade:meta.grade,subject:col.subject,area:col.area,className:meta.className,
+              seat:String(seat),name},col.rule,raw);
+            checked++;
+          }
+        }
+      }
+      classWideAreaCount+=areaHeaderSet.size;classWideBlankCount+=blank;
+      if(!checked)warnings.push(`${sheetLabel}: 유효한 학급별 점수 칸이 없습니다. 파일 서식을 확인하세요.`);
+      if(blank)warnings.push(`${sheetLabel}: 학급별 다교과 일람표의 빈칸 ${blank}개는 미수강·누락 여부를 판단할 수 없어 검사하지 않았습니다.`);
+      if(nonNumeric)warnings.push(`${sheetLabel}: 숫자가 아닌 점수·학적표기 ${nonNumeric}칸은 검토 대상으로 표시했습니다.`);
+      continue;
+    }
+    const meta=gradeAndSubject(rows);
     if(meta.year===null || meta.semester===null || meta.grade===null || !meta.subject){warnings.push(`${sheetLabel}: 학년·교과목 정보 미인식 — 점수 검사 제외`);continue;}
     const scopeRules=[...verified.values()].filter(r=>r.year===meta.year&&r.semester===meta.semester&&r.grade===meta.grade&&normalize(r.subject)===normalize(meta.subject));
     if(!scopeRules.length){warnings.push(`${sheetLabel}: ${meta.grade}학년 ${meta.subject}의 승인된 점수 규칙이 없음 — 검사 제외`);continue;}
@@ -290,7 +363,7 @@ function compareSheets(sheetObjects, approvalObjects) {
   if(duplicateCount)warnings.push(`동일 학년·과목·영역·반·번호의 중복 점수 ${duplicateCount}건을 중복 집계하지 않았습니다. 점수가 서로 달랐던 ${conflictCount}건은 미확인으로 표시했습니다.`);
   if(!results.length)throw Error('선택한 일람표에서 검사 가능한 점수를 찾지 못했습니다. 승인 규칙, 교과·영역명, 시트 서식을 확인하세요.');
   const counts={PASS:0,OUTSIDE:0,EXCEPTION:0,MISSING:0,UNVERIFIED:0};for(const r of results)counts[r.status]++;
-  return {results,warnings,totalChecks,counts,studentCount:students.size,sheetCount,areaSheetCount,classroomSheetCount,duplicateCount,conflictCount};
+  return {results,warnings,totalChecks,counts,studentCount:students.size,sheetCount,areaSheetCount,classroomSheetCount,classWideSheetCount,classWideAreaCount,classWideBlankCount,duplicateCount,conflictCount};
 }
 const zipScan=new TextDecoder('utf-8');
 async function unzipXlsx(bytes){
@@ -349,7 +422,7 @@ function resultsCSV(data,{names=false}={}){
   return '\uFEFF'+[heads,...body].map(row=>row.map(escapeCSVCell).join(',')).join('\r\n');
 }
 
-window.GTMC_ENGINE={normalize,scoreKey,validateApproval,parseXlsxBytes,compareSheets,escapeCSVCell,gradeAndSubject,neisSheetType,areaSheetInfo};
+window.GTMC_ENGINE={normalize,scoreKey,validateApproval,parseXlsxBytes,compareSheets,escapeCSVCell,gradeAndSubject,neisSheetType,areaSheetInfo,classWideMeta,classWideBlocks};
 })();
 /* GTMC v0.14: conservative, deterministic rubric candidate extraction.
    No AI, network, persistence, or student data. Output is ALWAYS unapproved. */
@@ -626,7 +699,7 @@ $('readPlan').addEventListener('click',async()=>{
   }catch(err){status('planStatus','계획서 분석 중단: '+err.message,'error');}finally{$('hwpx').value='';$('readPlan').disabled=false;}
 });
 $('planJson').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{fileGuard(f,'.json',3*1024*1024);setPlan(JSON.parse(await f.text()));}catch(err){status('planStatus','계획서 JSON 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}});
-$('exportPlan').addEventListener('click',()=>{if(!state.meta||!state.plan.length)return;jsonDownload({version:'0.15',...state.meta,areas:state.plan},`GTMC_${state.meta.academic_year}_${state.meta.semester}학기_평가영역_미승인후보.json`);});
+$('exportPlan').addEventListener('click',()=>{if(!state.meta||!state.plan.length)return;jsonDownload({version:'0.16',...state.meta,areas:state.plan},`GTMC_${state.meta.academic_year}_${state.meta.semester}학기_평가영역_미승인후보.json`);});
 function renderPlan(){
   const areas=state.plan,table=$('planTable'),boxes=$('planMetrics');clearElement(table);clearElement(boxes);
   $('planMetrics').hidden=!areas.length;$('planTableWrap').hidden=!areas.length;
@@ -649,7 +722,7 @@ function candidateApproval(area){
   if(!c?.safe_to_prefill||!Array.isArray(c.normal_points)||!c.normal_points.length)throw Error('검증 가능한 급간 자동 제안이 없습니다.');
   const ex=c.exception_points||{};
   const source=`HWPX ${area.source?.section||'위치 미확인'} · 표 ${(Number(area.source?.table_index_zero_based)||0)+1}`;
-  const raw={version:'0.15',course:{grade:area.grade,subject:area.subject,semester:state.meta.semester,academic_year:state.meta.academic_year},
+  const raw={version:'0.16',course:{grade:area.grade,subject:area.subject,semester:state.meta.semester,academic_year:state.meta.academic_year},
     area:{name:area.area,max_score:area.max},
     scoring:{kind:c.kind,normal_points:c.normal_points.map(Number),
       components:c.components.map(g=>({name:String(g.name),points:g.points.map(Number)})),
@@ -808,7 +881,7 @@ function currentRule(){
     if(!match)throw Error('계획서와 연결되지 않은 영역입니다. 다른 학년·과목의 규칙을 사용하지 않습니다.');
     if(Math.abs(match.max-max)>0.000001)throw Error(`계획서 영역 만점은 ${match.max}점입니다. 일치하지 않아 승인할 수 없습니다.`);
   }
-  const raw={version:'0.15',course:{grade,subject,semester:term,academic_year:year},area:{name:area,max_score:max},
+  const raw={version:'0.16',course:{grade,subject,semester:term,academic_year:year},area:{name:area,max_score:max},
     scoring:{kind:$('kind').value,normal_points:normal,components,
       exception_points:{base:maybeNum('base'),blank:maybeNum('blank'),long_unexcused_absence:maybeNum('longAbsent')}},
     source:{input_type:'teacher-reviewed',locator:$('reason').value.trim().slice(0,300)},
@@ -838,7 +911,7 @@ $('ruleFiles').addEventListener('change',async e=>{
     state.approved=temp;clearScore('승인 규칙 변경으로 이전 점수 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus',`${added}개 승인 규칙을 가져왔습니다. 승인 표기는 출처와 원문을 다시 확인해 주세요.`,'ok');
   }catch(err){status('ruleStatus','승인 규칙 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}
 });
-$('saveApproved').addEventListener('click',()=>{if(!state.approved.size)return;jsonDownload({version:'0.15',rules:[...state.approved.values()]},'GTMC_교사승인_점수규칙.json');});
+$('saveApproved').addEventListener('click',()=>{if(!state.approved.size)return;jsonDownload({version:'0.16',rules:[...state.approved.values()]},'GTMC_교사승인_점수규칙.json');});
 $('clearApproved').addEventListener('click',()=>{state.approved.clear();state.reviewChecked.clear();clearScore('승인 규칙 및 학생 검사 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus','승인된 규칙을 브라우저 메모리에서 모두 해제했습니다.');});
 $('runAudit').addEventListener('click',async()=>{
   const files=[...$('scoreFiles').files];$('runAudit').disabled=true;clearScore('새 검사를 시작해 이전 학생 데이터를 초기화했습니다.',true);
@@ -852,16 +925,16 @@ $('runAudit').addEventListener('click',async()=>{
       finally{new Uint8Array(b).fill(0);b=null;}
     }
     const result=compareSheets(all,[...state.approved.values()]);state.result=result;renderResults();renderPlan();armTimer();
-    status('scoreStatus',`검사 파일 유형: 강의실별 ${result.classroomSheetCount}개 · 교과목별 전체학급 ${result.areaSheetCount}개. 검사한 점수 ${result.results.length}건 · 급간 밖 ${result.counts.OUTSIDE}건 · 특별점수 ${result.counts.EXCEPTION}건 · 공란 ${result.counts.MISSING}건 · 미승인 ${result.counts.UNVERIFIED}건.\n학생 데이터는 이 브라우저의 메모리에만 있으며 15분 무조작 시 해제합니다.`,'ok');
+    status('scoreStatus',`검사 파일 유형: 강의실별 ${result.classroomSheetCount}개 · 학급별 전체 영역 ${result.classWideSheetCount}개 · 교과목별 전체학급 ${result.areaSheetCount}개. 검사한 점수 ${result.results.length}건 · 급간 밖 ${result.counts.OUTSIDE}건 · 특별점수 ${result.counts.EXCEPTION}건 · 공란 ${result.counts.MISSING}건 · 미승인 ${result.counts.UNVERIFIED}건.\n학생 데이터는 이 브라우저의 메모리에만 있으며 15분 무조작 시 해제합니다.`,'ok');
   }catch(err){clearScore('검사 중단으로 학생 임시 데이터를 초기화했습니다.',true);status('scoreStatus','검사 중단: '+err.message,'error');}
   finally{$('scoreFiles').value='';$('runAudit').disabled=false;}
 });
 function renderResults(){const d=state.result;if(!d)return;
   const boxes=$('resultMetrics');clearElement(boxes);
   const badTotals=d.totalChecks.filter(x=>!x.match);
-  const items=[['검사 점수',d.results.length],['급간 정상',d.counts.PASS],['급간 밖',d.counts.OUTSIDE],['특별점수 검토',d.counts.EXCEPTION],['공란',d.counts.MISSING],['규칙 미승인',d.counts.UNVERIFIED],['합계 불일치',badTotals.length],['영역별 전체학급 시트',d.areaSheetCount||0],['강의실별 시트',d.classroomSheetCount||0]];
+  const items=[['검사 점수',d.results.length],['급간 정상',d.counts.PASS],['급간 밖',d.counts.OUTSIDE],['특별점수 검토',d.counts.EXCEPTION],['공란',d.counts.MISSING],['규칙 미승인',d.counts.UNVERIFIED],['합계 불일치',badTotals.length],['영역별 전체학급 시트',d.areaSheetCount||0],['강의실별 시트',d.classroomSheetCount||0],['학급별 전체 영역',d.classWideSheetCount||0],['학급별 영역 열',d.classWideAreaCount||0]];
   for(const [label,num] of items)metric(boxes,label,num);
-  const messages=[`결과는 오류 확정이 아니라 검토 후보입니다. 정상 점수는 아래 표에서 생략됩니다. 전체학급(영역별) 파일은 합계 대조 대상이 아니며 빈칸은 자동 오류 처리하지 않습니다.`,...d.warnings,`합계 대조: ${d.totalChecks.length}건 중 ${badTotals.length}건 불일치`,...(badTotals.length?[`합계 불일치 행(최대 30건): ${badTotals.slice(0,30).map(x=>x.sheet+' '+x.row+'행').join(' / ')}`]:[])];
+  const messages=[`결과는 오류 확정이 아니라 검토 후보입니다. 정상 점수는 아래 표에서 생략됩니다. 학급별(다교과)·교과목별 전체학급 파일은 합계 대조 대상이 아니며 빈칸은 자동 오류 처리하지 않습니다. 미수강/누락은 별도 대조가 필요합니다.`,...d.warnings,`합계 대조: ${d.totalChecks.length}건 중 ${badTotals.length}건 불일치`,...(badTotals.length?[`합계 불일치 행(최대 30건): ${badTotals.slice(0,30).map(x=>x.sheet+' '+x.row+'행').join(' / ')}`]:[])];
   status('resultNote',messages.join('\n'),d.counts.OUTSIDE||d.counts.UNVERIFIED||badTotals.length?'':'ok');
   const table=$('resultTable');clearElement(table);const fail=d.results.filter(x=>x.status!=='PASS').slice(0,1500);
   if(!fail.length)addRow(table,['검토할 급간 밖·특별·공란·미승인 점수가 없습니다.','','','','','','']);
