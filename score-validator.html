@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-/QqoGpc12/dATZuXcWwASrPDj429s7W286CK23i227E='; style-src 'sha256-R39OC8JrTpH94RA7yHvr6YMZMWsSpvvEJvFuaCb/sQc='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' 'sha256-kXCydclTJFbDtjtKnu49IRZbfxBG+CDzo0dZf0PQIik='; style-src 'sha256-R39OC8JrTpH94RA7yHvr6YMZMWsSpvvEJvFuaCb/sQc='; img-src 'self' blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.17</title>
+<title>GTMC 수행평가 점수 검사기 · 브라우저 전용 v0.18</title>
 <style>:root{font-family:'Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif;background:#f6f7f8;color:#1d2b38;line-height:1.55;font-size:14px}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1130px;margin:0 auto;padding:30px 20px 65px}.banner{background:#fff;border-top:4px solid #263d53;padding:22px 25px;border-bottom:1px solid #d8e0e8}.eyebrow{font-size:11px;letter-spacing:.16em;color:#536d84;font-weight:800}.banner h1{font-size:25px;margin:7px 0}.version{font-size:12px;vertical-align:middle;color:#5c7285;border:1px solid #cbd6dd;padding:3px 8px;border-radius:12px}.banner p{color:#526579;margin:6px 0 12px}.security{background:#eaf5f1;border-left:3px solid #2b7d65;padding:12px 15px;font-size:13px;color:#215c49}.nav{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 20px}.nav span{font-size:12px;border-radius:30px;padding:6px 13px;background:#e9edf1;color:#465b70;font-weight:700}.panel{background:#fff;border:1px solid #d9e0e7;border-radius:10px;margin:18px 0;padding:20px 24px;box-shadow:0 2px 10px #263a4e07}.heading{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:8px}.heading h2{font-size:18px;margin:0}.chip{font-size:11px;color:#31546c;background:#eaf1f6;padding:4px 8px;border-radius:20px;white-space:nowrap}.lead{color:#47596d;margin:8px 0 15px;font-size:13px}.minor{font-size:12px;color:#637689}.columns,.fields{display:grid;gap:14px}.columns,.fields.two{grid-template-columns:repeat(2,minmax(0,1fr))}.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}.fields{margin-bottom:12px}label{display:block;font-weight:750;font-size:12px;margin:8px 0 5px;color:#35485e}input:not([type=checkbox]),select,textarea{width:100%;max-width:100%;border:1px solid #cbd6e0;border-radius:6px;padding:9px 10px;background:#fff;font:inherit;color:inherit}input[type=file]{background:#f9fbfc;border-style:dashed}textarea{resize:vertical;min-height:55px}button{cursor:pointer;border:1px solid #294b69;background:#294b69;color:white;border-radius:6px;padding:9px 13px;font:inherit;font-weight:750;font-size:13px}button:disabled{cursor:default;opacity:.45}button.secondary{color:#274d66;background:#e9f1f6;border-color:#d5e3ec}button.plain{background:white;color:#466079;border-color:#ccdae4}button.danger{background:#fff0ed;color:#a5342f;border-color:#efc4bd}.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.narrow{margin:0}.message{padding:12px 14px;border-left:3px solid #d3a44c;background:#fffaf0;color:#66552f;white-space:pre-wrap;font-size:12px;overflow-wrap:anywhere}.message.ok{background:#edf9f3;color:#1d6650;border-color:#2d8767}.message.error{background:#fff1ee;color:#9b312b;border-color:#c64c40}.metrics{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.stat{background:#f0f4f7;padding:10px 15px;min-width:118px;border-radius:8px;font-size:12px;color:#4f657a}.stat strong{display:block;font-size:22px;color:#29445f}.tableWrap{overflow:auto;max-height:430px;border:1px solid #e1e7ee;border-radius:6px;margin-top:10px}table{width:100%;border-collapse:collapse;min-width:680px;font-size:12px}thead{position:sticky;top:0;background:#edf2f6}td,th{padding:9px 10px;border-bottom:1px solid #e6edf2;text-align:left;vertical-align:top}th{white-space:nowrap;color:#41566b}td{overflow-wrap:anywhere}.empty{text-align:center;padding:26px;color:#8391a1}.ruleForm{border-top:1px solid #e7edf2;margin-top:14px;padding-top:12px}.check{display:flex;align-items:flex-start;gap:9px;font-weight:500;background:#f5f7fa;border-radius:6px;padding:10px;color:#354d60}.check input{flex:none;margin-top:2px}.mini{padding:5px 8px;font-size:12px}.details{margin-top:16px;padding:10px 15px;border:1px solid #dce5ec;border-radius:6px}.details summary{cursor:pointer;font-weight:750}.detail-line{border-bottom:1px solid #edf1f4;padding:7px 0}.state-pass{color:#17744f;font-weight:750}.state-outside{color:#b12e27;font-weight:800}.state-review{color:#946316;font-weight:750}footer{color:#627488;border-top:1px solid #d8e1e8;margin-top:25px;padding-top:18px;font-size:11px;line-height:1.8}@media(max-width:750px){.wrap{padding:10px}.banner{padding:17px}.panel{padding:15px}.columns,.fields.two,.fields.three{grid-template-columns:1fr}.heading{align-items:flex-start;flex-direction:column}.banner h1{font-size:22px}.nav{gap:5px}.nav span{font-size:10px;padding:5px 7px}}
 .candidateBox{margin:12px 0 15px;background:#f7fbff;border:1px solid #cbdfea;border-radius:9px;padding:14px 15px}.candidateHead{display:flex;gap:10px;justify-content:space-between;align-items:center}.candidateNumbers{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.candidateNumbers span{background:#e4f0f8;padding:4px 8px;border-radius:5px;color:#254d6d;font-size:12px;font-weight:750}.candidateBox .details{margin-top:9px}.candidateBox button{margin-top:2px}
 .reviewStation{margin:17px 0;padding:16px;border:1px solid #cbdce8;background:#f8fbfd;border-radius:10px}
@@ -31,7 +31,7 @@
 <main class="wrap">
 <header class="banner">
   <div class="eyebrow">GTMC · PERFORMANCE SCORE AUDIT</div>
-  <h1>수행평가 점수 검사기 <span class="version">v0.17</span></h1>
+  <h1>수행평가 점수 검사기 <span class="version">v0.18</span></h1>
   <p>평가계획서의 점수 기준과 나이스 일람표를 대조합니다. Python 설치 없이 Chrome · Edge에서 작동합니다.</p>
   <div class="security"><strong>학생 파일은 PC 밖으로 전송되지 않습니다.</strong> 서버·클라우드 AI·분석 추적 없음 · 로컬 규칙 기반 추출 · 임시 메모리 처리 · 언제든 초기화</div>
 </header>
@@ -458,6 +458,12 @@ function infer(rows,max){
    return {values,raw,row:rows.indexOf(matches[0])+1};
  };
  const explicit=parseExplicitSummary();
+ const statedTotals=rows.flatMap(r=>r.map(v=>txt(v))).filter(v=>/^총\s*점\s*[:：]?\s*\d+(?:\.\d+)?\s*점?\s*$/.test(v))
+   .map(v=>Number(v.match(/\d+(?:\.\d+)?/)[0]));
+ if(statedTotals.some(v=>!eq(v,max))){
+   o.warnings.push('영역만점 '+max+'점과 원문 총점 '+[...new Set(statedTotals)].join('/')+'점이 서로 다릅니다. 자동 판독을 중단합니다.');
+   return o;
+ }
  const findSpecial=(type)=>{
    const re=type==='base'?/기본\s*점수|기본점수/:type==='blank'?/백지|자발적\s*미응시|본인\s*의사.{0,20}미응시/:/장기\s*미\s*인정\s*결석|장기미인정결석/;
    const found=[];
@@ -602,6 +608,18 @@ function infer(rows,max){
  // Missing an expected special score is not silently fabricated.
  if(o.normal_points.some(x=>x<0||x>max))o.warnings.push('만점 초과 또는 음수 점수가 있습니다.');
  if(base!==null&&!o.normal_points.some(x=>eq(x,base)))o.warnings.push('기본점수가 일반 점수 목록에 포함되지 않았습니다.');
+ // A multi-component sum without an independently listed total-score table may
+ // silently omit valid low scores (e.g. component-level blank worksheets). Never
+ // present it as auto-reviewable solely because maxima add up correctly.
+ if(head.component && !explicit){
+   o.warnings.push('요소별 합산형: 합산점수 검산표가 없어 후보 계산만 표시합니다. 모든 요소별 배점과 최저점을 직접 대조하세요.');
+ }
+ // A missing special rule can mean 'not specified', not zero. It requires
+ // explicit human handling before the complete rubric can be approved.
+ if(o.normal_points.length && (base===null||blank===null||long===null)){
+   const missing=[base===null?'기본점수':'',blank===null?'백지·미응시점수':'',long===null?'장기미인정결석 점수':''].filter(Boolean);
+   o.warnings.push('특례점수 확인 필요: '+missing.join(', '));
+ }
  if(o.warnings.length){o.state='REVIEW_REQUIRED';o.safe_to_prefill=false;}
  else {o.state='CANDIDATE';o.safe_to_prefill=true;}
  return o;
@@ -690,7 +708,8 @@ async function extractHwpxFile(file){
         return vals;
       });
       const candidate=window.GTMC_SUGGEST.infer(rubricRows,x.max);
-      found.push({...x,subject_at_table:sectionSubject,table_index_zero_based:i,candidate});
+      const tableGrade=(rubricRows[0]&&rubricRows[0][0]==='학년'&&rubricRows[1]&&/^[123]$/.test(String(rubricRows[1][0]||'').trim()))?Number(rubricRows[1][0]):null;
+      found.push({...x,subject_at_table:sectionSubject,declared_grade_at_table:tableGrade,table_index_zero_based:i,candidate});
     }
     data.push({section:sec,meta,found});
   }
@@ -711,6 +730,11 @@ async function extractHwpxFile(file){
       const key=[grade,compact(scopedSubject),compact(x.area),x.max].join('::');
       if(seen.has(key)){duplicates.push({section:sec.section,area:x.area});continue;}
       seen.add(key);
+      if(x.declared_grade_at_table&&x.declared_grade_at_table!==grade){
+        x.candidate.warnings.push('원문 채점표 학년 '+x.declared_grade_at_table+'와 통합 파일 학년 '+grade+'이 불일치합니다.');
+        x.candidate.safe_to_prefill=false;
+        x.candidate.state='REVIEW_REQUIRED';
+      }
       areas.push({grade,subject:scopedSubject,area:x.area,max:x.max,recognition:x.recognition,
         source:{section:sec.section,table_index_zero_based:x.table_index_zero_based},candidate:x.candidate,state:'REVIEW_REQUIRED'});
     }
@@ -998,3 +1022,85 @@ $('approve').addEventListener('click',()=>{
 $('ruleFiles').addEventListener('change',async e=>{
   try{const files=[...e.target.files];if(files.length>200||files.reduce((a,f)=>a+f.size,0)>6*1024*1024)throw Error('승인 JSON 파일 크기/개수 제한을 초과했습니다.');
     const temp=new Map(state.approved);let added=0;
+    for(const f of files){fileGuard(f,'.json',1024*1024);const doc=JSON.parse(await f.text());const arr=Array.isArray(doc)?doc:Array.isArray(doc.rules)?doc.rules:[doc];
+      for(const r of arr){const v=validateApproval(r);
+        if(state.plan.length){const match=state.plan.find(x=>idForArea(x)===v.key);if(!match||match.max!==v.max)throw Error('등록한 계획서와 일치하지 않는 승인 규칙이 있습니다: '+v.subject+' / '+v.area);}
+        if(temp.has(v.key))throw Error('중복 승인 규칙: '+v.subject+' / '+v.area);
+        temp.set(v.key,r);added++;
+      }
+    }
+    if(!added)throw Error('가져올 승인 규칙이 없습니다.');
+    state.approved=temp;clearScore('승인 규칙 변경으로 이전 점수 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus',`${added}개 승인 규칙을 가져왔습니다. 승인 표기는 출처와 원문을 다시 확인해 주세요.`,'ok');
+  }catch(err){status('ruleStatus','승인 규칙 불러오기 실패: '+err.message,'error');}finally{e.target.value='';}
+});
+$('saveApproved').addEventListener('click',()=>{if(!state.approved.size)return;jsonDownload({version:'0.16',rules:[...state.approved.values()]},'GTMC_교사승인_점수규칙.json');});
+$('clearApproved').addEventListener('click',()=>{state.approved.clear();state.reviewChecked.clear();clearScore('승인 규칙 및 학생 검사 결과를 초기화했습니다.',true);refreshApproved();status('ruleStatus','승인된 규칙을 브라우저 메모리에서 모두 해제했습니다.');});
+$('runAudit').addEventListener('click',async()=>{
+  const files=[...$('scoreFiles').files];$('runAudit').disabled=true;clearScore('새 검사를 시작해 이전 학생 데이터를 초기화했습니다.',true);
+  try{
+    if(!state.approved.size)throw Error('교사가 직접 원문 확인한 승인 규칙이 없습니다.');
+    if(!files.length)throw Error('나이스 XLSX 파일을 선택하세요.');
+    if(files.length>80||files.reduce((a,f)=>a+f.size,0)>100*1024*1024)throw Error('최대 80개, 합계 100MB 이하만 검사합니다.');
+    const all=[];
+    for(const f of files){fileGuard(f,'.xlsx',18*1024*1024);let b=await f.arrayBuffer();
+      try{const sheets=await parseXlsxBytes(b);for(const s of sheets)all.push({...s,name:`${f.name} / ${s.name}`});}
+      finally{new Uint8Array(b).fill(0);b=null;}
+    }
+    const result=compareSheets(all,[...state.approved.values()]);state.result=result;renderResults();renderPlan();armTimer();
+    status('scoreStatus',`검사 파일 유형: 강의실별 ${result.classroomSheetCount}개 · 학급별 전체 영역 ${result.classWideSheetCount}개 · 교과목별 전체학급 ${result.areaSheetCount}개. 검사한 점수 ${result.results.length}건 · 급간 밖 ${result.counts.OUTSIDE}건 · 특별점수 ${result.counts.EXCEPTION}건 · 공란 ${result.counts.MISSING}건 · 미승인 ${result.counts.UNVERIFIED}건.\n학생 데이터는 이 브라우저의 메모리에만 있으며 15분 무조작 시 해제합니다.`,'ok');
+  }catch(err){clearScore('검사 중단으로 학생 임시 데이터를 초기화했습니다.',true);status('scoreStatus','검사 중단: '+err.message,'error');}
+  finally{$('scoreFiles').value='';$('runAudit').disabled=false;}
+});
+function renderResults(){const d=state.result;if(!d)return;
+  const boxes=$('resultMetrics');clearElement(boxes);
+  const badTotals=d.totalChecks.filter(x=>!x.match);
+  const items=[['검사 점수',d.results.length],['급간 정상',d.counts.PASS],['급간 밖',d.counts.OUTSIDE],['특별점수 검토',d.counts.EXCEPTION],['공란',d.counts.MISSING],['규칙 미승인',d.counts.UNVERIFIED],['합계 불일치',badTotals.length],['영역별 전체학급 시트',d.areaSheetCount||0],['강의실별 시트',d.classroomSheetCount||0],['학급별 전체 영역',d.classWideSheetCount||0],['학급별 영역 열',d.classWideAreaCount||0]];
+  for(const [label,num] of items)metric(boxes,label,num);
+  const messages=[`결과는 오류 확정이 아니라 검토 후보입니다. 정상 점수는 아래 표에서 생략됩니다. 학급별(다교과)·교과목별 전체학급 파일은 합계 대조 대상이 아니며 빈칸은 자동 오류 처리하지 않습니다. 미수강/누락은 별도 대조가 필요합니다.`,...d.warnings,`합계 대조: ${d.totalChecks.length}건 중 ${badTotals.length}건 불일치`,...(badTotals.length?[`합계 불일치 행(최대 30건): ${badTotals.slice(0,30).map(x=>x.sheet+' '+x.row+'행').join(' / ')}`]:[])];
+  status('resultNote',messages.join('\n'),d.counts.OUTSIDE||d.counts.UNVERIFIED||badTotals.length?'':'ok');
+  const table=$('resultTable');clearElement(table);const fail=d.results.filter(x=>x.status!=='PASS').slice(0,1500);
+  if(!fail.length)addRow(table,['검토할 급간 밖·특별·공란·미승인 점수가 없습니다.','','','','','','']);
+  for(const r of fail){const row=addRow(table,[`${r.sheet} / ${r.row}행`,`${r.className}/${r.seat}`,$('showNames').checked?r.name:'•••',`${r.subject} / ${r.area}`,r.score,r.status,r.reason]);
+    row.children[5].className=r.status==='OUTSIDE'?'state-outside':r.status==='EXCEPTION'?'state-review':'state-pass';}
+  $('saveSummary').disabled=false;
+}
+$('showNames').addEventListener('change',()=>{if(state.result)renderResults();});
+$('saveSummary').addEventListener('click',()=>{
+  if(!state.result)return;const map=new Map();for(const r of state.result.results){const key=[r.grade,r.subject,r.area].join('\u241f');
+    if(!map.has(key))map.set(key,{grade:r.grade,subject:r.subject,area:r.area,PASS:0,OUTSIDE:0,EXCEPTION:0,MISSING:0,UNVERIFIED:0});map.get(key)[r.status]++;}
+  const rows=[['학년','교과','영역','정상','급간외','특별점수','공란','미승인'],...[...map.values()].map(x=>[x.grade,x.subject,x.area,x.PASS,x.OUTSIDE,x.EXCEPTION,x.MISSING,x.UNVERIFIED])];
+  const csv='\uFEFF'+rows.map(a=>a.map(escapeCSVCell).join(',')).join('\r\n');
+  download(new Blob([csv],{type:'text/csv;charset=utf-8'}),'GTMC_영역별_집계_학생식별정보없음.csv');
+});
+// Initial UI. Nothing is persisted to localStorage, IndexedDB, cookies, or network.
+renderSelect();renderPlan();refreshApproved();
+
+})();</script>
+<!-- Third-party notice / MIT license for bundled JSZip 3.10.1
+JSZip is dual licensed. At your choice you may use it under the MIT license *or* the GPLv3
+license.
+
+The MIT License
+===============
+
+Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+</body></html>
