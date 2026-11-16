@@ -693,12 +693,37 @@ function identifyArea(table){
     }
   }
   const i=names.indexOf('평가영역');
-  if(i>=0&&rows.length>1){for(const row of rows.slice(1,5)){
-    const vals=cells(row);if(i>=vals.length)continue;
-    const entry=vals[i],m=entry.match(/\(\s*(\d+(?:\.\d+)?)\s*점\s*\)/);if(!m)continue;
-    const max=Number(m[1]),area=clean(entry.replace(/\(\s*\d+(?:\.\d+)?\s*점\s*\)/,''));
-    if(area.length>=2&&area.length<=140&&max>0&&max<=1000)return {area,max,recognition:'structured-detail-row'};
-  }}
+  if(i>=0&&rows.length>1){
+    for(let ri=1;ri<Math.min(rows.length,5);ri++){
+      const vals=cells(rows[ri]);if(i>=vals.length)continue;
+      const entry=vals[i],m=entry.match(/\(\s*(\d+(?:\.\d+)?)\s*점\s*\)/);if(!m)continue;
+      const firstMax=Number(m[1]),area=clean(entry.replace(/\(\s*\d+(?:\.\d+)?\s*점\s*\)/,''));
+      if(!(area.length>=2&&area.length<=140&&firstMax>0&&firstMax<=1000))continue;
+
+      // A merged rubric can contain multiple independently scored subareas:
+      // e.g. 10+10=20 or 20+5=25. The first (N점) is not always the whole-area max.
+      // Only accept the sum after cross-checking an unambiguous "총점 N점" row.
+      const componentMaxima=[firstMax];
+      for(let r=ri+1;r<rows.length;r++){
+        const parts=cells(rows[r]);
+        if(parts.some(v=>/^총\s*점/.test(clean(v))))break;
+        // A later component's label occupies the first physical cell because
+        // the HWPX table merges the grade/term/area cells above it.
+        if(parts.length<3)continue;
+        const marked=clean(parts[0]).match(/\(\s*(\d+(?:\.\d+)?)\s*점\s*\)$/);
+        if(marked)componentMaxima.push(Number(marked[1]));
+      }
+      const totals=rows.flatMap(r=>cells(r)).map(v=>clean(v).match(/^총\s*점\s*[:：]?\s*(\d+(?:\.\d+)?)\s*점?\s*$/))
+        .filter(Boolean).map(m=>Number(m[1]));
+      const uniqueTotals=[...new Set(totals)];
+      const sum=componentMaxima.reduce((a,b)=>a+b,0);
+      const validatedSum=componentMaxima.length>=2&&componentMaxima.every(n=>n>0&&n<=1000)
+        &&uniqueTotals.length===1&&uniqueTotals[0]>firstMax&&uniqueTotals[0]<=1000
+        &&Math.abs(sum-uniqueTotals[0])<1e-7;
+      return {area,max:validatedSum?uniqueTotals[0]:firstMax,
+        recognition:validatedSum?'structured-detail-component-sum':'structured-detail-row'};
+    }
+  }
   return null;
 }
 function sourceSnapshot(rows){
