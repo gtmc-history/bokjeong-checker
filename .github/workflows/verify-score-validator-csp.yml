@@ -1,0 +1,65 @@
+name: Verify score-validator CSP
+on:
+  push:
+    paths:
+      - score-validator.html
+      - .github/workflows/verify-score-validator-csp.yml
+  pull_request:
+    paths:
+      - score-validator.html
+      - .github/workflows/verify-score-validator-csp.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify-inline-hashes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Verify inline script and style hashes
+        run: |
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import pathlib
+          import re
+          import sys
+
+          html = pathlib.Path("score-validator.html").read_text(encoding="utf-8")
+          match = re.search(
+              r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"',
+              html,
+          )
+          if not match:
+              sys.exit("Missing Content-Security-Policy meta tag")
+          policy = match.group(1)
+
+          for tag in ("script", "style"):
+              directive = tag + "-src"
+              source = re.search(
+                  rf"(?:^|;\s*){re.escape(directive)}\s+([^;]+)",
+                  policy,
+              )
+              if not source:
+                  sys.exit(f"Missing {directive} directive")
+              blocks = re.findall(
+                  rf"<{tag}(?:\s[^>]*)?>(.*?)</{tag}>",
+                  html,
+                  flags=re.S | re.I,
+              )
+              if not blocks:
+                  sys.exit(f"No inline {tag} blocks found")
+              for index, block in enumerate(blocks, start=1):
+                  digest = base64.b64encode(
+                      hashlib.sha256(block.encode("utf-8")).digest()
+                  ).decode("ascii")
+                  required = f"'sha256-{digest}'"
+                  if required not in source.group(1):
+                      sys.exit(
+                          f"CSP mismatch in <{tag}> #{index}: "
+                          f"add {required} to {directive} before deployment"
+                      )
+              print(f"Verified {len(blocks)} inline <{tag}> blocks")
+          PY
